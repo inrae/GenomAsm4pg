@@ -1,92 +1,220 @@
-# genome_asm_smk_WF
+# Automating oak genome assembly workflow
+This workflow uses [Snakemake](https://snakemake.readthedocs.io/en/stable/) to quickly assemble genomes with a HTML report summarizing obtained assembly stats. This workflow uses PacBio HiFi data.
 
+![workflow DAG](fig/rule_dag.svg)
 
+## Table of contents
+[TOC]
 
-## Getting started
-
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+## Directory structure
 
 ```
-cd existing_repo
-git remote add origin https://forgemia.inra.fr/sukanya.denni/genome_asm_smk_wf.git
-git branch -M main
-git push -uf origin main
+├── README.md
+├── job.sh
+├── prejob.sh
+├── workflow
+│   ├── rules
+│   ├── modules
+│   ├── scripts
+│   ├── pre-job_snakefiles
+|   └── Snakefile
+├── .config
+|   ├── snakemake_profile
+|   |  └── slurm
+|   |       ├── cluster_config.yml
+|   |       ├── config.yaml
+|   |       ├── CookieCutter.py
+|   |       ├── settings.json
+|   |       ├── slurm_utils.py
+|   |       ├── slurm-jobscript.sh
+|   |       ├── slurm-status.py
+|   |       └── slurm-submit.py
+|   └── masterconfig.yaml
+└── workflow_results
 ```
 
-## Integrate with your tools
+## Requirements
+- snakemake >= 6.5.1
+- singularity
 
-- [ ] [Set up project integrations](https://forgemia.inra.fr/sukanya.denni/genome_asm_smk_wf/-/settings/integrations)
+## Workflow steps, programs & Docker images pulled by Snakemake
+All images here will be pulled automatically by Snakemake the first time you run the workflow. It may take some time. Images are only downloaded once and reused automatically by the workflow.
 
-## Collaborate with your team
+**Pre-assembly**
+- Conversion of PacBio bam to fasta & fastq
+    - **smrtlink** (https://www.pacb.com/support/software-downloads/)
+        - image version: 9.0.0.92188 ([link](https://hub.docker.com/r/bryce911/smrtlink/tags))
+- Fastq to fasta conversion
+    - **seqtk** (https://github.com/lh3/seqtk)
+        - image version: 1.3--dc0d16b ([link](https://hub.docker.com/r/nanozoo/seqtk))
+- Raw data quality control
+    - **fastqc** (https://github.com/s-andrews/FastQC)
+        - image version: v0.11.5_cv4 ([link](https://hub.docker.com/r/biocontainers/fastqc/tags))
+    - **lonqQC** (https://github.com/yfukasawa/LongQC)
+        - image version: latest (April 2022) ([link](https://hub.docker.com/r/grpiccoli/longqc/tags))
+- Metrics
+    - **genometools** (https://github.com/genometools/genometools)
+        - image version: v1.5.9ds-4-deb_cv1 ([link](https://hub.docker.com/r/biocontainers/genometools/tags))
+- K-mer analysis
+    - **jellyfish** (https://github.com/gmarcais/Jellyfish)
+        - image version: 2.3.0--h9f5acd7_3 ([link](https://quay.io/repository/biocontainers/kmer-jellyfish?tab=tags))
+    - **genomescope** (https://github.com/tbenavi1/genomescope2.0)
+        - image version: 2.0 ([link](https://hub.docker.com/r/abner12/genomescope))
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Automatically merge when pipeline succeeds](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+**Assembly**
+- Assembly
+    - **hifiasm** (https://github.com/chhylp123/hifiasm)
+        - image version: 0.16.1--h5b5514e_1 ([link](https://quay.io/repository/biocontainers/hifiasm?tab=tags))
+- Metrics
+    - **genometools** (same as Pre-assembly)
+- Assembly quality control
+    - **busco** (https://gitlab.com/ezlab/busco)
+        - image version: v5.1.2_cv1 ([link](https://hub.docker.com/r/ezlabgva/busco/tags))
+    - **kat** (https://github.com/TGAC/KAT)
+        - image version: 2.4.1--py35h355e19c_3 ([link](https://quay.io/repository/biocontainers/kat))
+- Error rate, QV & phasing
+    - **meryl** and **merqury** (https://github.com/marbl/meryl, https://github.com/marbl/merqury)
+        - image version: 1.3--hdfd78af_0 ([link](https://quay.io/repository/biocontainers/merqury?tab=tags))
+- Detect assembled telomeres
+    - **FindTelomeres** (https://github.com/JanaSperschneider/FindTelomeres)
+        - **Biopython** image version: 1.75 ([link](https://quay.io/repository/biocontainers/biopython?tab=tags))
+- Haplotigs and overlaps purging 
+    - **purge_dups** (https://github.com/dfguan/purge_dups)
+        - image version: 1.2.5--h7132678_2 ([link](https://quay.io/repository/biocontainers/purge_dups?tab=tags))
 
-## Test and Deploy
+## How to run the workflow
+### Installation
 
-Use the built-in continuous integration in GitLab.
+### Merqury image manipulation
+Follow the steps in this [issue](https://forgemia.inra.fr/ludovic.duvaux/woodysv/-/issues/7#note_89817).
+Then create a directory named `img` in the directory `workflow` and copy `merqury.sif` there.
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+### Profile setup
+The current profile is made for SLURM. To run this workflow on another HPC, create another profile (https://github.com/Snakemake-Profiles) and add it in the `.config/snakemake_profile` directory. Change the `CLUSTER_CONFIG` and `PROFILE` variables in `job.sh` and `prejob.sh`
 
-***
+### Workflow execution
+Go in the `Assemb_v2_Snakemake_FullAuto` directory to run the bash scripts.
 
-# Editing this README
+1. **Data preparation**
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!).  Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
+Modify the following variables in file `.config/masterconfig.yaml`:
+- `root`
+    - The absolute path where you want the output to be.
+- `data`
+    - The path to the directory containing all input tar files.
+This workflow can automatically determine the name of files in the specified `data` directory, or run only on given files :
+- `get_all_tar_filename: True` will uncompress all tar files. If you want to choose the the files to uncompress, use `get_all_tar_filename: False` and give the filenames as a list in `tarIDS`
 
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
 
-## Name
-Choose a self-explaining name for your project.
+Modify the `SNG_BIND` variable in `prejob.sh`, it has to be the same as the variable `root` in `.config/masterconfig.yaml`. Change line 17 to your email adress.
+If Singularity is not in the HPC environement, add `module load singularity` under Module loading.
+Then run 
+```bash
+sbatch prejob.sh
+```
+This will create multiple directories to prepare the data for the workflow. You will end up with a `bam_files` directory containing all .bam, renamed as the tar filename if your data is named "ccs.bam", and a `fastx_files` directory containing all *fasta.gz* and *fastq.gz*. The `extract` directory contains all other files that were in the tar ball.
+```
+workflow_results
+└── 00_raw_data
+    ├── bam_files
+    ├── extract
+    └── fastx_files
+```
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+You can add other datasets here if necessary. 
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+2. **Running the workflow**
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+The `fastx_files` directory will be the starting point for the assembly workflow.
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+You will have to modify other variables in file `.config/masterconfig.yaml`:
+- `get_all_filename: True` will run the workflow with all *fasta.gz* in the `fastx_files` directory as input. If you want to choose the input for the workflow, use `get_all_filename: False` and give the fasta filenames as a list in `IDS`.
+- Choose your run name with `run`.
+- Specify the organism ploidy with `ploidy`.
+- Choose the BUSCO lineage with `lineage`.
+- There are 3 modes to run hifiasm: only with Hifi data, in trio or with Hifi and Hi-C data. To choose the mode, modify the variable `mode` in file `.config/masterconfig.yaml` to either :
+    - `default`
+    - `trio`
+        - Add a key corresponding to your filename and modify the variables `p1` and `p2` to be the parental reads. Supported filetypes are *fasta*, *fasta.gz*, *fastq* and *fastq.gz*.
+    - `hi-c`
+        - Add a key corresponding to your filename an modify the variables `r1` and `r2` to be the paired-end Hi-C reads. Supported filetypes are *fasta*, *fasta.gz*, *fastq* and *fastq.gz*.
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+*For example*
+```yaml
+# trio datasets
+sibling_1_dataset_placeholder:
+  p1: path/to/parent/1/reads
+  p2: path/to/parent/2/reads
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+sibling_2_dataset_placeholder:
+  p1: path/to/parent/1/reads
+  p2: path/to/parent/2/reads
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+# Hi-C datasets
+hic_sample_dataset_1_name_placeholder:
+  r1: path/to/r1/reads
+  r2: path/to/r2/reads
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+hic_sample_dataset_2_name_placeholder:
+  r1: path/to/r1/reads
+  r2: path/to/r2/reads
+```
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+Modify the `SNG_BIND` variable in `job.sh`, it has to be the same as the variable `root` in `.config/masterconfig.yaml`. Change line 17 to your email adress.
+If Singularity is not in the HPC environement, add `module load singularity` under Module loading.
+Then run 
+```bash
+sbatch job.sh
+```
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+All the slurm output logs are in the `slurm_logs` directory. There are .out and .err files for the worklow (*snakemake.cortex**) and for each rules (*rulename.cortex**).
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+### Dry run
+To check if the workflow will run fine, you can do a dry run : uncomment line 56 in `job.sh` and comment line 59, then run
+```bash
+sbatch job.sh
+```
+Check the snakemake.cortex*.out file in the `slurm_logs` directory, you should see a summary of the workflow.
 
-## License
-For open source projects, say how it is licensed.
+### Outputs
+These are the directories for the data produced by the workflow :
+- `01_raw_data_QC` contains all quality control ran on the reads. FastQC and LongQC create html reports on fastq and bam files respectively, reads stats are given by Genometools, and predictions of genome size and heterozygosity are given by Genomescope (in directory `04_kmer`).
+- `02_genome_assembly` contains 2 assemblies. The first one is in `01_raw_assembly`, it is the assembly obtained with hifiasm. The second one is in `02_after_purge_dups_assembly`, it is the hifiasm assembly after haplotigs removal by purge_dups. Both assemblies have a `01_assembly_QC` directory containing assembly statistics done by Genometools (in directory `assembly_stats`), BUSCO analyses (`busco`), k-mer profiles with KAT (`katplot`) and completedness and QV stats with Merqury (`merqury`) as well as assembled telomeres with FindTelomeres (`telomeres`).
+- An automatic report is generated in the RUN directory.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+```
+workflow_results
+├── 00_raw_data
+└── FILENAME
+    └── RUN
+        ├── 01_raw_data_QC
+        │   ├── 01_fastQC
+        │   ├── 02_longQC
+        │   ├── 03_genometools
+        |   └── 04_kmer
+        |       └── genomescope
+        └── 02_genome_assembly
+            ├── 01_raw_assembly
+            │   ├── 00_assembly
+            |   └── 01_assembly_QC
+            |       ├── assembly_stats
+            |       ├── busco
+            |       ├── katplot
+            |       ├── merqury
+            |       └── telomeres
+            └── 02_after_purge_dups_assembly
+                ├── 00_assembly
+                |   ├── hap1
+                |   └── hap2
+                └── 01_assembly_QC
+                    ├── assembly_stats
+                    ├── busco
+                    ├── katplot
+                    ├── merqury
+                    └── telomeres
+```
+
+
+## Common Snakemake errors
+### Unlock directory
+When you try to rerun the workflow after cancelling a job, you may have to unlock the results directory. To do so, go in `.config/snakemake_profile/slurm` and uncomment line 14 of `config.yaml`. Run the workflow once to unlock the directory (it should only take a few seconds). Still in `config.yaml`, comment line 14. The workflow will be able to run and create outputs.
