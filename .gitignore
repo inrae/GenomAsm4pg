@@ -1,0 +1,60 @@
+# In this gitignore, we want to set up a white list (usually gitignore works as
+    # a black list). So we first exclude all files from tracking and then include
+    # only the file patterns we are interested in (i.e. we don't want big fastq
+    # or bam files to be synchronized on our git remote server).
+
+
+# 1) First, exclude files from git tracking
+    # exclude ALL files from tracking using the '*' wildcard
+    # Note that we could be more more specific here but that might be risky as
+    # one cannot necessarily think about all files contained in a folder that
+    # should not be sync (especially sometimes remanent huge temp files
+    # remaining from aborted analysis run)
+*
+
+# 2) Second, set exceptions to be tracked by git:
+    # thanks to the '!' symbol, we can track files with specific patterns
+    # even though they would be listed in section 1 (as a matter of fact,
+    # in the present case, any possible file is listed in section 1 since
+    # the pattern is the '*' wildcard).
+    # Note that the '#' comments anything on its rights, meaning that patterns
+    # below are still effectively ignored from git tracking.
+    # If you want to (un)track a given file, just comment toggle the respective line.
+    # of course, one can add new patterns at will.
+!*.csv
+#!*.cfg
+!*.dummy
+#!*.err
+#!*.error
+#!*.errors
+!.gitignore
+#!*.html
+!*.jl
+!.keep
+#!*Makefile*
+!*.md
+#!*.ods
+#!*.odt
+#!*.pptx
+!*.pl
+!*.py
+!*README*
+!*.R
+!*.Rmd
+!*.r
+!*.rmd
+!*.sh
+#!*.template
+#!*.txt
+!*.yml
+!*.yaml
+!Snakefile
+!*.smk
+
+# 3) add a pattern to track the file patterns of section2 even if they are in
+    # subdirectories
+!*/
+
+# 4) specific files or folder to TRACK (the '**' sign means 'any path')
+
+# 5) specific folders to UNTRACK (wherever it may be in the treeview)
