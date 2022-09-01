@@ -1,0 +1,137 @@
+---
+title: "Assembly Report"
+author:
+    -
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+params:
+   rmd: "report.Rmd"
+output:
+  html_document:
+    highlight: tango
+    number_sections: no
+    theme: default
+    toc: yes
+    toc_depth: 3
+    toc_float:
+      collapsed: no
+      smooth_scroll: yes
+---
+
+----
+
+# `r snakemake@params[["id"]]` - run: `r snakemake@config[["run"]]`
+* Run : `r snakemake@config[["run"]]`
+* Hifiasm mode : `r snakemake@config[["mode"]]`
+
+----
+
+## Raw data QC
+![](`r snakemake@input[["genomescope"]]`)
+
+### Reads statistics
+```{r comment='', echo=FALSE}
+cat(readLines(snakemake@input[["gt_reads"]]), sep = '\n')
+```
+
+
+## Assembly QC - Hifiasm
+### Assembly statistics
+#### Hap 1
+```{r comment='', echo=FALSE}
+cat(readLines(snakemake@input[["gt_asm_1"]]), sep = '\n')
+```
+
+#### Hap 2
+```{r comment='', echo=FALSE}
+cat(readLines(snakemake@input[["gt_asm_2"]]), sep = '\n')
+```
+
+### K-mer profiles
+| Hap 1 | Hap 2 |
+|-------|-------|
+| ![](`r snakemake@input[["kplot_1"]]`) | ![](`r snakemake@input[["kplot_2"]]`) |
+
+### K-mer completeness and error rate
+Completeness
+
+```{r comment='', echo=FALSE}
+cat(readLines(snakemake@input[["merq_comp"]]), sep = '\n')
+```
+
+Error rate 
+```{r comment='', echo=FALSE}
+cat(readLines(snakemake@input[["merq_err"]]), sep = '\n')
+```
+
+### BUSCO
+#### Hap 1
+```{r comment='', echo=FALSE}
+cat(readLines(snakemake@input[["busco_1"]]), sep = '\n')
+```
+#### Hap 2
+```{r comment='', echo=FALSE}
+cat(readLines(snakemake@input[["busco_2"]]), sep = '\n')
+```
+
+### Telomeres
+Telomeres present in assembly
+
+#### Hap 1
+```{r comment='', echo=FALSE}
+cat(readLines(snakemake@input[["tel_1"]]), sep = '\n')
+```
+#### Hap 2
+```{r comment='', echo=FALSE}
+cat(readLines(snakemake@input[["tel_2"]]), sep = '\n')
+```
+
+
+## Assembly QC - After Purge_dups
+### Assembly statistics
+#### Hap 1
+```{r comment='', echo=FALSE}
+cat(readLines(snakemake@input[["P_gt_asm_1"]]), sep = '\n')
+```
+
+#### Hap 2
+```{r comment='', echo=FALSE}
+cat(readLines(snakemake@input[["P_gt_asm_2"]]), sep = '\n')
+```
+### K-mer profiles
+| Hap 1 | Hap 2 |
+|-------|-------|
+| ![](`r snakemake@input[["P_kplot_1"]]`) | ![](`r snakemake@input[["P_kplot_2"]]`) |
+
+### K-mer completeness and error rate
+Completeness
+
+```{r comment='', echo=FALSE}
+cat(readLines(snakemake@input[["P_merq_comp"]]), sep = '\n')
+```
+
+Error rate 
+```{r comment='', echo=FALSE}
+cat(readLines(snakemake@input[["P_merq_err"]]), sep = '\n')
+```
+
+### BUSCO
+#### Hap 1
+```{r comment='', echo=FALSE}
+cat(readLines(snakemake@input[["P_busco_1"]]), sep = '\n')
+```
+#### Hap 2
+```{r comment='', echo=FALSE}
+cat(readLines(snakemake@input[["P_busco_2"]]), sep = '\n')
+```
+
+### Telomeres
+Telomeres present in assembly
+
+#### Hap 1
+```{r comment='', echo=FALSE}
+cat(readLines(snakemake@input[["P_tel_1"]]), sep = '\n')
+```
+#### Hap 2
+```{r comment='', echo=FALSE}
+cat(readLines(snakemake@input[["P_tel_2"]]), sep = '\n')
+```

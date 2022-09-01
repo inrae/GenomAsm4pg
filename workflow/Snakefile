@@ -1,0 +1,113 @@
+configfile: ".config/masterconfig.yaml"
+
+###### Include all scripts & rules necessary to run the workflow ######
+### Scripts
+include: "scripts/get_files_id.py"
+include: "scripts/branches.py"
+
+### Rules
+## PRE ASSEMBLY
+# QC
+include: "rules/longqc.smk"
+include: "rules/fastqc.smk"
+# Statistics 
+include: "rules/genometools_on_raw_data.smk"
+include: "rules/jellyfish.smk"
+include: "rules/genomescope.smk"
+## ASSEMBLY
+if config["mode"] == "trio":
+    include: "rules/hifiasm_trio.smk"
+elif config["mode"] == "hi-c":
+    include: "rules/hifiasm_hic.smk"
+else:
+    include: "rules/hifiasm.smk"
+include: "rules/hap_gfa_to_fasta.smk"
+# Statistics
+include: "rules/genometools_on_assembly.smk"
+include: "rules/unzip_hap_fasta.smk"
+include: "rules/busco.smk"
+include: "rules/kat.smk"
+include: "rules/meryl.smk"
+include: "rules/merqury.smk"
+include: "modules/merqury_trio.smk"
+# Purging
+include: "rules/purge_dups.smk"
+include: "modules/purged_stats.smk"
+# Link final assembly
+include: "rules/link_final_asm.smk"
+# Telomeres
+include: "rules/find_telomeres.smk"
+## AUTOMATIC REPORT
+if config["mode"] == "trio":
+    include: "rules/report_trio.smk"
+else:
+    include: "rules/report.smk"
+
+###### get filenames for workflow ######
+if config["get_all_filename"]:
+    IDS=get_files_id(config["root"] + "/" + config["resdir"] + "/" + config["fastxdir"]),
+else:
+    IDS=config["IDS"]
+bamIDS=check_bam(config["root"] + "/" + config["resdir"] + "/" + config["bamdir"], IDS)
+fastqIDS=check_fastq(config["root"] + "/" + config["resdir"] + "/" + config["fastxdir"], IDS)
+
+###### results path ######
+res_path=config["root"] + "/" + config["resdir"]
+
+###### Target files ######
+## raw data stats
+longqc_output = expand("{resdir}/{Bid}/{run}/{stepdir}/{tooldir}", resdir=res_path, run=config["run"], stepdir=config["qcdir"], tooldir=config["lqc"], Bid=bamIDS),
+fastqc_output =  expand("{resdir}/{Fid}/{run}/{stepdir}/{tooldir}/{Fid}_fastqc.{ext}", resdir=res_path, run=config["run"], stepdir=config["qcdir"], tooldir=config["fqc"], Fid=fastqIDS, ext=["html", "zip"])
+genometools_read_output = expand("{resdir}/{id}/{run}/{stepdir}/{tooldir}/{id}.RawStat.txt", resdir=res_path, run=config["run"], stepdir=config["qcdir"], tooldir=config["gentools"], id=IDS)
+genomescope_output = expand("{resdir}/{id}/{run}/{stepdir}/{tooldir}/genomescope", resdir=res_path, run=config["run"], stepdir=config["qcdir"], tooldir=config["kmer"], id=IDS)
+## assembly stats
+genometools_assem_output =  expand("{resdir}/{id}/{run}/{stepdir}/{asmdir}/{subdir}/assembly_stats/{id}_hap{n}.AStats.txt", resdir=res_path, run=config["run"], stepdir=config["assembdir"], asmdir=config["asm_raw"], subdir=config["asm_qc"], id=IDS, n=["1", "2"])
+busco_output = expand("{resdir}/{id}/{run}/{stepdir}/{asmdir}/{subdir}/busco/{id}_hap{n}", resdir=res_path, run=config["run"], stepdir=config["assembdir"], asmdir=config["asm_raw"], subdir=config["asm_qc"], id=IDS, n=["1", "2"])
+kat_output =  expand("{resdir}/{id}/{run}/{stepdir}/{asmdir}/{subdir}/katplot/hap{n}/{id}_hap{n}.katplot.png", resdir=res_path, run=config["run"], stepdir=config["assembdir"], asmdir=config["asm_raw"], subdir=config["asm_qc"], id=IDS, n=["1", "2"])
+telomeres_output = expand("{resdir}/{id}/{run}/{stepdir}/{asmdir}/{subdir}/telomeres/{id}_hap{n}_telomeres.txt", resdir=res_path, run=config["run"], stepdir=config["assembdir"], asmdir=config["asm_raw"], subdir=config["asm_qc"], id=IDS, n=["1", "2"])
+## purged assembly stats
+purge_busco_output = expand("{resdir}/{id}/{run}/{stepdir}/{asmdir}/{subdir}/busco/{id}_purged_hap{n}", resdir=res_path, run=config["run"], stepdir=config["assembdir"], asmdir=config["asm_purged"], subdir=config["asm_qc"], id=IDS, n=["1", "2"])
+purge_genometools_output =expand("{resdir}/{id}/{run}/{stepdir}/{asmdir}/{subdir}/assembly_stats/{id}_purged_hap{n}.AStats.txt", resdir=res_path, run=config["run"], stepdir=config["assembdir"], asmdir=config["asm_purged"], subdir=config["asm_qc"], id=IDS, n=["1", "2"])
+purge_kat_output = expand("{resdir}/{id}/{run}/{stepdir}/{asmdir}/{subdir}/katplot/hap{n}/{id}_purged_hap{n}.katplot.png", resdir=res_path, run=config["run"], stepdir=config["assembdir"], asmdir=config["asm_purged"], subdir=config["asm_qc"], id=IDS, n=["1", "2"])
+purge_telomeres_output = expand("{resdir}/{id}/{run}/{stepdir}/{asmdir}/{subdir}/telomeres/{id}_hap{n}_purged_telomeres.txt", resdir=res_path, run=config["run"], stepdir=config["assembdir"], asmdir=config["asm_purged"], subdir=config["asm_qc"], id=IDS, n=["1", "2"])
+## cutoffs eval
+cut_eval = expand("{resdir}/{id}/{run}/{stepdir}/{asmdir}/{subdir}/hap{n}/cutoffs_graph_hap{n}.png", resdir=res_path, run=config["run"], stepdir=config["assembdir"], asmdir=config["asm_purged"], subdir=config["asm"], id=IDS, n=["1", "2"])
+## symbolic link to final assembly
+symb_link = expand("{resdir}/{id}/{run}/{stepdir}/{id}_hap{n}.fa", resdir=res_path, run=config["run"], stepdir=config["assembdir"], id=IDS, n=["1", "2"])
+## automatic report
+report_output = expand("{resdir}/{id}/{run}/report_{id}_{run}.html", resdir=res_path, run=config["run"], id=IDS)
+
+rule_all_input_list = [
+    longqc_output,
+    fastqc_output,
+    genometools_read_output,
+    genomescope_output,
+    genometools_assem_output,
+    busco_output,
+    kat_output,
+    telomeres_output,
+    purge_busco_output,
+    purge_genometools_output,
+    purge_kat_output,
+    purge_telomeres_output,
+    cut_eval,
+    symb_link,
+    report_output
+]
+
+## include different merqury output depending on hifiasm mode (trio or default/hi-c)
+if config["mode"] == "trio":
+    merqury_trio_target = expand("{resdir}/{id}/{run}/{stepdir}/{asmdir}/{subdir}/merqury/merqury_trio.qv", resdir=res_path, run=config["run"], stepdir=config["assembdir"], asmdir=config["asm_raw"], subdir=config["asm_qc"], id=IDS, n=["1", "2"])
+    purge_merqury_trio_target = expand("{resdir}/{id}/{run}/{stepdir}/{asmdir}/{subdir}/merqury/purge_merqury_trio.{id}_hap{n}.purged.100_20000.phased_block.stats", resdir=res_path, run=config["run"], stepdir=config["assembdir"], asmdir=config["asm_purged"], subdir=config["asm_qc"], id=IDS, n=["1", "2"])
+    rule_all_input_list.append(merqury_trio_target)
+    rule_all_input_list.append(purge_merqury_trio_target)
+else:
+    merqury_ouput =  expand("{resdir}/{id}/{run}/{stepdir}/{asmdir}/{subdir}/merqury/merqury.qv", resdir=res_path, run=config["run"], stepdir=config["assembdir"], asmdir=config["asm_raw"], subdir=config["asm_qc"], id=IDS)
+    purge_merqury_output = expand("{resdir}/{id}/{run}/{stepdir}/{asmdir}/{subdir}/merqury/purge_merqury.qv", resdir=res_path, run=config["run"], stepdir=config["assembdir"], asmdir=config["asm_purged"], subdir=config["asm_qc"], id=IDS)
+    rule_all_input_list.append(merqury_ouput)
+    rule_all_input_list.append(purge_merqury_output)
+
+#### target files
+rule all:
+    input:
+        all_input = rule_all_input_list
