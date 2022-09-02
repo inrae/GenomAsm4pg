@@ -120,6 +120,14 @@ Create a directory named `img` in the directory `workflow` and copy `merqury.sif
 The current profile is made for SLURM. To run this workflow on another HPC, create another profile (https://github.com/Snakemake-Profiles) and add it in the `.config/snakemake_profile` directory. Change the `CLUSTER_CONFIG` and `PROFILE` variables in `job.sh` and `prejob.sh`.
 If you are using the current SLURM setup, change line 13 to your email adress in the `cluster_config`.yml file.
 
+### SLURM logs
+SLURM submission scripts, prejob.sh and job.sh, output standard and error output into slurm_logs directory. This directory must exist before running any of these submission script else slurm will refuse to submit these jobs.
+
+```
+# create if not exist
+mkdir -p slurm_logs
+```
+
 ### Workflow execution
 Go in the `Assemb_v2_Snakemake_FullAuto` directory to run the bash scripts.
 
