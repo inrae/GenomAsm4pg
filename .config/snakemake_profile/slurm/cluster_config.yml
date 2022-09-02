@@ -1,0 +1,61 @@
+### default ressources used by snakemake (applied to all rules)
+__default__:
+  job-name: "{rule}"
+  time: "120:00:00" # max run time "hours:minutes:seconds"
+  ntasks: 1 # nb of processes
+  cpus-per-task: 4 # nb of cores for each process(1 process)
+  mem: "60G"
+  nodes: 1 # Requirements nodes/servers (default: 1)
+  ntasks-per-node: 1 # Requirements cpu/core/task (default: 1)
+  output: "slurm_logs/{rule}.%N.%j.out"
+  error: "slurm_logs/{rule}.%N.%j.err"
+  mail-type: END,FAIL #email notification
+  mail-user: sukanya.denni@univ-rouen.fr
+
+### rule resources
+# convert with seqtk
+convert_to_fasta:
+  cpus: 10
+
+# BUSCO
+busco:
+  mem: "100G"
+  cpus: 20
+
+# assembly
+hifiasm:
+  mem: "250G"
+  cpus: 20
+
+hifiasm_hic:
+  mem: "250G"
+  cpus: 20
+
+hifiasm_trio:
+  mem: "250G"
+  cpus: 20
+
+# purge_dups
+purge_dups:
+  mem: "100G"
+  cpus: 20
+
+purge_dups_cutoffs:
+  mem: "100G"
+  cpus: 20
+
+# merqury
+merqury:
+  cpus: 20
+
+meryl:
+  cpus: 10
+
+meryl_trio:
+  cpus: 10
+
+merqury_trio:
+  cpus: 20
+
+purge_merqury_trio:
+  cpus: 20

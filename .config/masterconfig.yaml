@@ -1,0 +1,57 @@
+# absolute path to your desired output path
+root: /your/output/path
+
+####################### prejob - data preparation #######################
+# path to tar data
+data: /path
+
+# list of tar names
+get_all_tar_filename: True
+tarIDS: "tar_filename"
+
+####################### job - workflow #######################
+# list of fasta.gz names
+get_all_filename: False
+IDS: "fasta_filename_1, fasta_filename_2"
+
+# run name
+run: run00
+
+# busco lineage
+busco:
+  lineage: eudicots_odb10
+
+# hifiasm mode - 3 options: hi-c, trio or default
+mode : default
+
+### DATASETS
+# Trio datasets
+
+# Hi-C datasets
+
+
+####################### workflow output directories #######################
+# results directory
+resdir: workflow_results
+
+### PREJOB
+# extracted raw data
+rawdir: 00_raw_data
+bamdir: 00_raw_data/bam_files
+fastxdir: 00_raw_data/fastx_files
+
+### JOB
+# QC
+qcdir: 01_raw_data_QC
+fqc: 01_fastQC
+lqc: 02_longQC
+gentools: 03_genometools
+kmer: 04_kmer
+
+# assembly
+assembdir: 02_genome_assembly
+asm_raw: 01_raw_assembly
+asm_purged: 02_after_purge_dups_assembly
+asm_conta: 03_uncontaminated_assembly
+asm: 00_assembly
+asm_qc: 01_assembly_QC
