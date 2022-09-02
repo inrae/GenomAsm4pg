@@ -14,7 +14,7 @@
 #SBATCH -o slurm_logs/snakemake_prejob.%N.%j.out
 #SBATCH -e slurm_logs/snakemake_prejob.%N.%j.err
 #SBATCH --mail-type=END,FAIL
-#SBATCH --mail-user=sukanya.denni@univ-rouen.fr #Mon adresse mail
+#SBATCH --mail-user=sukanya.denni@univ-rouen.fr
 ################################################################################
 
 # Useful information to print
