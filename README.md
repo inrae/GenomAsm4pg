@@ -1,4 +1,4 @@
-# Automating oak genome assembly workflow
+# Assembly workflow for pangenome
 This workflow uses [Snakemake](https://snakemake.readthedocs.io/en/stable/) to quickly assemble genomes with a HTML report summarizing obtained assembly stats. This workflow uses PacBio HiFi data.
 
 A first script (```prejob.sh```) prepares the data until fasta.gz files are obtained. A second script (```job.sh```) runs the genome assembly and stats.
@@ -8,7 +8,7 @@ A first script (```prejob.sh```) prepares the data until fasta.gz files are obta
 ## Table of contents
 [TOC]
 
-## Directory structure
+## Repo directory structure
 
 ```
 ├── README.md
@@ -20,19 +20,18 @@ A first script (```prejob.sh```) prepares the data until fasta.gz files are obta
 │   ├── scripts
 │   ├── pre-job_snakefiles
 |   └── Snakefile
-├── .config
-|   ├── snakemake_profile
-|   |  └── slurm
-|   |       ├── cluster_config.yml
-|   |       ├── config.yaml
-|   |       ├── CookieCutter.py
-|   |       ├── settings.json
-|   |       ├── slurm_utils.py
-|   |       ├── slurm-jobscript.sh
-|   |       ├── slurm-status.py
-|   |       └── slurm-submit.py
-|   └── masterconfig.yaml
-└── workflow_results
+└──  .config
+    ├── snakemake_profile
+    |  └── slurm
+    |       ├── cluster_config.yml
+    |       ├── config.yaml
+    |       ├── CookieCutter.py
+    |       ├── settings.json
+    |       ├── slurm_utils.py
+    |       ├── slurm-jobscript.sh
+    |       ├── slurm-status.py
+    |       └── slurm-submit.py
+    └── masterconfig.yaml
 ```
 
 ## Requirements
@@ -85,14 +84,41 @@ All images here will be pulled automatically by Snakemake the first time you run
         - image version: 1.2.5--h7132678_2 ([link](https://quay.io/repository/biocontainers/purge_dups?tab=tags))
 
 ## How to run the workflow
-### Installation
 
 ### Merqury image manipulation
-Follow the steps in this [issue](https://forgemia.inra.fr/ludovic.duvaux/woodysv/-/issues/7#note_89817).
-Then create a directory named `img` in the directory `workflow` and copy `merqury.sif` there.
+This is essential to get correct Merqury plots.
+
+1. Download msttcorefonts
+
+```
+sudo apt-get update
+wget http://ftp.de.debian.org/debian/pool/contrib/m/msttcorefonts/ttf-mscorefonts-installer_3.7_all.deb -P ~/Downloads
+sudo apt install ~/Downloads/ttf-mscorefonts-installer_3.7_all.deb -y
+sudo apt-mark hold ttf-mscorefonts-installer
+```
+
+2. Add the fonts to the image with [Singularity](https://docs.sylabs.io/guides/3.0/user-guide/index.html)
+
+```
+singularity pull docker://quay.io/biocontainers/merqury:1.3--hdfd78af_0
+singularity build --sandbox merqury_sandbox merqury_1.3--hdfd78af_0.sif
+```
+
+Create a new directory in the merqury_sandbox directory and copy the fonts here.
+
+```
+mkdir -p merqury_sandbox/usr/share/fonts/truetype
+cp -r /usr/share/fonts/truetype/msttcorefonts merqury_sandbox/usr/share/fonts/truetype
+singularity build merqury.sif merqury_sandbox
+```
+
+3. Add the Merqury image to the workflow
+
+Create a directory named `img` in the directory `workflow` and copy `merqury.sif` there.
 
 ### Profile setup
-The current profile is made for SLURM. To run this workflow on another HPC, create another profile (https://github.com/Snakemake-Profiles) and add it in the `.config/snakemake_profile` directory. Change the `CLUSTER_CONFIG` and `PROFILE` variables in `job.sh` and `prejob.sh`
+The current profile is made for SLURM. To run this workflow on another HPC, create another profile (https://github.com/Snakemake-Profiles) and add it in the `.config/snakemake_profile` directory. Change the `CLUSTER_CONFIG` and `PROFILE` variables in `job.sh` and `prejob.sh`.
+If you are using the current SLURM setup, change line 13 to your email adress in the `cluster_config`.yml file.
 
 ### Workflow execution
 Go in the `Assemb_v2_Snakemake_FullAuto` directory to run the bash scripts.
@@ -114,7 +140,7 @@ Then run
 ```bash
 sbatch prejob.sh
 ```
-This will create multiple directories to prepare the data for the workflow. You will end up with a `bam_files` directory containing all .bam, renamed as the tar filename if your data is named "ccs.bam", and a `fastx_files` directory containing all *fasta.gz* and *fastq.gz*. The `extract` directory contains all other files that were in the tar ball.
+This will create multiple directories to prepare the data for the workflow. You will end up with a `bam_files` directory containing all *bam* files, renamed as the tar filename if your data was named "ccs.bam", and a `fastx_files` directory containing all *fasta* and *fastq* files. The `extract` directory contains all other files that were in the tar ball.
 ```
 workflow_results
 └── 00_raw_data
@@ -123,25 +149,23 @@ workflow_results
     └── fastx_files
 ```
 
-You can add other datasets here if necessary. 
-
 2. **Running the workflow**
 
-The `fastx_files` directory will be the starting point for the assembly workflow.
+The `fastx_files` directory will be the starting point for the assembly workflow. You can add other datasets but the workflow needs a *fasta.gz* file. If *bam* files or *fastq.gz* files are available, the workflow runs raw data quality control steps.
 
 You will have to modify other variables in file `.config/masterconfig.yaml`:
 - `get_all_filename: True` will run the workflow with all *fasta.gz* in the `fastx_files` directory as input. If you want to choose the input for the workflow, use `get_all_filename: False` and give the fasta filenames as a list in `IDS`.
 - Choose your run name with `run`.
 - Specify the organism ploidy with `ploidy`.
 - Choose the BUSCO lineage with `lineage`.
-- There are 3 modes to run hifiasm: only with Hifi data, in trio or with Hifi and Hi-C data. To choose the mode, modify the variable `mode` in file `.config/masterconfig.yaml` to either :
-    - `default`
-    - `trio`
+- There are 3 modes to run hifiasm. In all cases, the organism have to be sequenced in PacBio HiFi. To choose the mode, modify the variable `mode` in file `.config/masterconfig.yaml` to either :
+    - `default` for a HiFi-only assembly.
+    - `trio` if you have parental reads (either HiFi or short reads) in addition to the sequencing of the organism.
         - Add a key corresponding to your filename and modify the variables `p1` and `p2` to be the parental reads. Supported filetypes are *fasta*, *fasta.gz*, *fastq* and *fastq.gz*.
-    - `hi-c`
+    - `hi-c` if the organism has been sequenced in paired-end Hi-C as well.
         - Add a key corresponding to your filename an modify the variables `r1` and `r2` to be the paired-end Hi-C reads. Supported filetypes are *fasta*, *fasta.gz*, *fastq* and *fastq.gz*.
 
-*For example*
+For example
 ```yaml
 # trio datasets
 sibling_1_dataset_placeholder:
@@ -172,17 +196,17 @@ sbatch job.sh
 All the slurm output logs are in the `slurm_logs` directory. There are .out and .err files for the worklow (*snakemake.cortex**) and for each rules (*rulename.cortex**).
 
 ### Dry run
-To check if the workflow will run fine, you can do a dry run : uncomment line 56 in `job.sh` and comment line 59, then run
+To check if the workflow will run fine, you can do a dry run: uncomment line 56 in `job.sh` and comment line 59, then run
 ```bash
 sbatch job.sh
 ```
 Check the snakemake.cortex*.out file in the `slurm_logs` directory, you should see a summary of the workflow.
 
 ### Outputs
-These are the directories for the data produced by the workflow :
+These are the directories for the data produced by the workflow:
+- An automatic report is generated in the `RUN` directory.
 - `01_raw_data_QC` contains all quality control ran on the reads. FastQC and LongQC create html reports on fastq and bam files respectively, reads stats are given by Genometools, and predictions of genome size and heterozygosity are given by Genomescope (in directory `04_kmer`).
 - `02_genome_assembly` contains 2 assemblies. The first one is in `01_raw_assembly`, it is the assembly obtained with hifiasm. The second one is in `02_after_purge_dups_assembly`, it is the hifiasm assembly after haplotigs removal by purge_dups. Both assemblies have a `01_assembly_QC` directory containing assembly statistics done by Genometools (in directory `assembly_stats`), BUSCO analyses (`busco`), k-mer profiles with KAT (`katplot`) and completedness and QV stats with Merqury (`merqury`) as well as assembled telomeres with FindTelomeres (`telomeres`).
-- An automatic report is generated in the RUN directory.
 
 ```
 workflow_results
