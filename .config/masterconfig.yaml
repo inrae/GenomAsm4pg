@@ -1,5 +1,5 @@
 # absolute path to your desired output path
-root: /your/output/path
+root: /gpfs/scratch/sdenni
 
 ####################### prejob - data preparation #######################
 # path to tar data
@@ -16,6 +16,9 @@ IDS: "fasta_filename_1, fasta_filename_2"
 
 # run name
 run: run00
+
+# ploidy
+ploidy: 2
 
 # busco lineage
 busco:
