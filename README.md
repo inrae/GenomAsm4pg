@@ -70,7 +70,7 @@ All images here will be pulled automatically by Snakemake the first time you run
     - **genometools** (same as Pre-assembly)
 - Assembly quality control
     - **busco** (https://gitlab.com/ezlab/busco)
-        - image version: v5.1.2_cv1 ([link](https://hub.docker.com/r/ezlabgva/busco/tags))
+        - image version: v5.3.1_cv1 ([link](https://hub.docker.com/r/ezlabgva/busco/tags))
     - **kat** (https://github.com/TGAC/KAT)
         - image version: 2.4.1--py35h355e19c_3 ([link](https://quay.io/repository/biocontainers/kat))
 - Error rate, QV & phasing
@@ -82,6 +82,11 @@ All images here will be pulled automatically by Snakemake the first time you run
 - Haplotigs and overlaps purging 
     - **purge_dups** (https://github.com/dfguan/purge_dups)
         - image version: 1.2.5--h7132678_2 ([link](https://quay.io/repository/biocontainers/purge_dups?tab=tags))
+        - **matplotlib** image version: v0.11.5-5-deb-py3_cv1 ([link](https://hub.docker.com/r/biocontainers/matplotlib-venn/tags))
+
+**Report**
+- **R markdown**
+    - image version: 4.0.3 ([link](https://hub.docker.com/r/reslp/rmarkdown/tags))
 
 ## How to run the workflow
 
