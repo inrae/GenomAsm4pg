@@ -15,10 +15,8 @@ rule purge_dups_cutoffs:
     threads: 20
     resources:
         mem_mb=100000
-    envmodules:
-        "purge_dups/1.2.5"
     container:
-        "docker://quay.io/biocontainers/purge_dups:1.2.5--h7132678_2"
+        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/purge_dups1.2.5"
     shell:
         # generate paf file
         "minimap2 -xasm20 {input.assembly} {input.reads} | gzip -c - > {output.paf} && "
@@ -40,10 +38,8 @@ rule purge_dups:
     threads: 20
     resources:
         mem_mb=100000
-    envmodules:
-        "purge_dups/1.2.5"
     container:
-        "docker://quay.io/biocontainers/purge_dups:1.2.5--h7132678_2"
+        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/purge_dups1.2.5"
     shell:
         # split assembly & self-self alignment
         "split_fa {input.assembly} > {output.split} && "
@@ -62,6 +58,6 @@ rule cutoffs_eval:
     params:
         dir="{resdir}/{id}/{run}/{stepdir}/" + config["asm_purged"] + "/" + config["asm"] + "/hap{n}",
     container:
-        "docker://biocontainers/matplotlib-venn:v0.11.5-5-deb-py3_cv1"
+        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/matplotlib0.11.5"
     shell:
         "python3 workflow/scripts/hist_plot.py -c {input} {params.dir}/PB.stat {output}"

@@ -11,10 +11,8 @@ rule kat:
         prefix="{id}_hap{n}",
         path="{resdir}/{id}/{run}/{stepdir}/{asmdir}/{subdir}/katplot/hap{n}/{id}_hap{n}"
     threads: 4
-    envmodules:
-        "kat/2.4.1"
     container: 
-        "docker://quay.io/biocontainers/kat:2.4.1--py35h355e19c_3"
+        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/kat2.4.1"
     shell:
         "kat comp -o {params.path} -t {threads} -m 21 --output_type png -v {input.jellyfish} {input.hap} && "
         "kat plot spectra-cn -x 200 -o {params.path}.katplot.png {params.path}-main.mx"

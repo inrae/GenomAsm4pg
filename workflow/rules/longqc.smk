@@ -9,10 +9,8 @@ rule longqc:
     threads: 8
     resources:
         mem_mb=60000
-    envmodules:
-        "LongQC/1.2.0"
     container:
-        "docker://grpiccoli/longqc:latest"
+        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/longqc1.2.0c"
     shell:
         "longQC sampleqc -x pb-hifi -o {output} {input}"
         # "LongQC sampleqc -x pb-hifi -o {output} {input}"

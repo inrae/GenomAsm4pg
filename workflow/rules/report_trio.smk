@@ -60,7 +60,7 @@ rule report:
         p1 = get_p1,
         p2 = get_p2
     container:
-        "docker://reslp/rmarkdown:4.0.3"
+        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/rmarkdown4.0.3"
     script:
         "../scripts/report_trio.Rmd"
 

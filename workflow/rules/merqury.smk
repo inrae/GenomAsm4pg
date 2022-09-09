@@ -27,7 +27,7 @@ rule merqury:
     resources:
         mem_mb=60000
     container:
-        "workflow/img/merqury.sif"
+        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/merqury1.3"
     shell:
         "cd {params.path} && "
         "export MERQURY=/usr/local/share/merqury && "

@@ -34,10 +34,8 @@ rule smrtlink_index:
         config["root"] + "/" + config["resdir"] + "/" + config["bamdir"] + "/{id}.bam"
     output:
         config["root"] + "/" + config["resdir"] + "/" + config["bamdir"] + "/{id}.bam.pbi"
-    envmodules:
-        "smrtlink"
     container:
-        "docker://bryce911/smrtlink:9.0.0.92188"
+        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/smrtlink9.0"
     shell:
         "pbindex {input}"
 
@@ -51,10 +49,8 @@ rule smrtlink_bam_to_fastq:
     params:
         prefix=config["root"] + "/" + config["resdir"] + "/" + config["fastxdir"] + "/{id}"
     priority: 2
-    envmodules:
-        "smrtlink"
     container:
-        "docker://bryce911/smrtlink:9.0.0.92188"
+        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/smrtlink9.0"
     shell:
         "bam2fastq -o {params.prefix} {input.bam}"
 
@@ -68,9 +64,7 @@ rule smrtlink_bam_to_fasta:
     params:
         prefix=config["root"] + "/" + config["resdir"] + "/" + config["fastxdir"] + "/{id}"
     priority: 2
-    envmodules:
-        "smrtlink"
     container:
-        "docker://bryce911/smrtlink:9.0.0.92188"
+        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/smrtlink9.0"
     shell:
         "bam2fasta -o {params.prefix} {input.bam}"

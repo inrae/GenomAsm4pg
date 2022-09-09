@@ -19,7 +19,7 @@ rule meryl_trio:
     resources:
         mem_mb=60000
     container:
-        "workflow/img/merqury.sif"
+        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/merqury1.3"
     shell:
         "meryl k=21 count {input.p1} output {output.p1} && "
         "meryl k=21 count {input.p2} output {output.p2}"
@@ -71,7 +71,7 @@ rule merqury_trio:
     resources:
         mem_mb=60000
     container:
-        "workflow/img/merqury.sif"
+        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/merqury1.3"
     shell:
         "cd {params.path} && "
         "export MERQURY=/usr/local/share/merqury && "
@@ -130,7 +130,7 @@ rule purge_merqury_trio:
     resources:
         mem_mb=60000
     container:
-        "workflow/img/merqury.sif"
+        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/merqury1.3"
     shell:
         "cd {params.path} && "
         "export MERQURY=/usr/local/share/merqury && "

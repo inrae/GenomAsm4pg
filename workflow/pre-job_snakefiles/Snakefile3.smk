@@ -39,6 +39,6 @@ rule convert_to_fasta:
         path=config["root"] + "/" + config["resdir"] + "/" + config["fastxdir"]
     threads: 10
     container:
-        "docker://nanozoo/seqtk:1.3--dc0d16b"
+        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/seqtk1.3"
     shell:
         "seqtk seq -a {input} | gzip > {output}"

@@ -7,9 +7,7 @@ rule genometools_on_raw_data:
         "{resdir}/{id}/{run}/{stepdir}/{tooldir}/{id}.RawStat.txt"
     priority: 1
     threads: 4
-    envmodules:
-        "genometools/1.5.7"
     container:
-        "docker://biocontainers/genometools:v1.5.9ds-4-deb_cv1"
+        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/genometools1.5.9"
     shell:
         "gt seqstat {input} > {output}"

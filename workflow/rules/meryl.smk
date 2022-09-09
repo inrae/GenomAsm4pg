@@ -8,6 +8,6 @@ rule meryl:
     resources:
         mem_mb=60000
     container:
-        "workflow/img/merqury.sif"
+        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/merqury1.3"
     shell:
         "meryl k=21 count {input} output {output}"

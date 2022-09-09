@@ -9,9 +9,7 @@ rule fastqc:
         output_path="{resdir}/{Fid}/{run}/{stepdir}/{tooldir}/"
     priority: 1
     threads: 4
-    envmodules:
-        "FastQC/0.11.5"
     container:
-        "docker://biocontainers/fastqc:v0.11.5_cv4"
+        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/fastqc0.11.5"
     shell:
         "fastqc -o {params.output_path} {input}"

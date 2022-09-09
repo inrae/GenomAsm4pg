@@ -10,10 +10,7 @@ rule genomescope:
         ploidy = config["ploidy"]
     priority: 1
     threads: 4
-    envmodules:
-        "genomescope/1.0.0"
     container:
-        "docker://abner12/genomescope:2.0"
+        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/genomescope2.0"
     shell:
         "genomescope.R -k 21 -i {input} -o {output[0]} -p {params.ploidy}"
-        # "genomescope -k 21 -i {input} -o {output[0]}"

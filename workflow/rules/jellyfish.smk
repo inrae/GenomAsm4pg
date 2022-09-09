@@ -11,10 +11,8 @@ rule jellyfish:
     threads: 4
     resources:
         mem_mb=40000
-    envmodules:
-        "jellyfish/2.3.0"
     container:
-        "docker://quay.io/biocontainers/kmer-jellyfish:2.3.0--h9f5acd7_3"
+        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/jellyfish2.3.0"
     shell:
         "jellyfish count -m 21 -s 100M -t 10 -o {output[0]} -C <(zcat {input}) && "
         "jellyfish histo -h 1000000 -t 10 {output[0]} > {output[1]}"

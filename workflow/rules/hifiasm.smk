@@ -11,9 +11,7 @@ rule hifiasm:
     threads: 20
     resources:
         mem_mb=250000
-    envmodules:
-        "hifiasm/0.16.1"
     container:
-        "docker://dmolik/hifiasm:latest"
+        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/hifiasm0.16.1"
     shell:
         "hifiasm -l3 -o {params.prefix} -t {threads} {input}"

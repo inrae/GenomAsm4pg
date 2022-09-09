@@ -17,7 +17,7 @@ rule yak:
         p1 = config["root"] + "/" + config["resdir"] + "/{id}/{run}/{stepdir}/" + config["asm_raw"] + "/" + config["asm"] + "/yak/{id}_parent1.yak",
         p2 = config["root"] + "/" + config["resdir"] + "/{id}/{run}/{stepdir}/" + config["asm_raw"] + "/" + config["asm"] + "/yak/{id}_parent2.yak"
     container:
-        "docker://dmolik/hifiasm:latest"
+        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/hifiasm0.16.1"
     shell:
         "yak count -k31 -b37 -t16 -o {output.p1} {input.p1} && "
         "yak count -k31 -b37 -t16 -o {output.p2} {input.p2}"
@@ -36,9 +36,7 @@ rule hifiasm_trio:
     threads: 20
     resources:
         mem_mb=250000
-    envmodules:
-        "hifiasm/0.16.1"
     container:
-        "docker://dmolik/hifiasm:latest"
+        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/hifiasm0.16.1"
     shell:
         "hifiasm -o {params.prefix} -t {threads} -1 {input.p1} -2 {input.p2} {input.child}"

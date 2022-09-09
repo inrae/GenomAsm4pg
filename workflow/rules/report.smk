@@ -35,7 +35,7 @@ rule report:
         id="{id}",
         mode=config["mode"]
     container:
-        "docker://reslp/rmarkdown:4.0.3"
+        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/rmarkdown4.0.3"
     script:
         "../scripts/report.Rmd"
 
