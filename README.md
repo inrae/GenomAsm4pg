@@ -40,6 +40,7 @@ A first script (```prejob.sh```) prepares the data until fasta.gz files are obta
 
 ## Workflow steps, programs & Docker images pulled by Snakemake
 All images here will be pulled automatically by Snakemake the first time you run the workflow. It may take some time. Images are only downloaded once and reused automatically by the workflow.
+Images are stored on the project's container registry but come from various container libraries:
 
 **Pre-assembly**
 - Conversion of PacBio bam to fasta & fastq
@@ -89,37 +90,6 @@ All images here will be pulled automatically by Snakemake the first time you run
     - image version: 4.0.3 ([link](https://hub.docker.com/r/reslp/rmarkdown/tags))
 
 ## How to run the workflow
-
-### Merqury image manipulation
-This is essential to get correct Merqury plots.
-
-1. Download msttcorefonts
-
-```
-sudo apt-get update
-wget http://ftp.de.debian.org/debian/pool/contrib/m/msttcorefonts/ttf-mscorefonts-installer_3.7_all.deb -P ~/Downloads
-sudo apt install ~/Downloads/ttf-mscorefonts-installer_3.7_all.deb -y
-sudo apt-mark hold ttf-mscorefonts-installer
-```
-
-2. Add the fonts to the image with [Singularity](https://docs.sylabs.io/guides/3.0/user-guide/index.html)
-
-```
-singularity pull docker://quay.io/biocontainers/merqury:1.3--hdfd78af_0
-singularity build --sandbox merqury_sandbox merqury_1.3--hdfd78af_0.sif
-```
-
-Create a new directory in the merqury_sandbox directory and copy the fonts here.
-
-```
-mkdir -p merqury_sandbox/usr/share/fonts/truetype
-cp -r /usr/share/fonts/truetype/msttcorefonts merqury_sandbox/usr/share/fonts/truetype
-singularity build merqury.sif merqury_sandbox
-```
-
-3. Add the Merqury image to the workflow
-
-Create a directory named `img` in the directory `workflow` and copy `merqury.sif` there.
 
 ### Profile setup
 The current profile is made for SLURM. To run this workflow on another HPC, create another profile (https://github.com/Snakemake-Profiles) and add it in the `.config/snakemake_profile` directory. Change the `CLUSTER_CONFIG` and `PROFILE` variables in `job.sh` and `prejob.sh`.
