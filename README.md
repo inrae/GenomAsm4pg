@@ -223,7 +223,7 @@ workflow_results
                     └── telomeres
 ```
 
-## Known problems
+## Known problems/errors
 ### HPC
 The workflow does not work if the HPC does not allow a job to run other jobs.
 ### BUSCO
