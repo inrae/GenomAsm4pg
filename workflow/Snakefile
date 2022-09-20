@@ -45,7 +45,7 @@ else:
 
 ###### get filenames for workflow ######
 if config["get_all_filename"]:
-    IDS=get_files_id(config["root"] + "/" + config["resdir"] + "/" + config["fastxdir"]),
+    IDS=get_files_id(config["root"] + "/" + config["resdir"] + "/" + config["fastxdir"])
 else:
     IDS=config["IDS"]
 bamIDS=check_bam(config["root"] + "/" + config["resdir"] + "/" + config["bamdir"], IDS)
@@ -80,7 +80,7 @@ report_output = expand("{resdir}/{id}/{run}/report_{id}_{run}.html", resdir=res_
 rule_all_input_list = [
     longqc_output,
     fastqc_output,
-    genometools_read_output,
+    # genometools_read_output,
     genomescope_output,
     genometools_assem_output,
     busco_output,
