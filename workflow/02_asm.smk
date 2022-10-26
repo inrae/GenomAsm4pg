@@ -76,8 +76,8 @@ TO_FA_CMD = r"""/^S/{print ">"$2;print $3}"""
 
 rule hap_gfa_to_fasta:
     input:
-        hap1 = lambda wildcards: hifiasm_mode_hap1(config["mode"]),
-        hap2 = lambda wildcards: hifiasm_mode_hap2(config["mode"])
+        hap1 = get_mode_hap1,
+        hap2 = get_mode_hap2
     output:
         hap1_fa =  config["root"] + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}_hap1.fa.gz",
         hap2_fa =  config["root"] + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}_hap2.fa.gz"

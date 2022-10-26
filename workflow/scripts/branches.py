@@ -1,7 +1,9 @@
 from snakemake.io import expand
 
-### choose hifiasm mode
-def hifiasm_mode_hap1(mode):
+### which hifiasm mode
+def get_mode_hap1(wildcards):
+    id_name = wildcards.id
+    mode = config[f'{id_name}']["mode"]
     if mode == "hi-c":
         return(str(rules.hifiasm_hic.output.hap1))
     elif mode == "trio":
@@ -9,7 +11,9 @@ def hifiasm_mode_hap1(mode):
     elif mode == "default":
         return(str(rules.hifiasm.output.hap1))
 
-def hifiasm_mode_hap2(mode):
+def get_mode_hap2(wildcards):
+    id_name = wildcards.id
+    mode = config[f'{id_name}']["mode"]
     if mode == "hi-c":
         return(str(rules.hifiasm_hic.output.hap2))
     elif mode == "trio":
