@@ -40,7 +40,7 @@ CLUSTER_CONFIG=".config/snakemake_profile/slurm/cluster_config.yml"
 MAX_CORES=4
 PROFILE=".config/snakemake_profile/slurm"
 SMK_PATH="workflow/pre-job_snakefiles"
-SNG_BIND="/gpfs/scratch/sdenni"
+SNG_BIND="/gpfs/scratch/sdenni/wf/GenomAsm4pg"
 
 ### Module Loading:
 module purge

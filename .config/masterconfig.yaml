@@ -1,5 +1,34 @@
 # absolute path to your desired output path
-root: /gpfs/scratch/sdenni
+root: /gpfs/scratch/sdenni/wf/GenomAsm4pg
+
+### TEMPLATE
+IDS: ["E742-Rouge_de_Roussillon_ccs-20"]
+
+# IDS_1:
+  # path: path
+  # bam: true
+#   run: name
+#   ploidy: 2
+#   busco_lineage: eudi
+#   mode: default
+
+# IDS_2:
+  # path: path
+  # bam: false
+#   run: name
+#   ploidy: 2
+#   busco_lineage: eudi
+#   mode: trio
+#   p1: path
+#   p2: path
+
+### TRIAL
+E742-Rouge_de_Roussillon_ccs-20:
+  bam: False
+  run: test_runid
+  ploidy: 2
+  busco_lineage: eudicots_odb10
+  mode: default
 
 ####################### prejob - data preparation #######################
 # path to tar data
@@ -11,26 +40,6 @@ tarIDS: "tar_filename"
 
 ####################### job - workflow #######################
 # list of fasta.gz names
-get_all_filename: False
-IDS: ["fasta_filename_1", "fasta_filename_2"]
-
-# run name
-run: run00
-
-# ploidy
-ploidy: 2
-
-# busco lineage
-busco:
-  lineage: eudicots_odb10
-
-# hifiasm mode - 3 options: hi-c, trio or default
-mode : default
-
-### DATASETS
-# Trio datasets
-
-# Hi-C datasets
 
 
 ####################### workflow output directories #######################

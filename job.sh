@@ -40,7 +40,7 @@ echo '########################################'
 CLUSTER_CONFIG=".config/snakemake_profile/slurm/cluster_config.yml"
 MAX_CORES=10
 PROFILE=".config/snakemake_profile/slurm"
-SNG_BIND="/gpfs/scratch/sdenni"
+SNG_BIND="/gpfs/scratch/sdenni/wf/GenomAsm4pg"
 
 ### Module Loading:
 module purge
@@ -53,7 +53,7 @@ mkdir -p slurm_logs
 
 ### Snakemake commands
 ## Dry run
-# snakemake --profile $PROFILE -j $MAX_CORES --use-singularity --cluster-config $CLUSTER_CONFIG -n -r
+snakemake --profile $PROFILE -j $MAX_CORES --use-singularity  --singularity-args "-B $SNG_BIND" --cluster-config $CLUSTER_CONFIG -n -r
 
 ## Run
-snakemake --profile $PROFILE -j $MAX_CORES --use-singularity --singularity-args "-B $SNG_BIND" --cluster-config $CLUSTER_CONFIG
+# snakemake --profile $PROFILE -j $MAX_CORES --use-singularity --singularity-args "-B $SNG_BIND" --cluster-config $CLUSTER_CONFIG

@@ -13,4 +13,3 @@ rule longqc:
         "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/longqc1.2.0c"
     shell:
         "longQC sampleqc -x pb-hifi -o {output} {input}"
-        # "LongQC sampleqc -x pb-hifi -o {output} {input}"
