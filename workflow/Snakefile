@@ -32,10 +32,6 @@ include: "06_sym_link_hap.smk"
 
 ## AUTOMATIC REPORT
 include: "07_report.smk"
-# if config["mode"] == "trio":
-#     include: "rules/report_trio.smk"
-# else:
-#     include: "rules/report.smk"
 
 ###### get filenames for workflow ######
 IDS=config["IDS"]
@@ -58,6 +54,7 @@ genometools_read_output = expand("{resdir}/{runid}/01_raw_data_QC/03_genometools
     resdir=res_path, runid=RUNID, id=IDS)
 genomescope_output = expand("{resdir}/{runid}/01_raw_data_QC/04_kmer/{id}_genomescope", 
     resdir=res_path, runid=RUNID, id=IDS)
+
 ### ASSEMBLY
 ## assembly stats
 genometools_assem_output =  expand("{resdir}/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/assembly_stats/{id}_hap{n}.AStats.txt", 
@@ -68,6 +65,7 @@ kat_output =  expand("{resdir}/{runid}/02_genome_assembly/01_raw_assembly/01_ass
     resdir=res_path, runid=RUNID, id=IDS, n=["1", "2"])
 telomeres_output = expand("{resdir}/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/telomeres/{id}_hap{n}_telomeres.txt", 
     resdir=res_path, runid=RUNID, id=IDS, n=["1", "2"])
+
 ### PURGED ASSEMBLY
 ## purged assembly stats
 purge_busco_output = expand("{resdir}/{runid}/02_genome_assembly/02_after_purge_dups_assembly/01_assembly_QC/busco/{id}_purged_hap{n}", 
@@ -87,39 +85,34 @@ cut_eval = expand("{resdir}/{runid}/02_genome_assembly/02_after_purge_dups_assem
 symb_link = expand("{resdir}/{runid}/{id}_hap{n}.fa", 
     resdir=res_path, runid=RUNID, id=IDS, n=["1", "2"])
 ### REPORT
-## automatic report
+REP_ID = for_report(IDS)
+RUNID_REG = run_id(REP_ID)
 report_output = expand("{resdir}/{runid}/report_{id}.html", 
-    resdir=res_path, runid=RUNID, id=IDS)
+    resdir=res_path, runid=RUNID_REG, id=REP_ID)
+### REPORT TRIO
+REP_TRIO_ID = for_report_trio(IDS)
+RUNID_TRIO = run_id(REP_TRIO_ID)
+report_trio_output = expand("{resdir}/{runid}/report_trio_{id}.html", 
+    resdir=res_path, runid=RUNID_TRIO, id=REP_TRIO_ID)
 
 rule_all_input_list = [
-    longqc_output,
-    fastqc_output,
-    genometools_read_output,
-    genomescope_output,
-    genometools_assem_output,
-    busco_output,
-    kat_output,
-    telomeres_output,
-    purge_busco_output,
-    purge_genometools_output,
-    purge_kat_output,
-    purge_telomeres_output,
-    cut_eval,
-    symb_link,
-    report_output
+    # longqc_output,
+    # fastqc_output,
+    # genometools_read_output,
+    # genomescope_output,
+    # genometools_assem_output,
+    # busco_output,
+    # kat_output,
+    # telomeres_output,
+    # purge_busco_output,
+    # purge_genometools_output,
+    # purge_kat_output,
+    # purge_telomeres_output,
+    # cut_eval,
+    # symb_link,
+    report_output,
+    report_trio_output
 ]
-
-## include different merqury output depending on hifiasm mode (trio or default/hi-c)
-# if config["mode"] == "trio":
-#     merqury_trio_target = expand("{resdir}/{id}/{run}/{stepdir}/{asmdir}/{subdir}/merqury/merqury_trio.qv", resdir=res_path, runid=RUNID, id=IDS, n=["1", "2"])
-#     purge_merqury_trio_target = expand("{resdir}/{id}/{run}/{stepdir}/{asmdir}/{subdir}/merqury/purge_merqury_trio.{id}_hap{n}.purged.100_20000.phased_block.stats", resdir=res_path, run=get_run, stepdir=config["assembdir"], asmdir=config["asm_purged"], subdir=config["asm_qc"], id=IDS, n=["1", "2"])
-#     rule_all_input_list.append(merqury_trio_target)
-#     rule_all_input_list.append(purge_merqury_trio_target)
-# else:
-#     merqury_ouput =  expand("{resdir}/{id}/{run}/{stepdir}/{asmdir}/{subdir}/merqury/merqury.qv", resdir=res_path, runid=RUNID, id=IDS)
-#     purge_merqury_output = expand("{resdir}/{id}/{run}/{stepdir}/{asmdir}/{subdir}/merqury/purge_merqury.qv", resdir=res_path, run=get_run, stepdir=config["assembdir"], asmdir=config["asm_purged"], subdir=config["asm_qc"], id=IDS)
-#     rule_all_input_list.append(merqury_ouput)
-#     rule_all_input_list.append(purge_merqury_output)
 
 #### target files
 rule all:

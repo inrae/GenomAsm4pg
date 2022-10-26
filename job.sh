@@ -55,5 +55,7 @@ mkdir -p slurm_logs
 ## Dry run
 snakemake --profile $PROFILE -j $MAX_CORES --use-singularity  --singularity-args "-B $SNG_BIND" --cluster-config $CLUSTER_CONFIG -n -r
 
+# snakemake --profile $PROFILE -j $MAX_CORES --use-singularity  --singularity-args "-B $SNG_BIND" --cluster-config $CLUSTER_CONFIG -f print
+
 ## Run
 # snakemake --profile $PROFILE -j $MAX_CORES --use-singularity --singularity-args "-B $SNG_BIND" --cluster-config $CLUSTER_CONFIG

@@ -77,3 +77,20 @@ def get_p2(wildcards):
     id = wildcards.id
     p2 = config[f'{id}']["p2"]
     return p2
+
+######## Report
+def for_report(id_list):
+    NAME = []
+    for i in id_list:
+        mode = config[i]["mode"]
+        if mode != "trio":
+            NAME.append(i)
+    return(NAME)
+
+def for_report_trio(id_list):
+    NAME = []
+    for i in id_list:
+        mode = config[i]["mode"]
+        if mode == "trio":
+            NAME.append(i)
+    return(NAME)
