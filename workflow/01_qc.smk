@@ -66,8 +66,8 @@ rule genomescope:
     input:
         rules.jellyfish.output.histo
     output:
-        directory("{resdir}/{runid}/01_raw_data_QC/04_kmer/{id}_genomescope"),
-        "{resdir}/{runid}/01_raw_data_QC/04_kmer/{id}_genomescope/linear_plot.png"
+        d = directory("{resdir}/{runid}/01_raw_data_QC/04_kmer/{id}_genomescope"),
+        png = "{resdir}/{runid}/01_raw_data_QC/04_kmer/{id}_genomescope/linear_plot.png"
     params:
         ploidy = get_ploidy
     priority: 1
@@ -75,4 +75,4 @@ rule genomescope:
     container:
         "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/genomescope2.0"
     shell:
-        "genomescope.R -k 21 -i {input} -o {output[0]} -p {params.ploidy}"
+        "genomescope.R -k 21 -i {input} -o {output.d} -p {params.ploidy}"

@@ -14,23 +14,24 @@ include: "02_asm.smk"
 
 # Statistics
 include: "03_asm_qc.smk"
-
+include: "03.5_A_qc_merqury.smk"
 ##########
-include: "rules/meryl.smk"
-include: "rules/merqury.smk"
-include: "modules/merqury_trio.smk"
+# include: "rules/meryl.smk"
+# include: "rules/merqury.smk"
+# include: "modules/merqury_trio.smk"
 ##########
 
 # Purging
 include: "04_purge_dups.smk"
-include: "05_purge_asm_qc.smk"
-
+include: "05_purged_asm_qc.smk"
+include: "05.5_PA_qc_merqury.smk"
 ##########
 # Link final assembly
 include: "06_sym_link_hap.smk"
 ##########
 
 ## AUTOMATIC REPORT
+include: "07_report.smk"
 # if config["mode"] == "trio":
 #     include: "rules/report_trio.smk"
 # else:
@@ -87,8 +88,8 @@ symb_link = expand("{resdir}/{runid}/{id}_hap{n}.fa",
     resdir=res_path, runid=RUNID, id=IDS, n=["1", "2"])
 ### REPORT
 ## automatic report
-report_output = expand("{resdir}/{id}/{run}/report_{id}_{run}.html", 
-    resdir=res_path, run=get_run, id=IDS)
+report_output = expand("{resdir}/{runid}/report_{id}.html", 
+    resdir=res_path, runid=RUNID, id=IDS)
 
 rule_all_input_list = [
     longqc_output,
@@ -105,7 +106,7 @@ rule_all_input_list = [
     purge_telomeres_output,
     cut_eval,
     symb_link,
-    # report_output
+    report_output
 ]
 
 ## include different merqury output depending on hifiasm mode (trio or default/hi-c)

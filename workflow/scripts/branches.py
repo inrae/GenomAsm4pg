@@ -1,6 +1,11 @@
 from snakemake.io import expand
 
 ### which hifiasm mode
+def get_mode(wildcards):
+    id_name = wildcards.id
+    mode = config[f'{id_name}']["mode"]
+    return(mode)
+
 def get_mode_hap1(wildcards):
     id_name = wildcards.id
     mode = config[f'{id_name}']["mode"]
