@@ -66,8 +66,8 @@ rule genomescope:
     input:
         rules.jellyfish.output.histo
     output:
-        directory("{resdir}/{runid}/01_raw_data_QC/04_kmer/genomescope"),
-        "{resdir}/{runid}/01_raw_data_QC/04_kmer/genomescope/linear_plot.png"
+        directory("{resdir}/{runid}/01_raw_data_QC/04_kmer/{id}_genomescope"),
+        "{resdir}/{runid}/01_raw_data_QC/04_kmer/{id}_genomescope/linear_plot.png"
     params:
         ploidy = get_ploidy
     priority: 1
