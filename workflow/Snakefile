@@ -27,7 +27,7 @@ include: "05_purge_asm_qc.smk"
 
 ##########
 # Link final assembly
-include: "rules/link_final_asm.smk"
+include: "06_sym_link_hap.smk"
 ##########
 
 ## AUTOMATIC REPORT
@@ -80,11 +80,11 @@ purge_telomeres_output = expand("{resdir}/{runid}/02_genome_assembly/02_after_pu
 ## cutoffs eval
 cut_eval = expand("{resdir}/{runid}/02_genome_assembly/02_after_purge_dups_assembly/00_assembly/{id}_hap{n}/cutoffs_graph_hap{n}.png", 
     resdir=res_path, runid=RUNID, id=IDS, n=["1", "2"])
-    
+
 ### SYM LINK
 ## symbolic link to final assembly
-symb_link = expand("{resdir}/{id}/{run}/{stepdir}/{id}_hap{n}.fa", 
-    resdir=res_path, run=get_run, stepdir=config["assembdir"], id=IDS, n=["1", "2"])
+symb_link = expand("{resdir}/{runid}/{id}_hap{n}.fa", 
+    resdir=res_path, runid=RUNID, id=IDS, n=["1", "2"])
 ### REPORT
 ## automatic report
 report_output = expand("{resdir}/{id}/{run}/report_{id}_{run}.html", 
@@ -104,7 +104,7 @@ rule_all_input_list = [
     purge_kat_output,
     purge_telomeres_output,
     cut_eval,
-    # symb_link,
+    symb_link,
     # report_output
 ]
 
