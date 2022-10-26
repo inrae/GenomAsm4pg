@@ -10,13 +10,8 @@ include: "scripts/branches.py"
 include: "01_qc.smk"
 
 ## ASSEMBLY
-if config["mode"] == "trio":
-    include: "rules/hifiasm_trio.smk"
-elif config["mode"] == "hi-c":
-    include: "rules/hifiasm_hic.smk"
-else:
-    include: "rules/hifiasm.smk"
-include: "rules/hap_gfa_to_fasta.smk"
+include: "02_asm.smk"
+
 # Statistics
 include: "03_asm_qc.smk"
 # include: "rules/genometools_on_assembly.smk"
@@ -28,7 +23,7 @@ include: "rules/meryl.smk"
 include: "rules/merqury.smk"
 include: "modules/merqury_trio.smk"
 # Purging
-include: "O4_purge_dups.smk"
+include: "04_purge_dups.smk"
 include: "05_purge_asm_qc.smk"
 # include: "rules/purge_dups.smk"
 # include: "modules/purged_stats.smk"

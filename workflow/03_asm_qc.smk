@@ -22,7 +22,7 @@ rule busco:
     input:
         rules.unzip_hap_fasta.output
     output:
-        directory("{resdir}/02_genome_assembly/01_raw_assembly/01_assembly_QC/busco/{id}_hap{n}"),
+        directory("{resdir}/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/busco/{id}_hap{n}"),
         "{resdir}/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/busco/{id}_hap{n}/short_summary.specific.eudicots_odb10.{id}_hap{n}.txt",
     params:
         prefix="{resdir}/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/busco",
