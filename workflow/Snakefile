@@ -55,7 +55,7 @@ fastqc_output =  expand("{resdir}/{Fid}/{run}/01_raw_data_QC/01_fastQC/{Fid}_fas
     resdir=res_path, run=get_run, Fid=fastqIDS, ext=["html", "zip"])
 genometools_read_output = expand("{resdir}/{runid}/01_raw_data_QC/03_genometools/{id}.RawStat.txt", 
     resdir=res_path, runid=RUNID, id=IDS)
-genomescope_output = expand("{resdir}/{runid}/01_raw_data_QC/04_kmer/genomescope", 
+genomescope_output = expand("{resdir}/{runid}/01_raw_data_QC/04_kmer/{id}_genomescope", 
     resdir=res_path, runid=RUNID, id=IDS)
 ### ASSEMBLY
 ## assembly stats
@@ -78,8 +78,9 @@ purge_kat_output = expand("{resdir}/{runid}/02_genome_assembly/02_after_purge_du
 purge_telomeres_output = expand("{resdir}/{runid}/02_genome_assembly/02_after_purge_dups_assembly/01_assembly_QC/telomeres/{id}_hap{n}_purged_telomeres.txt", 
     resdir=res_path, runid=RUNID, id=IDS, n=["1", "2"])
 ## cutoffs eval
-cut_eval = expand("{resdir}/{runid}/02_genome_assembly/02_after_purge_dups_assembly/00_assembly/hap{n}/cutoffs_graph_hap{n}.png", 
+cut_eval = expand("{resdir}/{runid}/02_genome_assembly/02_after_purge_dups_assembly/00_assembly/{id}_hap{n}/cutoffs_graph_hap{n}.png", 
     resdir=res_path, runid=RUNID, id=IDS, n=["1", "2"])
+    
 ### SYM LINK
 ## symbolic link to final assembly
 symb_link = expand("{resdir}/{id}/{run}/{stepdir}/{id}_hap{n}.fa", 

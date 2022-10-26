@@ -2,7 +2,7 @@
 # only the input, output and params have been modified, 
 # commands are the same as the ones in corresponding rule (dir : workflow/rules)
 
-# same command as busco.smk
+# reuse busco rule from 03_asm_qc.smk
 use rule busco as purge_busco with:
     input:
         rules.purge_dups.output.purge
@@ -14,20 +14,30 @@ use rule busco as purge_busco with:
         lineage=get_busco_lin, # get lineage from config
         sample="{id}_purged_hap{n}"
 
-# same command as genometools_assembly.smk
+# reuse genometools rule from 03_asm_qc.smk
 use rule genometools_on_raw_data as purge_genometools with:
     input:
         rules.purge_dups.output.purge
     output:
         "{resdir}/{runid}/02_genome_assembly/02_after_purge_dups_assembly/01_assembly_QC/assembly_stats/{id}_purged_hap{n}.AStats.txt"
 
-# same command as kat.smk
+# reuse kat rule from 03_asm_qc.smk
 use rule kat as purge_kat with:
     input:
         hap = rules.purge_dups.output.purge,
-        jellyfish = "{resdir}/{id}/{run}/" + config["qcdir"] + "/" + config["kmer"] + "/{id}.jf"
+        jellyfish = "{resdir}/{runid}/01_raw_data_QC/04_kmer/{id}.jf"
     output:
         "{resdir}/{runid}/02_genome_assembly/02_after_purge_dups_assembly/01_assembly_QC/katplot/hap{n}/{id}_purged_hap{n}.katplot.png"
     params:
         prefix="{id}_hap{n}",
         path= "{resdir}/{runid}/02_genome_assembly/02_after_purge_dups_assembly/01_assembly_QC/katplot//hap{n}/{id}_purged_hap{n}"
+
+rule purge_find_telomeres:
+    input:
+        rules.purge_dups.output.purge
+    output:
+        "{resdir}/{runid}/02_genome_assembly/02_after_purge_dups_assembly/01_assembly_QC/telomeres/{id}_hap{n}_purged_telomeres.txt"
+    container:
+        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/biopython1.75"
+    shell:
+        "python3 workflow/scripts/FindTelomeres.py {input} > {output}"

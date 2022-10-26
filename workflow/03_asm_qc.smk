@@ -6,7 +6,7 @@ rule unzip_hap_fasta:
     input:
         HAP_FA_GZ
     output:
-        temp("{resdir}/{id}/{run}/{stepdir}/{asmdir}/" + config["asm"] + "/{id}_hap{n}.fa")
+        temp("{resdir}/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}_hap{n}.fa")
     shell:
         "unpigz -k -p 1 {input}"
 
@@ -41,7 +41,7 @@ rule busco:
 
 rule kat:
     input:
-        hap = "{resdir}/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/{id}_hap{n}.fa.gz",
+        hap = "{resdir}/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}_hap{n}.fa.gz",
         jellyfish = "{resdir}/{runid}/01_raw_data_QC/04_kmer/{id}.jf"
     output:
         "{resdir}/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/katplot/hap{n}/{id}_hap{n}.katplot.png"
