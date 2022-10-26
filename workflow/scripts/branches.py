@@ -17,6 +17,7 @@ def hifiasm_mode_hap2(mode):
     elif mode == "default":
         return(str(rules.hifiasm.output.hap2))
 
+######################################
 ### get params from config
 # BUSCO
 def get_busco_lin(wildcards):
@@ -30,10 +31,14 @@ def get_ploidy(wildcards):
     ploidy = config[f'{id_name}']["ploidy"]
     return(ploidy)
 
+def get_run(wildcards):
+    id_name = wildcards.id
+    run = config[f'{id_name}']["run"]
+    return(run)
 
-#######
+######################################
 # give IDS as list
-def run(id_list):
+def run_id(id_list):
     run_list = []
     for i in id_list:
         run = config[i]["run"]
@@ -41,6 +46,7 @@ def run(id_list):
     RUNID = expand("{runid}", runid = run_list)
     return(RUNID)
 
+######################################
 ## reads hi-c
 def get_r1(wildcards):
     id = wildcards.id
