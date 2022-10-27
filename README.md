@@ -1,7 +1,8 @@
-# Assembly workflow for pangenome
-This workflow uses [Snakemake](https://snakemake.readthedocs.io/en/stable/) to quickly assemble genomes with a HTML report summarizing obtained assembly stats. This workflow uses PacBio HiFi data.
+# Assembly workflow for pangenomics
+This workflow uses [Snakemake](https://snakemake.readthedocs.io/en/stable/) to assemble genomes using PacBio HiFi data. At the end, a HTML report summarizes the obtained assembly stats.
+Its main goal is to assemble genomes for a pangenomics approach, which means we want quick and well-assembled genomes but we do not aim for telomere-to-telomere assemblies. Currently, assemblies are at contig level. 
 
-A first script (```prejob.sh```) prepares the data until fasta.gz files are obtained. A second script (```job.sh```) runs the genome assembly and stats.
+A first script (```prejob.sh```) prepares the data until *fasta.gz* files are obtained. A second script (```job.sh```) runs the genome assembly and stats.
 
 ![workflow DAG](fig/rule_dag.svg)
 
