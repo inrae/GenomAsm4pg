@@ -4,7 +4,7 @@ rule meryl:
     input:
         config["root"] + "/" + config["resdir"] + "/" + config["fastxdir"] + "/{id}.fasta.gz"
     output:
-        directory("{resdir}/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_reads-db_k21.meryl")
+        directory(res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_reads-db_k21.meryl")
     threads: 20
     resources:
         mem_mb=60000
@@ -19,10 +19,10 @@ rule cp_hap:
         hap1=rules.hap_gfa_to_fasta.output.hap1_fa,
         hap2=rules.hap_gfa_to_fasta.output.hap2_fa
     output:
-        hap1=temp("{resdir}/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_hap1.fa.gz"),
-        hap2=temp("{resdir}/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_hap2.fa.gz")
+        hap1=temp(res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_hap1.fa.gz"),
+        hap2=temp(res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_hap2.fa.gz")
     params:
-        path = "{resdir}/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury"
+        path = res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury"
     shell:
         "cp {{{input.hap1},{input.hap2}}} {params.path}"
 
@@ -33,11 +33,11 @@ rule merqury:
         hap1 = rules.cp_hap.output.hap1,
         hap2 = rules.cp_hap.output.hap2
     output:
-        qv = "{resdir}/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_merqury.qv",
-        stat = "{resdir}/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_merqury.completeness.stats"
+        qv = res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_merqury.qv",
+        stat = res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_merqury.completeness.stats"
     params:
         prefix = "{id}_merqury",
-        path = "{resdir}/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury",
+        path = res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury",
     threads: 20
     resources:
         mem_mb=60000
@@ -54,8 +54,8 @@ rule meryl_trio:
         p1 = get_p1,
         p2 = get_p2
     output:
-        p1 = directory("{resdir}/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_P1_reads-db_k21.meryl"),
-        p2 = directory("{resdir}/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_P2_reads-db_k21.meryl")
+        p1 = directory(res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_P1_reads-db_k21.meryl"),
+        p2 = directory(res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_P2_reads-db_k21.meryl")
     threads: 10
     resources:
         mem_mb=60000
@@ -70,10 +70,10 @@ rule cp_trio:
         hap1 = rules.hap_gfa_to_fasta.output.hap1_fa,
         hap2 = rules.hap_gfa_to_fasta.output.hap2_fa
     output:
-        hap1 = temp("{resdir}/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_hap1.fasta.gz"),
-        hap2 = temp("{resdir}/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_hap2.fasta.gz")
+        hap1 = temp(res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_hap1.fasta.gz"),
+        hap2 = temp(res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_hap2.fasta.gz")
     params:
-        path="{resdir}/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury"
+        path=res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury"
     shell:
         "cp {input.hap1} {output.hap1} && "
         "cp {input.hap2} {output.hap2}"
@@ -83,8 +83,8 @@ rule unzip:
         rules.cp_trio.output.hap1,
         rules.cp_trio.output.hap2
     output:
-        hap1 = temp("{resdir}/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_hap1.fasta"),
-        hap2 = temp("{resdir}/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_hap2.fasta")
+        hap1 = temp(res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_hap1.fasta"),
+        hap2 = temp(res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_hap2.fasta")
     shell:
         "unpigz -k -p 1 {input}"
 
@@ -96,17 +96,17 @@ rule merqury_trio:
         hap1 = rules.unzip.output.hap1,
         hap2 = rules.unzip.output.hap2
     output:
-        "{resdir}/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_merqury_trio.qv",
-        "{resdir}/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_merqury_trio.completeness.stats",
-        "{resdir}/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_merqury_trio.{id}_hap1.block.N.png",
-        "{resdir}/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_merqury_trio.{id}_hap2.block.N.png",
-        "{resdir}/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_merqury_trio.{id}_hap1.100_20000.phased_block.stats",
-        "{resdir}/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_merqury_trio.{id}_hap2.100_20000.phased_block.stats",
-        "{resdir}/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_merqury_trio.hapmers.blob.png",
-        p1_hapmer = directory("{resdir}/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_P1_reads-db_k21.hapmer.meryl"),
-        p2_hapmer = directory("{resdir}/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_P2_reads-db_k21.hapmer.meryl")
+        res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_merqury_trio.qv",
+        res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_merqury_trio.completeness.stats",
+        res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_merqury_trio.{id}_hap1.block.N.png",
+        res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_merqury_trio.{id}_hap2.block.N.png",
+        res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_merqury_trio.{id}_hap1.100_20000.phased_block.stats",
+        res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_merqury_trio.{id}_hap2.100_20000.phased_block.stats",
+        res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_merqury_trio.hapmers.blob.png",
+        p1_hapmer = directory(res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_P1_reads-db_k21.hapmer.meryl"),
+        p2_hapmer = directory(res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_P2_reads-db_k21.hapmer.meryl")
     params:
-        path = "{resdir}/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury",
+        path = res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury",
         prefix = "{id}_merqury_trio"
     threads: 20
     resources:

@@ -1,5 +1,7 @@
 configfile: ".config/masterconfig.yaml"
 
+res_path=config["root"] + "/" + config["resdir"]
+
 ###### Include all scripts & rules necessary to run the workflow ######
 ### Scripts
 include: "scripts/get_files_id.py"
@@ -8,10 +10,8 @@ include: "scripts/branches.py"
 ### Rules
 ## PRE ASSEMBLY QC
 include: "01_qc.smk"
-
 ## ASSEMBLY
 include: "02_asm.smk"
-
 # Statistics
 include: "03_asm_qc.smk"
 include: "03.5_A_qc_merqury.smk"
@@ -20,7 +20,6 @@ include: "03.5_A_qc_merqury.smk"
 # include: "rules/merqury.smk"
 # include: "modules/merqury_trio.smk"
 ##########
-
 # Purging
 include: "04_purge_dups.smk"
 include: "05_purged_asm_qc.smk"
@@ -29,7 +28,6 @@ include: "05.5_PA_qc_merqury.smk"
 # Link final assembly
 include: "06_sym_link_hap.smk"
 ##########
-
 ## AUTOMATIC REPORT
 include: "07_report.smk"
 
@@ -37,81 +35,52 @@ include: "07_report.smk"
 IDS=config["IDS"]
 bamIDS=check_bam(config["root"] + "/" + config["resdir"] + "/" + config["bamdir"], IDS)
 fastqIDS=check_fastq(config["root"] + "/" + config["resdir"] + "/" + config["fastxdir"], IDS)
+####
+RUNID = run_id(config["IDS"])
 
 ###### results path ######
 res_path=config["root"] + "/" + config["resdir"]
 
-####
-RUNID = run_id(config["IDS"])
-
 ###### Target files ######
 ## raw data stats
-longqc_output = expand("{resdir}/{Bid}/{run}/01_raw_data_QC/02_longQC", 
-    resdir=res_path, run=get_run, Bid=bamIDS),
-fastqc_output =  expand("{resdir}/{Fid}/{run}/01_raw_data_QC/01_fastQC/{Fid}_fastqc.{ext}", 
-    resdir=res_path, run=get_run, Fid=fastqIDS, ext=["html", "zip"])
-genometools_read_output = expand("{resdir}/{runid}/01_raw_data_QC/03_genometools/{id}.RawStat.txt", 
-    resdir=res_path, runid=RUNID, id=IDS)
-genomescope_output = expand("{resdir}/{runid}/01_raw_data_QC/04_kmer/{id}_genomescope", 
-    resdir=res_path, runid=RUNID, id=IDS)
+longqc_output = expand(res_path + "/{Bid}/{run}/01_raw_data_QC/02_longQC", 
+    run=get_run, Bid=bamIDS),
+fastqc_output =  expand(res_path + "/{Fid}/{run}/01_raw_data_QC/01_fastQC/{Fid}_fastqc.{ext}", 
+    run=get_run, Fid=fastqIDS, ext=["html", "zip"])
 
-### ASSEMBLY
-## assembly stats
-genometools_assem_output =  expand("{resdir}/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/assembly_stats/{id}_hap{n}.AStats.txt", 
-    resdir=res_path, runid=RUNID, id=IDS, n=["1", "2"])
-busco_output = expand("{resdir}/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/busco/{id}_hap{n}", 
-    resdir=res_path, runid=RUNID, id=IDS, n=["1", "2"])
-kat_output =  expand("{resdir}/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/katplot/hap{n}/{id}_hap{n}.katplot.png", 
-    resdir=res_path, runid=RUNID, id=IDS, n=["1", "2"])
-telomeres_output = expand("{resdir}/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/telomeres/{id}_hap{n}_telomeres.txt", 
-    resdir=res_path, runid=RUNID, id=IDS, n=["1", "2"])
-
-### PURGED ASSEMBLY
-## purged assembly stats
-purge_busco_output = expand("{resdir}/{runid}/02_genome_assembly/02_after_purge_dups_assembly/01_assembly_QC/busco/{id}_purged_hap{n}", 
-    resdir=res_path, runid=RUNID, id=IDS, n=["1", "2"])
-purge_genometools_output = expand("{resdir}/{runid}/02_genome_assembly/02_after_purge_dups_assembly/01_assembly_QC/assembly_stats/{id}_purged_hap{n}.AStats.txt", 
-    resdir=res_path, runid=RUNID, id=IDS, n=["1", "2"])
-purge_kat_output = expand("{resdir}/{runid}/02_genome_assembly/02_after_purge_dups_assembly/01_assembly_QC/katplot/hap{n}/{id}_purged_hap{n}.katplot.png", 
-    resdir=res_path, runid=RUNID, id=IDS, n=["1", "2"])
-purge_telomeres_output = expand("{resdir}/{runid}/02_genome_assembly/02_after_purge_dups_assembly/01_assembly_QC/telomeres/{id}_hap{n}_purged_telomeres.txt", 
-    resdir=res_path, runid=RUNID, id=IDS, n=["1", "2"])
-## cutoffs eval
-cut_eval = expand("{resdir}/{runid}/02_genome_assembly/02_after_purge_dups_assembly/00_assembly/{id}_hap{n}/cutoffs_graph_hap{n}.png", 
-    resdir=res_path, runid=RUNID, id=IDS, n=["1", "2"])
-
-### SYM LINK
-## symbolic link to final assembly
-symb_link = expand("{resdir}/{runid}/{id}_hap{n}.fa", 
-    resdir=res_path, runid=RUNID, id=IDS, n=["1", "2"])
 ### REPORT
 REP_ID = for_report(IDS)
 RUNID_REG = run_id(REP_ID)
-report_output = expand("{resdir}/{runid}/report_{id}.html", 
-    resdir=res_path, runid=RUNID_REG, id=REP_ID)
+report_output = expand(res_path + "/{runid}/report_{id}.html", 
+    runid=RUNID_REG, id=REP_ID)
 ### REPORT TRIO
 REP_TRIO_ID = for_report_trio(IDS)
 RUNID_TRIO = run_id(REP_TRIO_ID)
-report_trio_output = expand("{resdir}/{runid}/report_trio_{id}.html", 
-    resdir=res_path, runid=RUNID_TRIO, id=REP_TRIO_ID)
+report_trio_output = expand(res_path + "/{runid}/report_trio_{id}.html", 
+    runid=RUNID_TRIO, id=REP_TRIO_ID)
+
+### SYM LINK
+## symbolic link to final assembly
+symb_link1 = expand(res_path + "/{runid}/{id}_hap{n}.fa", 
+    runid=RUNID_REG, id=REP_ID, n=["1", "2"])
+symb_link2 = expand(res_path + "/{runid}/{id}_hap{n}.fa", 
+    runid=RUNID_TRIO, id=REP_TRIO_ID, n=["1", "2"])
+
+## PURGE_DUPS CUTOFFS GRAPH
+cut_eval1 = expand(res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/00_assembly/{id}_hap{n}/cutoffs_graph_hap{n}.png", 
+    runid=RUNID_REG, id=REP_ID, n=["1", "2"])
+cut_eval2 = expand(res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/00_assembly/{id}_hap{n}/cutoffs_graph_hap{n}.png", 
+    runid=RUNID_TRIO, id=REP_TRIO_ID, n=["1", "2"])
 
 rule_all_input_list = [
-    # longqc_output,
-    # fastqc_output,
-    # genometools_read_output,
-    # genomescope_output,
-    # genometools_assem_output,
-    # busco_output,
-    # kat_output,
-    # telomeres_output,
-    # purge_busco_output,
-    # purge_genometools_output,
-    # purge_kat_output,
-    # purge_telomeres_output,
-    # cut_eval,
-    # symb_link,
+    longqc_output,
+    fastqc_output,
+    cut_eval1,
+    cut_eval2,
+    symb_link1,
+    symb_link2,
     report_output,
-    report_trio_output
+    report_trio_output,
 ]
 
 #### target files

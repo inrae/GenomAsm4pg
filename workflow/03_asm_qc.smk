@@ -6,7 +6,7 @@ rule unzip_hap_fasta:
     input:
         HAP_FA_GZ
     output:
-        temp("{resdir}/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}_hap{n}.fa")
+        res_path + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}_hap{n}.fa"
     shell:
         "unpigz -k -p 1 {input}"
 
@@ -15,17 +15,17 @@ use rule genometools_on_raw_data as genometools_on_assembly with:
     input:
         HAP_FA_GZ
     output:
-        "{resdir}/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/assembly_stats/{id}_hap{n}.AStats.txt"
+        res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/assembly_stats/{id}_hap{n}.AStats.txt"
 
 ### BUSCO stats on assembly
 rule busco:
     input:
         rules.unzip_hap_fasta.output
     output:
-        directory("{resdir}/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/busco/{id}_hap{n}"),
-        "{resdir}/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/busco/{id}_hap{n}/short_summary.specific.eudicots_odb10.{id}_hap{n}.txt",
+        directory(res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/busco/{id}_hap{n}"),
+        res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/busco/{id}_hap{n}/short_summary.specific.eudicots_odb10.{id}_hap{n}.txt",
     params:
-        prefix="{resdir}/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/busco",
+        prefix=res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/busco",
         lineage=get_busco_lin, # get lineage from config
         sample="{id}_hap{n}"
     threads: 20
@@ -41,13 +41,13 @@ rule busco:
 
 rule kat:
     input:
-        hap = "{resdir}/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}_hap{n}.fa.gz",
-        jellyfish = "{resdir}/{runid}/01_raw_data_QC/04_kmer/{id}.jf"
+        hap = res_path + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}_hap{n}.fa.gz",
+        jellyfish = res_path + "/{runid}/01_raw_data_QC/04_kmer/{id}.jf"
     output:
-        "{resdir}/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/katplot/hap{n}/{id}_hap{n}.katplot.png"
+        res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/katplot/hap{n}/{id}_hap{n}.katplot.png"
     params:
         prefix="{id}_hap{n}",
-        path="{resdir}/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/katplot/hap{n}/{id}_hap{n}"
+        path=res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/katplot/hap{n}/{id}_hap{n}"
     threads: 4
     container: 
         "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/kat2.4.1"
@@ -60,7 +60,7 @@ rule find_telomeres:
     input:
         rules.unzip_hap_fasta.output
     output:
-        "{resdir}/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/telomeres/{id}_hap{n}_telomeres.txt"
+        res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/telomeres/{id}_hap{n}_telomeres.txt"
     container:
         "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/biopython1.75"
     shell:

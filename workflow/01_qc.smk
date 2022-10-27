@@ -3,7 +3,7 @@ rule longqc:
     input:
         config["root"] + "/" + config["resdir"] + "/" + config["bamdir"] + "/{Bid}.bam"
     output:
-        directory("{resdir}/{Brunid}/01_raw_data_QC/02_longQC")
+        directory(res_path + "/{Brunid}/01_raw_data_QC/02_longQC")
     priority: 1
     threads: 8
     resources:
@@ -18,9 +18,9 @@ rule fastqc:
     input:
         config["root"] + "/" + config["resdir"] + "/" + config["fastxdir"] + "/{Fid}.fastq.gz"
     output:
-        multiext("{resdir}/{Frunid}/01_raw_data_QC/01_fastQC/{Fid}_fastqc", ".html", ".zip")
+        multiext(res_path + "/{Frunid}/01_raw_data_QC/01_fastQC/{Fid}_fastqc", ".html", ".zip")
     params:
-        output_path="{resdir}/{Frunid}/01_raw_data_QC/01_fastQC/"
+        output_path=res_path + "/{Frunid}/01_raw_data_QC/01_fastQC/"
     priority: 1
     threads: 4
     container:
@@ -34,7 +34,7 @@ rule genometools_on_raw_data:
     input:
         config["root"] + "/" + config["resdir"] + "/" + config["fastxdir"] + "/{id}.fasta.gz"
     output:
-        "{resdir}/{runid}/01_raw_data_QC/03_genometools/{id}.RawStat.txt"
+        res_path + "/{runid}/01_raw_data_QC/03_genometools/{id}.RawStat.txt"
     priority: 1
     threads: 4
     container:
@@ -50,8 +50,8 @@ rule jellyfish:
     input:
         config["root"] + "/" + config["resdir"] + "/" + config["fastxdir"] + "/{id}.fasta.gz"
     output:
-        jf = "{resdir}/{runid}/01_raw_data_QC/04_kmer/{id}.jf",
-        histo = "{resdir}/{runid}/01_raw_data_QC/04_kmer/{id}.histo"
+        jf = res_path + "/{runid}/01_raw_data_QC/04_kmer/{id}.jf",
+        histo = res_path + "/{runid}/01_raw_data_QC/04_kmer/{id}.histo"
     priority: 1
     threads: 4
     resources:
@@ -66,8 +66,8 @@ rule genomescope:
     input:
         rules.jellyfish.output.histo
     output:
-        d = directory("{resdir}/{runid}/01_raw_data_QC/04_kmer/{id}_genomescope"),
-        png = "{resdir}/{runid}/01_raw_data_QC/04_kmer/{id}_genomescope/linear_plot.png"
+        d = directory(res_path + "/{runid}/01_raw_data_QC/04_kmer/{id}_genomescope"),
+        png = res_path + "/{runid}/01_raw_data_QC/04_kmer/{id}_genomescope/linear_plot.png"
     params:
         ploidy = get_ploidy
     priority: 1

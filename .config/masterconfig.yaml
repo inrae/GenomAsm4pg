@@ -2,7 +2,7 @@
 root: /gpfs/scratch/sdenni/wf/GenomAsm4pg
 
 ### TEMPLATE
-IDS: ["E742-Rouge_de_Roussillon_ccs-20"]
+IDS: ["E742-Rouge_de_Roussillon_ccs-20", "E742-CH-240_1-20"]
 
 # IDS_1:
   # path: path
@@ -29,6 +29,15 @@ E742-Rouge_de_Roussillon_ccs-20:
   ploidy: 2
   busco_lineage: eudicots_odb10
   mode: default
+
+E742-CH-240_1-20:
+  bam: False
+  run: test_trio
+  ploidy: 2
+  busco_lineage: eudicots_odb10
+  mode: trio
+  p1: /scratch/sdenni/wf/GenomAsm4pg/workflow_results/00_raw_data/fastx_files/E742-CH-240_1-20.fasta.gz
+  p2: /scratch/sdenni/wf/GenomAsm4pg/workflow_results/00_raw_data/fastx_files/E742-CH-240_1-20.fasta.gz
 
 ####################### prejob - data preparation #######################
 # path to tar data

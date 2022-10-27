@@ -7,10 +7,10 @@ use rule busco as purge_busco with:
     input:
         rules.purge_dups.output.purge
     output:
-        directory("{resdir}/{runid}/02_genome_assembly/02_after_purge_dups_assembly/01_assembly_QC/busco/{id}_purged_hap{n}"),
-        "{resdir}/{runid}/02_genome_assembly/02_after_purge_dups_assembly/01_assembly_QC/busco/{id}_purged_hap{n}/short_summary.specific.eudicots_odb10.{id}_purged_hap{n}.txt",
+        directory(res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/01_assembly_QC/busco/{id}_purged_hap{n}"),
+        res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/01_assembly_QC/busco/{id}_purged_hap{n}/short_summary.specific.eudicots_odb10.{id}_purged_hap{n}.txt",
     params:
-        prefix="{resdir}/{runid}/02_genome_assembly/02_after_purge_dups_assembly/01_assembly_QC/busco",
+        prefix=res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/01_assembly_QC/busco",
         lineage=get_busco_lin, # get lineage from config
         sample="{id}_purged_hap{n}"
 
@@ -19,24 +19,24 @@ use rule genometools_on_raw_data as purge_genometools with:
     input:
         rules.purge_dups.output.purge
     output:
-        "{resdir}/{runid}/02_genome_assembly/02_after_purge_dups_assembly/01_assembly_QC/assembly_stats/{id}_purged_hap{n}.AStats.txt"
+        res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/01_assembly_QC/assembly_stats/{id}_purged_hap{n}.AStats.txt"
 
 # reuse kat rule from 03_asm_qc.smk
 use rule kat as purge_kat with:
     input:
         hap = rules.purge_dups.output.purge,
-        jellyfish = "{resdir}/{runid}/01_raw_data_QC/04_kmer/{id}.jf"
+        jellyfish = res_path + "/{runid}/01_raw_data_QC/04_kmer/{id}.jf"
     output:
-        "{resdir}/{runid}/02_genome_assembly/02_after_purge_dups_assembly/01_assembly_QC/katplot/hap{n}/{id}_purged_hap{n}.katplot.png"
+        res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/01_assembly_QC/katplot/hap{n}/{id}_purged_hap{n}.katplot.png"
     params:
         prefix="{id}_hap{n}",
-        path= "{resdir}/{runid}/02_genome_assembly/02_after_purge_dups_assembly/01_assembly_QC/katplot//hap{n}/{id}_purged_hap{n}"
+        path= res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/01_assembly_QC/katplot//hap{n}/{id}_purged_hap{n}"
 
 rule purge_find_telomeres:
     input:
         rules.purge_dups.output.purge
     output:
-        "{resdir}/{runid}/02_genome_assembly/02_after_purge_dups_assembly/01_assembly_QC/telomeres/{id}_hap{n}_purged_telomeres.txt"
+        res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/01_assembly_QC/telomeres/{id}_hap{n}_purged_telomeres.txt"
     container:
         "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/biopython1.75"
     shell:

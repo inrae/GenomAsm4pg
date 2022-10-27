@@ -1,13 +1,15 @@
 ### create report at the end of the workflow
 # path variables
-ASM_QC = "{resdir}/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC"
-P_ASM_QC = "{resdir}/{runid}/02_genome_assembly/02_after_purge_dups_assembly/01_assembly_QC"
+res_path=config["root"] + "/" + config["resdir"]
+RAW_QC = res_path + "/{runid}/01_raw_data_QC"
+ASM_QC = res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC"
+P_ASM_QC = res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/01_assembly_QC"
 
 rule report:
     input:
         # reads QC
-        genomescope = rules.genomescope.output.png,
-        gt_reads = rules.genometools_on_raw_data.output,
+        genomescope = RAW_QC + "/04_kmer/{id}_genomescope/linear_plot.png",
+        gt_reads = RAW_QC + "/03_genometools/{id}.RawStat.txt",
         # hifiasm assembly QC
         gt_asm_1 = ASM_QC + "/assembly_stats/{id}_hap1.AStats.txt",
         gt_asm_2 = ASM_QC + "/assembly_stats/{id}_hap2.AStats.txt",
@@ -31,7 +33,7 @@ rule report:
         P_merq_comp = rules.purge_merqury.output.stat,
         P_merq_err = rules.purge_merqury.output.qv
     output:
-        "{resdir}/{runid}/report_{id}.html"
+        res_path + "/{runid}/report_{id}.html"
     params:
         id="{id}",
         mode=get_mode
@@ -44,7 +46,7 @@ rule report:
 #     input:
 #         rules.report.output
 #     output:
-#         "{resdir}/{runid}/report_{id}_{run}.html"
+#         res_path + "/{runid}/report_{id}_{run}.html"
 #     shell:
 #         "mv {input} {output}"
 
@@ -52,8 +54,8 @@ rule report_trio:
     input:
         ### collect files to include in report
         # reads QC
-        genomescope = rules.genomescope.output.png,
-        gt_reads = rules.genometools_on_raw_data.output,
+        genomescope = RAW_QC + "/04_kmer/{id}_genomescope/linear_plot.png",
+        gt_reads = RAW_QC + "/03_genometools/{id}.RawStat.txt",
         # hifiasm assembly QC
         gt_asm_1 = ASM_QC + "/assembly_stats/{id}_hap1.AStats.txt",
         gt_asm_2 = ASM_QC + "/assembly_stats/{id}_hap2.AStats.txt",
@@ -87,7 +89,7 @@ rule report_trio:
         P_merq_block_stats_1 = P_ASM_QC + "/merqury/{id}_purge_merqury_trio.{id}_hap1.purged.100_20000.phased_block.stats",
         P_merq_block_stats_2 = P_ASM_QC + "/merqury/{id}_purge_merqury_trio.{id}_hap2.purged.100_20000.phased_block.stats",
     output:
-        "{resdir}/{runid}/report_trio_{id}.html"
+        res_path + "/{runid}/report_trio_{id}.html"
     params:
         id = "{id}", # get filename
         mode = get_mode, # get assembly mode
@@ -103,6 +105,6 @@ rule report_trio:
 #     input:
 #         rules.report_trio.output
 #     output:
-#         "{resdir}/{runid}/report_{id}.html"
+#         res_path + "/{runid}/report_{id}.html"
 #     shell:
 #         "mv {input} {output}"
