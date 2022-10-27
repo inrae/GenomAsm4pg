@@ -33,22 +33,23 @@ rule report:
         P_merq_comp = rules.purge_merqury.output.stat,
         P_merq_err = rules.purge_merqury.output.qv
     output:
-        res_path + "/{runid}/report_{id}.html"
+        res_path + "/{runid}/{id}/report.html"
     params:
         id="{id}",
-        mode=get_mode
+        mode=get_mode,
+        run=get_run
     container:
         "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/rmarkdown4.0.3"
     script:
         "../scripts/report.Rmd"
 
-# rule rename_report:
-#     input:
-#         rules.report.output
-#     output:
-#         res_path + "/{runid}/report_{id}_{run}.html"
-#     shell:
-#         "mv {input} {output}"
+rule rename_report:
+    input:
+        rules.report.output
+    output:
+        res_path + "/{runid}/report_{id}.html"
+    shell:
+        "mv {input} {output}"
 
 rule report_trio:
     input:

@@ -36,7 +36,7 @@ E742-CH-240_1-20:
   ploidy: 2
   busco_lineage: eudicots_odb10
   mode: trio
-  p1: /scratch/sdenni/wf/GenomAsm4pg/workflow_results/00_raw_data/fastx_files/E742-CH-240_1-20.fasta.gz
+  p1: /scratch/sdenni/wf/GenomAsm4pg/workflow_results/00_raw_data/fastx_files/E742-CH-240_1.fasta.gz
   p2: /scratch/sdenni/wf/GenomAsm4pg/workflow_results/00_raw_data/fastx_files/E742-CH-240_1-20.fasta.gz
 
 ####################### prejob - data preparation #######################
