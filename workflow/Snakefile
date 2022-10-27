@@ -47,25 +47,25 @@ fastqc_output =  expand(res_path + "/{Fid}/{run}/01_raw_data_QC/01_fastQC/{Fid}_
 ### REPORT
 REP_ID = for_report(IDS)
 RUNID_REG = run_id(REP_ID)
-report_output = expand(res_path + "/{runid}/report_{id}.html", 
+report_output = expand(res_path + "/{runid}/report_{id}.html", zip,
     runid=RUNID_REG, id=REP_ID)
 ### REPORT TRIO
 REP_TRIO_ID = for_report_trio(IDS)
 RUNID_TRIO = run_id(REP_TRIO_ID)
-report_trio_output = expand(res_path + "/{runid}/report_trio_{id}.html", 
+report_trio_output = expand(res_path + "/{runid}/report_trio_{id}.html", zip,
     runid=RUNID_TRIO, id=REP_TRIO_ID)
 
 ### SYM LINK
 ## symbolic link to final assembly
-symb_link1 = expand(res_path + "/{runid}/{id}_hap{n}.fa", 
+symb_link1 = expand(res_path + "/{runid}/{id}_hap{n}.fa", zip,
     runid=RUNID_REG, id=REP_ID, n=["1", "2"])
-symb_link2 = expand(res_path + "/{runid}/{id}_hap{n}.fa", 
+symb_link2 = expand(res_path + "/{runid}/{id}_hap{n}.fa", zip,
     runid=RUNID_TRIO, id=REP_TRIO_ID, n=["1", "2"])
 
 ## PURGE_DUPS CUTOFFS GRAPH
-cut_eval1 = expand(res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/00_assembly/{id}_hap{n}/cutoffs_graph_hap{n}.png", 
+cut_eval1 = expand(res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/00_assembly/{id}_hap{n}/cutoffs_graph_hap{n}.png", zip,
     runid=RUNID_REG, id=REP_ID, n=["1", "2"])
-cut_eval2 = expand(res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/00_assembly/{id}_hap{n}/cutoffs_graph_hap{n}.png", 
+cut_eval2 = expand(res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/00_assembly/{id}_hap{n}/cutoffs_graph_hap{n}.png", zip,
     runid=RUNID_TRIO, id=REP_TRIO_ID, n=["1", "2"])
 
 rule_all_input_list = [
