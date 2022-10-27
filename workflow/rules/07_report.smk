@@ -95,7 +95,8 @@ rule report_trio:
         id = "{id}", # get filename
         mode = get_mode, # get assembly mode
         p1 = get_p1,
-        p2 = get_p2
+        p2 = get_p2,
+        run = get_run
     container:
         "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/rmarkdown4.0.3"
     script:
