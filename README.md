@@ -1,5 +1,7 @@
-# Assembly workflow for pangenome
-This workflow uses [Snakemake](https://snakemake.readthedocs.io/en/stable/) to quickly assemble genomes with a HTML report summarizing obtained assembly stats. This workflow uses PacBio HiFi data.
+# <A HREF="https://forgemia.inra.fr/asm4pg/GenomAsm4pg"> asm4pg </A>
+An automatic and reproducible genome assembly workflow for pangenomic applications using PacBio HiFi data.
+
+This workflow uses [Snakemake](https://snakemake.readthedocs.io/en/stable/) to quickly assemble genomes with a HTML report summarizing obtained assembly stats.
 
 A first script (```prejob.sh```) prepares the data until fasta.gz files are obtained. A second script (```job.sh```) runs the genome assembly and stats.
 
@@ -9,6 +11,7 @@ A first script (```prejob.sh```) prepares the data until fasta.gz files are obta
 [TOC]
 
 ## Repo directory structure
+
 
 ```
 ├── README.md
@@ -230,3 +233,15 @@ The workflow does not work if the HPC does not allow a job to run other jobs.
 The first time you run the workflow, if there are multiple samples, the BUSCO lineage might be downladed multiple times. This can create a conflict between the jobs using BUSCO and may interrupt some of them. In that case, you only need to rerun the workflow once everything is done.
 ### Snakemake locked directory
 When you try to rerun the workflow after cancelling a job, you may have to unlock the results directory. To do so, go in `.config/snakemake_profile/slurm` and uncomment line 14 of `config.yaml`. Run the workflow once to unlock the directory (it should only take a few seconds). Still in `config.yaml`, comment line 14. The workflow will be able to run and create outputs.
+
+## How to cite asm4pg? ##
+
+We are currently writing a publication about asm4pg. Meanwhile, if you use the pipeline, please cite it using the address of this repository. 
+
+## License ##
+
+The content of this repository is licensed under <A HREF="https://choosealicense.com/licenses/gpl-3.0/">(GNU GPLv3)</A> 
+
+## Contacts ##
+For any troubleshouting, issue or feature suggestion, please use the issue tab of this repository.
+For any other question or if you want to help in developing asm4pg, please contact Ludovic Duvaux at ludovic.duvaux@inrae.fr
