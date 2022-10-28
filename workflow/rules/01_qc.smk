@@ -3,7 +3,9 @@ rule longqc:
     input:
         config["root"] + "/" + config["resdir"] + "/" + config["bamdir"] + "/{Bid}.bam"
     output:
-        directory(res_path + "/{Brunid}/01_raw_data_QC/02_longQC")
+        directory(res_path + "/{Bid}/{run}/01_raw_data_QC/02_longQC")
+    benchmark:
+        res_path + "/{Bid}/{run}/benchmark/longqc.txt"
     priority: 1
     threads: 8
     resources:
@@ -18,9 +20,11 @@ rule fastqc:
     input:
         config["root"] + "/" + config["resdir"] + "/" + config["fastxdir"] + "/{Fid}.fastq.gz"
     output:
-        multiext(res_path + "/{Frunid}/01_raw_data_QC/01_fastQC/{Fid}_fastqc", ".html", ".zip")
+        multiext(res_path + "/{Fid}/{run}/01_raw_data_QC/01_fastQC/{Fid}_fastqc", ".html", ".zip")
     params:
-        output_path=res_path + "/{Frunid}/01_raw_data_QC/01_fastQC/"
+        output_path=res_path + "/{Fid}/{run}//01_raw_data_QC/01_fastQC/"
+    benchmark:
+        res_path + "/{Fid}/{run}/benchmark/fastqc.txt"
     priority: 1
     threads: 4
     container:
@@ -35,6 +39,8 @@ rule genometools_on_raw_data:
         config["root"] + "/" + config["resdir"] + "/" + config["fastxdir"] + "/{id}.fasta.gz"
     output:
         res_path + "/{runid}/01_raw_data_QC/03_genometools/{id}.RawStat.txt"
+    benchmark:
+        res_path + "/{runid}/benchmark/{id}_genometools_rawQC.txt"
     priority: 1
     threads: 4
     container:
