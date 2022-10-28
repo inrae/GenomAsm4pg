@@ -4,8 +4,10 @@ res_path=config["root"] + "/" + config["resdir"]
 
 ###### Include all scripts & rules necessary to run the workflow ######
 ### Scripts
-include: "scripts/get_files_id.py"
-include: "scripts/branches.py"
+# get parameters from masterconfig
+include: "scripts/from_config/hifiasm_mode.py"
+include: "scripts/from_config/parameters.py"
+include: "scripts/from_config/target_list.py"
 
 ### Rules
 ## PRE ASSEMBLY QC
@@ -15,15 +17,12 @@ include: "rules/02_asm.smk"
 # Statistics
 include: "rules/03_asm_qc.smk"
 include: "rules/03.5_A_qc_merqury.smk"
-##########
 # Purging
 include: "rules/04_purge_dups.smk"
 include: "rules/05_purged_asm_qc.smk"
 include: "rules/05.5_PA_qc_merqury.smk"
-##########
 # Link final assembly
 include: "rules/06_sym_link_hap.smk"
-##########
 ## AUTOMATIC REPORT
 include: "rules/07_report.smk"
 
@@ -33,16 +32,18 @@ bamIDS=check_bam(config["root"] + "/" + config["resdir"] + "/" + config["bamdir"
 fastqIDS=check_fastq(config["root"] + "/" + config["resdir"] + "/" + config["fastxdir"], IDS)
 ####
 RUNID = run_id(config["IDS"])
+BID_RUN = run_BFid(bamIDS)
+FID_RUN = run_BFid(fastqIDS)
 
 ###### results path ######
 res_path=config["root"] + "/" + config["resdir"]
 
 ###### Target files ######
 ## raw data stats
-longqc_output = expand(res_path + "/{Bid}/{run}/01_raw_data_QC/02_longQC", 
-    run=get_run, Bid=bamIDS),
-fastqc_output =  expand(res_path + "/{Fid}/{run}/01_raw_data_QC/01_fastQC/{Fid}_fastqc.{ext}", 
-    run=get_run, Fid=fastqIDS, ext=["html", "zip"])
+longqc_output = expand(res_path + "/{Bid}/{run}/01_raw_data_QC/02_longQC", zip,
+    run=BID_RUN, Bid=bamIDS),
+fastqc_output =  expand(res_path + "/{Fid}/{run}/01_raw_data_QC/01_fastQC/{Fid}_fastqc.{ext}", zip,
+    run=FID_RUN, Fid=fastqIDS, ext=["html", "zip"])
 
 ### REPORT
 REP_ID = for_report(IDS)
