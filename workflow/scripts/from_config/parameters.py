@@ -1,0 +1,20 @@
+from snakemake.io import expand
+
+########### GET PARAMETERS FROM CONFIG ###########
+#### BUSCO LINEAGE
+def get_busco_lin(wildcards):
+    id_name = wildcards.id
+    lineage = config[f'{id_name}']["busco_lineage"]
+    return(lineage)
+
+#### PLOIDY
+def get_ploidy(wildcards):
+    id_name = wildcards.id
+    ploidy = config[f'{id_name}']["ploidy"]
+    return(ploidy)
+
+#### RUN NAME
+def get_run(wildcards):
+    id_name = wildcards.id
+    run = config[f'{id_name}']["run"]
+    return(run)
