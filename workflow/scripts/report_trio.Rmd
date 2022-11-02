@@ -4,7 +4,7 @@ author:
     -
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 params:
-   rmd: "report.Rmd"
+   rmd: "report_trio.Rmd"
 output:
   html_document:
     highlight: tango

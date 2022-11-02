@@ -90,7 +90,7 @@ rule report_trio:
         P_merq_block_stats_1 = P_ASM_QC + "/merqury/{id}_purge_merqury_trio.{id}_hap1.purged.100_20000.phased_block.stats",
         P_merq_block_stats_2 = P_ASM_QC + "/merqury/{id}_purge_merqury_trio.{id}_hap2.purged.100_20000.phased_block.stats",
     output:
-        res_path + "/{runid}/report_trio_{id}.html"
+        res_path + "/{runid}/{id}/report_trio.html"
     params:
         id = "{id}", # get filename
         mode = get_mode, # get assembly mode
@@ -103,10 +103,10 @@ rule report_trio:
         "../scripts/report_trio.Rmd"
 
 
-# rule rename_report_trio:
-#     input:
-#         rules.report_trio.output
-#     output:
-#         res_path + "/{runid}/report_{id}.html"
-#     shell:
-#         "mv {input} {output}"
+rule rename_report_trio:
+    input:
+        rules.report_trio.output
+    output:
+        res_path + "/{runid}/report_trio_{id}.html"
+    shell:
+        "mv {input} {output}"
