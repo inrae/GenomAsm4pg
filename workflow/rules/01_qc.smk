@@ -39,8 +39,6 @@ rule genometools_on_raw_data:
         config["root"] + "/" + config["resdir"] + "/" + config["fastxdir"] + "/{id}.fasta.gz"
     output:
         res_path + "/{runid}/01_raw_data_QC/03_genometools/{id}.RawStat.txt"
-    benchmark:
-        res_path + "/{runid}/benchmark/{id}_genometools_rawQC.txt"
     priority: 1
     threads: 4
     container:

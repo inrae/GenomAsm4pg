@@ -5,6 +5,8 @@ rule meryl:
         config["root"] + "/" + config["resdir"] + "/" + config["fastxdir"] + "/{id}.fasta.gz"
     output:
         directory(res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_reads-db_k21.meryl")
+    benchmark:
+        res_path + "/{runid}/benchmark/{id}_meryl.txt"
     threads: 20
     resources:
         mem_mb=60000
@@ -38,6 +40,8 @@ rule merqury:
     params:
         prefix = "{id}_merqury",
         path = res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury",
+    benchmark:
+        res_path + "/{runid}/benchmark/{id}_merqury.txt"
     threads: 20
     resources:
         mem_mb=60000
@@ -56,6 +60,8 @@ rule meryl_trio:
     output:
         p1 = directory(res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_P1_reads-db_k21.meryl"),
         p2 = directory(res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_P2_reads-db_k21.meryl")
+    benchmark:
+        res_path + "/{runid}/benchmark/{id}_meryl_trio.txt"
     threads: 10
     resources:
         mem_mb=60000
@@ -108,6 +114,8 @@ rule merqury_trio:
     params:
         path = res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury",
         prefix = "{id}_merqury_trio"
+    benchmark:
+        res_path + "/{runid}/benchmark/{id}_merqury_trio.txt"
     threads: 20
     resources:
         mem_mb=60000

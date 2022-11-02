@@ -32,6 +32,8 @@ use rule merqury as purge_merqury with:
     params:
         prefix = "{id}_purge_merqury",
         path = res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/01_assembly_QC/merqury"
+    benchmark:
+        res_path + "/{runid}/benchmark/{id}_merqury_purged.txt"
 
 ######### MERQURY TRIO
 rule cp_purge_trio:
@@ -81,6 +83,8 @@ rule purge_merqury_trio:
     params:
         path = res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/01_assembly_QC/merqury",
         prefix = "{id}_purge_merqury_trio"
+    benchmark:
+        res_path + "/{runid}/benchmark/{id}_merqury_trio_purged.txt"
     threads: 20
     resources:
         mem_mb=60000

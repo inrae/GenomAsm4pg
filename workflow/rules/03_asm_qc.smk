@@ -28,6 +28,8 @@ rule busco:
         prefix=res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/busco",
         lineage=get_busco_lin, # get lineage from config
         sample="{id}_hap{n}"
+    benchmark:
+        res_path + "/{runid}/benchmark/{id}_hap{n}_busco.txt"
     threads: 20
     resources:
         mem_mb=100000

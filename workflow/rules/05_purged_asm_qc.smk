@@ -13,6 +13,8 @@ use rule busco as purge_busco with:
         prefix=res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/01_assembly_QC/busco",
         lineage=get_busco_lin, # get lineage from config
         sample="{id}_purged_hap{n}"
+    benchmark:
+        res_path + "/{runid}/benchmark/{id}_hap{n}_busco_purged.txt"
 
 # reuse genometools rule from 03_asm_qc.smk
 use rule genometools_on_raw_data as purge_genometools with:

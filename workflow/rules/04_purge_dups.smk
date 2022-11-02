@@ -12,6 +12,8 @@ rule purge_dups_cutoffs:
         cutoffs = res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/00_assembly/{id}_hap{n}/cutoffs"
     params:
         dir=res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/00_assembly/{id}_hap{n}"
+    benchmark:
+        res_path + "/{runid}/benchmark/{id}_hap{n}_purgedups_cutoffs.txt"
     threads: 20
     resources:
         mem_mb=100000
@@ -35,6 +37,8 @@ rule purge_dups:
         log = res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/00_assembly/{id}_hap{n}/purge_dups.log"
     params:
         dir=res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/00_assembly/{id}_hap{n}"
+    benchmark:
+        res_path + "/{runid}/benchmark/{id}_hap{n}_purgedups.txt"
     threads: 20
     resources:
         mem_mb=100000

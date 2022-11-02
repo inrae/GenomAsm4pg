@@ -9,6 +9,8 @@ rule hifiasm:
         hap2 = config["root"] + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}.bp.hap2.p_ctg.gfa"
     params:
         prefix = config["root"] + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}"
+    benchmark:
+        config["root"] + "/" + config["resdir"] + "/{runid}/benchmark/{id}_hifiasm_benchmark.txt"
     threads: 20
     resources:
         mem_mb=250000
@@ -30,6 +32,8 @@ rule hifiasm_hic:
         hap2 = config["root"] + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}.hic.hap2.p_ctg.gfa"
     params:
         prefix= config["root"] + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}"
+    benchmark:
+        config["root"] + "/" + config["resdir"] + "/{runid}/benchmark/{id}_hifiasm_hic_benchmark.txt"
     threads: 20
     resources:
         mem_mb=250000
@@ -46,6 +50,8 @@ rule yak:
     output:
         p1 = config["root"] + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/yak/{id}_parent1.yak",
         p2 = config["root"] + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/yak/{id}_parent2.yak"
+    benchmark:
+        config["root"] + "/" + config["resdir"] + "/{runid}/benchmark/{id}_yak_benchmark.txt"
     container:
         "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/hifiasm0.16.1"
     shell:
@@ -63,6 +69,8 @@ rule hifiasm_trio:
         hap2 = config["root"] + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}.dip.hap2.p_ctg.gfa"
     params:
         prefix = config["root"] + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}"
+    benchmark:
+        config["root"] + "/" + config["resdir"] + "/{runid}/benchmark/{id}_hifiasm_trio_benchmark.txt"
     threads: 20
     resources:
         mem_mb=250000
