@@ -13,8 +13,8 @@ rule report:
         # hifiasm assembly QC
         gt_asm_1 = ASM_QC + "/assembly_stats/{id}_hap1.AStats.txt",
         gt_asm_2 = ASM_QC + "/assembly_stats/{id}_hap2.AStats.txt",
-        busco_1 = ASM_QC + "/busco/{id}_hap1/short_summary.specific.eudicots_odb10.{id}_hap1.txt",
-        busco_2 = ASM_QC + "/busco/{id}_hap2/short_summary.specific.eudicots_odb10.{id}_hap2.txt",
+        busco_1 = ASM_QC + "/busco/{id}_hap1/short_summary.specific.{lin}.{id}_hap1.txt",
+        busco_2 = ASM_QC + "/busco/{id}_hap2/short_summary.specific.{lin}.{id}_hap2.txt",
         kplot_1 = ASM_QC + "/katplot/hap1/{id}_hap1.katplot.png",
         kplot_2 = ASM_QC + "/katplot/hap2/{id}_hap2.katplot.png",
         tel_1 = ASM_QC + "/telomeres/{id}_hap1_telomeres.txt",
@@ -24,8 +24,8 @@ rule report:
         # after purge_dups assembly QC
         P_gt_asm_1 = P_ASM_QC + "/assembly_stats/{id}_purged_hap1.AStats.txt",
         P_gt_asm_2 = P_ASM_QC + "/assembly_stats/{id}_purged_hap2.AStats.txt",
-        P_busco_1 = P_ASM_QC + "/busco/{id}_purged_hap1/short_summary.specific.eudicots_odb10.{id}_purged_hap1.txt",
-        P_busco_2 = P_ASM_QC + "/busco/{id}_purged_hap2/short_summary.specific.eudicots_odb10.{id}_purged_hap2.txt",
+        P_busco_1 = P_ASM_QC + "/busco/{id}_purged_hap1/short_summary.specific.{lin}.{id}_purged_hap1.txt",
+        P_busco_2 = P_ASM_QC + "/busco/{id}_purged_hap2/short_summary.specific.{lin}.{id}_purged_hap2.txt",
         P_kplot_1 = P_ASM_QC + "/katplot/hap1/{id}_purged_hap1.katplot.png",
         P_kplot_2 = P_ASM_QC + "/katplot/hap2/{id}_purged_hap2.katplot.png",
         P_tel_1 = P_ASM_QC + "/telomeres/{id}_hap1_purged_telomeres.txt",
@@ -33,11 +33,11 @@ rule report:
         P_merq_comp = rules.purge_merqury.output.stat,
         P_merq_err = rules.purge_merqury.output.qv
     output:
-        res_path + "/{runid}/{id}/report.html"
+        res_path + "/{runid}/{id}/{lin}/report.html"
     params:
         id="{id}",
         mode=get_mode,
-        run=get_run
+        run=get_run,
     container:
         "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/rmarkdown4.0.3"
     script:
@@ -47,7 +47,7 @@ rule rename_report:
     input:
         rules.report.output
     output:
-        res_path + "/{runid}/report_{id}.html"
+        res_path + "/{runid}/report_{id}.{lin}.html"
     shell:
         "mv {input} {output}"
 
@@ -60,8 +60,8 @@ rule report_trio:
         # hifiasm assembly QC
         gt_asm_1 = ASM_QC + "/assembly_stats/{id}_hap1.AStats.txt",
         gt_asm_2 = ASM_QC + "/assembly_stats/{id}_hap2.AStats.txt",
-        busco_1 = ASM_QC + "/busco/{id}_hap1/short_summary.specific.eudicots_odb10.{id}_hap1.txt",
-        busco_2 = ASM_QC + "/busco/{id}_hap2/short_summary.specific.eudicots_odb10.{id}_hap2.txt",
+        busco_1 = ASM_QC + "/busco/{id}_hap1/short_summary.specific.{lin}.{id}_hap1.txt",
+        busco_2 = ASM_QC + "/busco/{id}_hap2/short_summary.specific.{lin}.{id}_hap2.txt",
         kplot_1 = ASM_QC + "/katplot/hap1/{id}_hap1.katplot.png",
         kplot_2 = ASM_QC + "/katplot/hap2/{id}_hap2.katplot.png",
         tel_1 = ASM_QC + "/telomeres/{id}_hap1_telomeres.txt",
@@ -76,8 +76,8 @@ rule report_trio:
         # after purge_dups assembly QC
         P_gt_asm_1 = P_ASM_QC + "/assembly_stats/{id}_purged_hap1.AStats.txt",
         P_gt_asm_2 = P_ASM_QC + "/assembly_stats/{id}_purged_hap2.AStats.txt",
-        P_busco_1 = P_ASM_QC + "/busco/{id}_purged_hap1/short_summary.specific.eudicots_odb10.{id}_purged_hap1.txt",
-        P_busco_2 = P_ASM_QC + "/busco/{id}_purged_hap2/short_summary.specific.eudicots_odb10.{id}_purged_hap2.txt",
+        P_busco_1 = P_ASM_QC + "/busco/{id}_purged_hap1/short_summary.specific.{lin}.{id}_purged_hap1.txt",
+        P_busco_2 = P_ASM_QC + "/busco/{id}_purged_hap2/short_summary.specific.{lin}.{id}_purged_hap2.txt",
         P_kplot_1 = P_ASM_QC + "/katplot/hap1/{id}_purged_hap1.katplot.png",
         P_kplot_2 = P_ASM_QC + "/katplot/hap2/{id}_purged_hap2.katplot.png",
         P_tel_1 = P_ASM_QC + "/telomeres/{id}_hap1_purged_telomeres.txt",
@@ -90,7 +90,7 @@ rule report_trio:
         P_merq_block_stats_1 = P_ASM_QC + "/merqury/{id}_purge_merqury_trio.{id}_hap1.purged.100_20000.phased_block.stats",
         P_merq_block_stats_2 = P_ASM_QC + "/merqury/{id}_purge_merqury_trio.{id}_hap2.purged.100_20000.phased_block.stats",
     output:
-        res_path + "/{runid}/{id}/report_trio.html"
+        res_path + "/{runid}/{id}/{lin}/report_trio.html"
     params:
         id = "{id}", # get filename
         mode = get_mode, # get assembly mode
@@ -107,6 +107,18 @@ rule rename_report_trio:
     input:
         rules.report_trio.output
     output:
-        res_path + "/{runid}/report_trio_{id}.html"
+        res_path + "/{runid}/report_trio_{id}.{lin}.html"
     shell:
         "mv {input} {output}"
+
+rule multiqc:
+    output:
+        res_path + "/{runid}/multiqc/{id}_multiqc.html"
+    params:
+        indir = res_path + "/{runid}",
+        name = "{id}_multiqc",
+        out = res_path + "/{runid}/multiqc"
+    container:
+        "docker://ewels/multiqc"
+    shell:
+        "multiqc {params.indir} --filename {params.name} --outdir {params.out} --ignore \"*multiqc*\" -d -dd 1 -f"

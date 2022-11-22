@@ -37,6 +37,14 @@ def for_report_trio(id_list):
             NAME.append(i)
     return(NAME)
 
+#### BUSCO LINEAGE
+def busco_lin(id_list):
+    lineage_list = []
+    for i in id_list:
+        lineage = config[i]["busco_lineage"]
+        lineage_list.append(lineage)
+    return(lineage_list)
+
 ########### CHECK IF BAM AND FASTQ ARE AVAILABLE ###########
 #### BAM
 def check_bam(dirpath, IDlist):

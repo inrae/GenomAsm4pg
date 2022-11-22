@@ -22,14 +22,13 @@ rule busco:
     input:
         rules.unzip_hap_fasta.output
     output:
-        directory(res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/busco/{id}_hap{n}"),
-        res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/busco/{id}_hap{n}/short_summary.specific.eudicots_odb10.{id}_hap{n}.txt",
+        res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/busco/{id}_hap{n}/short_summary.specific.{lin}.{id}_hap{n}.txt"
     params:
         prefix=res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/busco",
         lineage=get_busco_lin, # get lineage from config
         sample="{id}_hap{n}"
     benchmark:
-        res_path + "/{runid}/benchmark/{id}_hap{n}_busco.txt"
+        res_path + "/{runid}/benchmark/{id}_hap{n}_{lin}_busco.txt"
     threads: 20
     resources:
         mem_mb=100000

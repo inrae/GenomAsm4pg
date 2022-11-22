@@ -45,16 +45,27 @@ longqc_output = expand(res_path + "/{Bid}/{run}/01_raw_data_QC/02_longQC", zip,
 fastqc_output =  expand(res_path + "/{Fid}/{run}/01_raw_data_QC/01_fastQC/{Fid}_fastqc.{ext}", zip,
     run=FID_RUN, Fid=fastqIDS, ext=["html", "zip"])
 
+
+
 ### REPORT
 REP_ID = for_report(IDS)
 RUNID_REG = run_id(REP_ID)
-report_output = expand(res_path + "/{runid}/report_{id}.html", zip,
-    runid=RUNID_REG, id=REP_ID)
+BUSCO_LIN = busco_lin(REP_ID)
+
+report_output = expand(res_path + "/{runid}/report_{id}.{lin}.html", zip,
+    runid=RUNID_REG, id=REP_ID, lin = BUSCO_LIN )
+
 ### REPORT TRIO
 REP_TRIO_ID = for_report_trio(IDS)
 RUNID_TRIO = run_id(REP_TRIO_ID)
-report_trio_output = expand(res_path + "/{runid}/report_trio_{id}.html", zip,
-    runid=RUNID_TRIO, id=REP_TRIO_ID)
+BUSCO_LIN_TRIO = busco_lin(REP_TRIO_ID)
+
+
+report_trio_output = expand(res_path + "/{runid}/report_trio_{id}.{lin}.html", zip,
+    runid=RUNID_TRIO, id=REP_TRIO_ID, lin = BUSCO_LIN_TRIO)
+
+
+
 
 ### SYM LINK
 ## symbolic link to final assembly
@@ -69,6 +80,17 @@ cut_eval1 = expand(res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_a
 cut_eval2 = expand(res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/00_assembly/{id}_hap{n}/cutoffs_graph_hap{n}.png", zip,
     runid=RUNID_TRIO, id=REP_TRIO_ID, n=["1", "2"])
 
+# BUSCO
+busco_reg = expand(res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/busco/{id}_hap{n}/short_summary.specific.{lin}.{id}_hap{n}.txt", zip,
+    runid=RUNID_REG, id=REP_ID, n=["1", "2"], lin = BUSCO_LIN)
+busco_purged_reg = expand(res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/01_assembly_QC/busco/{id}_purged_hap{n}/short_summary.specific.{lin}.{id}_purged_hap{n}.txt", zip,
+    runid=RUNID_REG, id=REP_ID, n=["1", "2"], lin = BUSCO_LIN)
+
+busco_trio = expand(res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/busco/{id}_hap{n}/short_summary.specific.{lin}.{id}_hap{n}.txt", zip,
+    runid=RUNID_TRIO, id=REP_TRIO_ID, n=["1", "2"], lin = BUSCO_LIN_TRIO)
+busco_purged_trio = expand(res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/01_assembly_QC/busco/{id}_purged_hap{n}/short_summary.specific.{lin}.{id}_purged_hap{n}.txt", zip,
+    runid=RUNID_TRIO, id=REP_TRIO_ID, n=["1", "2"], lin = BUSCO_LIN_TRIO)
+
 rule_all_input_list = [
     longqc_output,
     fastqc_output,
@@ -78,6 +100,10 @@ rule_all_input_list = [
     symb_link2,
     report_output,
     report_trio_output,
+    busco_reg,
+    busco_purged_reg,
+    busco_trio,
+    busco_purged_trio
 ]
 
 #### target files
