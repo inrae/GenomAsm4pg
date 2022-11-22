@@ -1,17 +1,19 @@
 ### to purge haplotigs in hifiasm assembly
 # input haplotypes
-HAP_FA_GZ = config["root"] + "/" + config["resdir"] + "/{id}/{run}/" + config["assembdir"] + "/" + config["asm_raw"] + "/" + config["asm"] + "/{id}_hap{n}.fa.gz"
+HAP_FA_GZ = res_path + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}_hap{n}.fa.gz"
 
 rule purge_dups_cutoffs:
     input:
         assembly = HAP_FA_GZ,
         reads = config["root"] + "/" + config["resdir"] + "/" + config["fastxdir"] + "/{id}.fasta.gz"
     output:
-        paf = "{resdir}/{id}/{run}/{stepdir}/" + config["asm_purged"] + "/" + config["asm"] + "/hap{n}/{id}_hap{n}.paf.gz",
-        calcuts = "{resdir}/{id}/{run}/{stepdir}/" + config["asm_purged"] + "/" + config["asm"] + "/hap{n}/calcuts.log",
-        cutoffs = "{resdir}/{id}/{run}/{stepdir}/" + config["asm_purged"] + "/" + config["asm"] + "/hap{n}/cutoffs"
+        paf = res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/00_assembly/{id}_hap{n}/{id}_hap{n}.paf.gz",
+        calcuts = res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/00_assembly/{id}_hap{n}/calcuts.log",
+        cutoffs = res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/00_assembly/{id}_hap{n}/cutoffs"
     params:
-        dir="{resdir}/{id}/{run}/{stepdir}/" + config["asm_purged"] + "/" + config["asm"] + "/hap{n}"
+        dir=res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/00_assembly/{id}_hap{n}"
+    benchmark:
+        res_path + "/{runid}/benchmark/{id}_hap{n}_purgedups_cutoffs.txt"
     threads: 20
     resources:
         mem_mb=100000
@@ -28,13 +30,15 @@ rule purge_dups:
         assembly = HAP_FA_GZ,
         cutoffs = rules.purge_dups_cutoffs.output.cutoffs
     output:
-        purge = "{resdir}/{id}/{run}/{stepdir}/" + config["asm_purged"] + "/" + config["asm"] + "/hap{n}/{id}_hap{n}.purged.fa",
-        split = "{resdir}/{id}/{run}/{stepdir}/" + config["asm_purged"] + "/" + config["asm"] + "/hap{n}/{id}_hap{n}.split",
-        self_paf = "{resdir}/{id}/{run}/{stepdir}/" + config["asm_purged"] + "/" + config["asm"] + "/hap{n}/{id}_hap{n}.split.self.paf.gz",
-        bed = "{resdir}/{id}/{run}/{stepdir}/" + config["asm_purged"] + "/" + config["asm"] + "/hap{n}/dups.bed",
-        log = "{resdir}/{id}/{run}/{stepdir}/" + config["asm_purged"] + "/" + config["asm"] + "/hap{n}/purge_dups.log"
+        purge = res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/00_assembly/{id}_hap{n}/{id}_hap{n}.purged.fa",
+        split = res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/00_assembly/{id}_hap{n}/{id}_hap{n}.split",
+        self_paf = res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/00_assembly/{id}_hap{n}/{id}_hap{n}.split.self.paf.gz",
+        bed = res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/00_assembly/{id}_hap{n}/dups.bed",
+        log = res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/00_assembly/{id}_hap{n}/purge_dups.log"
     params:
-        dir="{resdir}/{id}/{run}/{stepdir}/" + config["asm_purged"] + "/" + config["asm"] + "/hap{n}"
+        dir=res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/00_assembly/{id}_hap{n}"
+    benchmark:
+        res_path + "/{runid}/benchmark/{id}_hap{n}_purgedups.txt"
     threads: 20
     resources:
         mem_mb=100000
@@ -54,9 +58,9 @@ rule cutoffs_eval:
     input:
         rules.purge_dups_cutoffs.output.cutoffs
     output:
-        "{resdir}/{id}/{run}/{stepdir}/" + config["asm_purged"] + "/" + config["asm"] + "/hap{n}/cutoffs_graph_hap{n}.png"
+        res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/00_assembly/{id}_hap{n}/cutoffs_graph_hap{n}.png"
     params:
-        dir="{resdir}/{id}/{run}/{stepdir}/" + config["asm_purged"] + "/" + config["asm"] + "/hap{n}",
+        dir=res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/00_assembly/{id}_hap{n}",
     container:
         "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/matplotlib0.11.5"
     shell:

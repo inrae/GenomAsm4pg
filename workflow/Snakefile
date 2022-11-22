@@ -1,111 +1,110 @@
 configfile: ".config/masterconfig.yaml"
 
+res_path=config["root"] + "/" + config["resdir"]
+
 ###### Include all scripts & rules necessary to run the workflow ######
 ### Scripts
-include: "scripts/get_files_id.py"
-include: "scripts/branches.py"
+# get parameters from masterconfig
+include: "scripts/from_config/hifiasm_mode.py"
+include: "scripts/from_config/parameters.py"
+include: "scripts/from_config/target_list.py"
 
 ### Rules
-## PRE ASSEMBLY
-# QC
-include: "rules/longqc.smk"
-include: "rules/fastqc.smk"
-# Statistics 
-include: "rules/genometools_on_raw_data.smk"
-include: "rules/jellyfish.smk"
-include: "rules/genomescope.smk"
+## PRE ASSEMBLY QC
+include: "rules/01_qc.smk"
 ## ASSEMBLY
-if config["mode"] == "trio":
-    include: "rules/hifiasm_trio.smk"
-elif config["mode"] == "hi-c":
-    include: "rules/hifiasm_hic.smk"
-else:
-    include: "rules/hifiasm.smk"
-include: "rules/hap_gfa_to_fasta.smk"
+include: "rules/02_asm.smk"
 # Statistics
-include: "rules/genometools_on_assembly.smk"
-include: "rules/unzip_hap_fasta.smk"
-include: "rules/busco.smk"
-include: "rules/kat.smk"
-include: "rules/meryl.smk"
-include: "rules/merqury.smk"
-include: "modules/merqury_trio.smk"
+include: "rules/03_asm_qc.smk"
+include: "rules/03.5_A_qc_merqury.smk"
 # Purging
-include: "rules/purge_dups.smk"
-include: "modules/purged_stats.smk"
+include: "rules/04_purge_dups.smk"
+include: "rules/05_purged_asm_qc.smk"
+include: "rules/05.5_PA_qc_merqury.smk"
 # Link final assembly
-include: "rules/link_final_asm.smk"
-# Telomeres
-include: "rules/find_telomeres.smk"
+include: "rules/06_sym_link_hap.smk"
 ## AUTOMATIC REPORT
-if config["mode"] == "trio":
-    include: "rules/report_trio.smk"
-else:
-    include: "rules/report.smk"
+include: "rules/07_report.smk"
 
 ###### get filenames for workflow ######
-if config["get_all_filename"]:
-    IDS=get_files_id(config["root"] + "/" + config["resdir"] + "/" + config["fastxdir"])
-else:
-    IDS=config["IDS"]
+IDS=config["IDS"]
 bamIDS=check_bam(config["root"] + "/" + config["resdir"] + "/" + config["bamdir"], IDS)
 fastqIDS=check_fastq(config["root"] + "/" + config["resdir"] + "/" + config["fastxdir"], IDS)
+####
+RUNID = run_id(config["IDS"])
+BID_RUN = run_BFid(bamIDS)
+FID_RUN = run_BFid(fastqIDS)
 
 ###### results path ######
 res_path=config["root"] + "/" + config["resdir"]
 
 ###### Target files ######
 ## raw data stats
-longqc_output = expand("{resdir}/{Bid}/{run}/{stepdir}/{tooldir}", resdir=res_path, run=config["run"], stepdir=config["qcdir"], tooldir=config["lqc"], Bid=bamIDS),
-fastqc_output =  expand("{resdir}/{Fid}/{run}/{stepdir}/{tooldir}/{Fid}_fastqc.{ext}", resdir=res_path, run=config["run"], stepdir=config["qcdir"], tooldir=config["fqc"], Fid=fastqIDS, ext=["html", "zip"])
-genometools_read_output = expand("{resdir}/{id}/{run}/{stepdir}/{tooldir}/{id}.RawStat.txt", resdir=res_path, run=config["run"], stepdir=config["qcdir"], tooldir=config["gentools"], id=IDS)
-genomescope_output = expand("{resdir}/{id}/{run}/{stepdir}/{tooldir}/genomescope", resdir=res_path, run=config["run"], stepdir=config["qcdir"], tooldir=config["kmer"], id=IDS)
-## assembly stats
-genometools_assem_output =  expand("{resdir}/{id}/{run}/{stepdir}/{asmdir}/{subdir}/assembly_stats/{id}_hap{n}.AStats.txt", resdir=res_path, run=config["run"], stepdir=config["assembdir"], asmdir=config["asm_raw"], subdir=config["asm_qc"], id=IDS, n=["1", "2"])
-busco_output = expand("{resdir}/{id}/{run}/{stepdir}/{asmdir}/{subdir}/busco/{id}_hap{n}", resdir=res_path, run=config["run"], stepdir=config["assembdir"], asmdir=config["asm_raw"], subdir=config["asm_qc"], id=IDS, n=["1", "2"])
-kat_output =  expand("{resdir}/{id}/{run}/{stepdir}/{asmdir}/{subdir}/katplot/hap{n}/{id}_hap{n}.katplot.png", resdir=res_path, run=config["run"], stepdir=config["assembdir"], asmdir=config["asm_raw"], subdir=config["asm_qc"], id=IDS, n=["1", "2"])
-telomeres_output = expand("{resdir}/{id}/{run}/{stepdir}/{asmdir}/{subdir}/telomeres/{id}_hap{n}_telomeres.txt", resdir=res_path, run=config["run"], stepdir=config["assembdir"], asmdir=config["asm_raw"], subdir=config["asm_qc"], id=IDS, n=["1", "2"])
-## purged assembly stats
-purge_busco_output = expand("{resdir}/{id}/{run}/{stepdir}/{asmdir}/{subdir}/busco/{id}_purged_hap{n}", resdir=res_path, run=config["run"], stepdir=config["assembdir"], asmdir=config["asm_purged"], subdir=config["asm_qc"], id=IDS, n=["1", "2"])
-purge_genometools_output =expand("{resdir}/{id}/{run}/{stepdir}/{asmdir}/{subdir}/assembly_stats/{id}_purged_hap{n}.AStats.txt", resdir=res_path, run=config["run"], stepdir=config["assembdir"], asmdir=config["asm_purged"], subdir=config["asm_qc"], id=IDS, n=["1", "2"])
-purge_kat_output = expand("{resdir}/{id}/{run}/{stepdir}/{asmdir}/{subdir}/katplot/hap{n}/{id}_purged_hap{n}.katplot.png", resdir=res_path, run=config["run"], stepdir=config["assembdir"], asmdir=config["asm_purged"], subdir=config["asm_qc"], id=IDS, n=["1", "2"])
-purge_telomeres_output = expand("{resdir}/{id}/{run}/{stepdir}/{asmdir}/{subdir}/telomeres/{id}_hap{n}_purged_telomeres.txt", resdir=res_path, run=config["run"], stepdir=config["assembdir"], asmdir=config["asm_purged"], subdir=config["asm_qc"], id=IDS, n=["1", "2"])
-## cutoffs eval
-cut_eval = expand("{resdir}/{id}/{run}/{stepdir}/{asmdir}/{subdir}/hap{n}/cutoffs_graph_hap{n}.png", resdir=res_path, run=config["run"], stepdir=config["assembdir"], asmdir=config["asm_purged"], subdir=config["asm"], id=IDS, n=["1", "2"])
+longqc_output = expand(res_path + "/{Bid}/{run}/01_raw_data_QC/02_longQC", zip,
+    run=BID_RUN, Bid=bamIDS),
+fastqc_output =  expand(res_path + "/{Fid}/{run}/01_raw_data_QC/01_fastQC/{Fid}_fastqc.{ext}", zip,
+    run=FID_RUN, Fid=fastqIDS, ext=["html", "zip"])
+
+
+
+### REPORT
+REP_ID = for_report(IDS)
+RUNID_REG = run_id(REP_ID)
+BUSCO_LIN = busco_lin(REP_ID)
+
+report_output = expand(res_path + "/{runid}/report_{id}.{lin}.html", zip,
+    runid=RUNID_REG, id=REP_ID, lin = BUSCO_LIN )
+
+### REPORT TRIO
+REP_TRIO_ID = for_report_trio(IDS)
+RUNID_TRIO = run_id(REP_TRIO_ID)
+BUSCO_LIN_TRIO = busco_lin(REP_TRIO_ID)
+
+
+report_trio_output = expand(res_path + "/{runid}/report_trio_{id}.{lin}.html", zip,
+    runid=RUNID_TRIO, id=REP_TRIO_ID, lin = BUSCO_LIN_TRIO)
+
+
+
+
+### SYM LINK
 ## symbolic link to final assembly
-symb_link = expand("{resdir}/{id}/{run}/{stepdir}/{id}_hap{n}.fa", resdir=res_path, run=config["run"], stepdir=config["assembdir"], id=IDS, n=["1", "2"])
-## automatic report
-report_output = expand("{resdir}/{id}/{run}/report_{id}_{run}.html", resdir=res_path, run=config["run"], id=IDS)
+symb_link1 = expand(res_path + "/{runid}/{id}_hap{n}.fa", zip,
+    runid=RUNID_REG, id=REP_ID, n=["1", "2"])
+symb_link2 = expand(res_path + "/{runid}/{id}_hap{n}.fa", zip,
+    runid=RUNID_TRIO, id=REP_TRIO_ID, n=["1", "2"])
+
+## PURGE_DUPS CUTOFFS GRAPH
+cut_eval1 = expand(res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/00_assembly/{id}_hap{n}/cutoffs_graph_hap{n}.png", zip,
+    runid=RUNID_REG, id=REP_ID, n=["1", "2"])
+cut_eval2 = expand(res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/00_assembly/{id}_hap{n}/cutoffs_graph_hap{n}.png", zip,
+    runid=RUNID_TRIO, id=REP_TRIO_ID, n=["1", "2"])
+
+# BUSCO
+busco_reg = expand(res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/busco/{id}_hap{n}/short_summary.specific.{lin}.{id}_hap{n}.txt", zip,
+    runid=RUNID_REG, id=REP_ID, n=["1", "2"], lin = BUSCO_LIN)
+busco_purged_reg = expand(res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/01_assembly_QC/busco/{id}_purged_hap{n}/short_summary.specific.{lin}.{id}_purged_hap{n}.txt", zip,
+    runid=RUNID_REG, id=REP_ID, n=["1", "2"], lin = BUSCO_LIN)
+
+busco_trio = expand(res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/busco/{id}_hap{n}/short_summary.specific.{lin}.{id}_hap{n}.txt", zip,
+    runid=RUNID_TRIO, id=REP_TRIO_ID, n=["1", "2"], lin = BUSCO_LIN_TRIO)
+busco_purged_trio = expand(res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/01_assembly_QC/busco/{id}_purged_hap{n}/short_summary.specific.{lin}.{id}_purged_hap{n}.txt", zip,
+    runid=RUNID_TRIO, id=REP_TRIO_ID, n=["1", "2"], lin = BUSCO_LIN_TRIO)
 
 rule_all_input_list = [
     longqc_output,
     fastqc_output,
-    genometools_read_output,
-    genomescope_output,
-    genometools_assem_output,
-    busco_output,
-    kat_output,
-    telomeres_output,
-    purge_busco_output,
-    purge_genometools_output,
-    purge_kat_output,
-    purge_telomeres_output,
-    cut_eval,
-    symb_link,
-    report_output
+    cut_eval1,
+    cut_eval2,
+    symb_link1,
+    symb_link2,
+    report_output,
+    report_trio_output,
+    busco_reg,
+    busco_purged_reg,
+    busco_trio,
+    busco_purged_trio
 ]
-
-## include different merqury output depending on hifiasm mode (trio or default/hi-c)
-if config["mode"] == "trio":
-    merqury_trio_target = expand("{resdir}/{id}/{run}/{stepdir}/{asmdir}/{subdir}/merqury/merqury_trio.qv", resdir=res_path, run=config["run"], stepdir=config["assembdir"], asmdir=config["asm_raw"], subdir=config["asm_qc"], id=IDS, n=["1", "2"])
-    purge_merqury_trio_target = expand("{resdir}/{id}/{run}/{stepdir}/{asmdir}/{subdir}/merqury/purge_merqury_trio.{id}_hap{n}.purged.100_20000.phased_block.stats", resdir=res_path, run=config["run"], stepdir=config["assembdir"], asmdir=config["asm_purged"], subdir=config["asm_qc"], id=IDS, n=["1", "2"])
-    rule_all_input_list.append(merqury_trio_target)
-    rule_all_input_list.append(purge_merqury_trio_target)
-else:
-    merqury_ouput =  expand("{resdir}/{id}/{run}/{stepdir}/{asmdir}/{subdir}/merqury/merqury.qv", resdir=res_path, run=config["run"], stepdir=config["assembdir"], asmdir=config["asm_raw"], subdir=config["asm_qc"], id=IDS)
-    purge_merqury_output = expand("{resdir}/{id}/{run}/{stepdir}/{asmdir}/{subdir}/merqury/purge_merqury.qv", resdir=res_path, run=config["run"], stepdir=config["assembdir"], asmdir=config["asm_purged"], subdir=config["asm_qc"], id=IDS)
-    rule_all_input_list.append(merqury_ouput)
-    rule_all_input_list.append(purge_merqury_output)
 
 #### target files
 rule all:

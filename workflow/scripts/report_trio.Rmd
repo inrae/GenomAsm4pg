@@ -4,7 +4,7 @@ author:
     -
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 params:
-   rmd: "report.Rmd"
+   rmd: "report_trio.Rmd"
 output:
   html_document:
     highlight: tango
@@ -19,9 +19,9 @@ output:
 
 ----
 
-# `r snakemake@params[["id"]]` - run: `r snakemake@config[["run"]]`
-* Run : `r snakemake@config[["run"]]`
-* Hifiasm mode : `r snakemake@config[["mode"]]`
+# `r snakemake@params[["id"]]` - run: `r snakemake@params[["run"]]`
+* Run : `r snakemake@params[["run"]]`
+* Hifiasm mode : `r snakemake@params[["mode"]]`
 * Parent 1 : `r snakemake@params[["p1"]]`
 * Parent 2 : `r snakemake@params[["p2"]]`
 

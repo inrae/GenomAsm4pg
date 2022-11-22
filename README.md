@@ -3,14 +3,16 @@ An automatic and reproducible genome assembly workflow for pangenomic applicatio
 
 This workflow uses [Snakemake](https://snakemake.readthedocs.io/en/stable/) to quickly assemble genomes with a HTML report summarizing obtained assembly stats.
 
-A first script (```prejob.sh```) prepares the data until fasta.gz files are obtained. A second script (```job.sh```) runs the genome assembly and stats.
+This workflow uses [Snakemake](https://snakemake.readthedocs.io/en/stable/) to quickly assemble genomes with a HTML report summarizing obtained assembly stats.
+
+A first script (```prejob.sh```) prepares the data until *fasta.gz* files are obtained. A second script (```job.sh```) runs the genome assembly and stats.
 
 ![workflow DAG](fig/rule_dag.svg)
 
 ## Table of contents
 [TOC]
 
-## Repo directory structure
+## Repo directory structure
 
 
 ```
@@ -140,37 +142,43 @@ workflow_results
 The `fastx_files` directory will be the starting point for the assembly workflow. You can add other datasets but the workflow needs a *fasta.gz* file. If *bam* files or *fastq.gz* files are available, the workflow runs raw data quality control steps.
 
 You will have to modify other variables in file `.config/masterconfig.yaml`:
-- `get_all_filename: True` will run the workflow with all *fasta.gz* in the `fastx_files` directory as input. If you want to choose the input for the workflow, use `get_all_filename: False` and give the fasta filenames as a list in `IDS`.
+- Give the fasta filenames as a list in `IDS`.
+- Your config should follow this template
+```yaml
+# default assembly mode
+sample_1:
+  run: name
+  ploidy: 2
+  busco_lineage: eudicots_odb10
+  mode: default
+
+# trio assembly mode
+sample_2:
+  run: name
+  ploidy: 2
+  busco_lineage: eudicots_odb10
+  mode: trio
+  p1: path/to/parent/1/reads
+  p2: path/to/parent/2/reads
+
+  # hi-c assembly mode
+sample_3:
+  run: name
+  ploidy: 2
+  busco_lineage: eudicots_odb10
+  mode: hi-c
+  r1: path/to/r1/reads
+  r2: path/to/r2/reads
+```
 - Choose your run name with `run`.
 - Specify the organism ploidy with `ploidy`.
 - Choose the BUSCO lineage with `lineage`.
-- There are 3 modes to run hifiasm. In all cases, the organism have to be sequenced in PacBio HiFi. To choose the mode, modify the variable `mode` in file `.config/masterconfig.yaml` to either :
+- There are 3 modes to run hifiasm. In all cases, the organism has to be sequenced in PacBio HiFi. To choose the mode, modify the variable `mode` to either :
     - `default` for a HiFi-only assembly.
     - `trio` if you have parental reads (either HiFi or short reads) in addition to the sequencing of the organism.
         - Add a key corresponding to your filename and modify the variables `p1` and `p2` to be the parental reads. Supported filetypes are *fasta*, *fasta.gz*, *fastq* and *fastq.gz*.
     - `hi-c` if the organism has been sequenced in paired-end Hi-C as well.
         - Add a key corresponding to your filename an modify the variables `r1` and `r2` to be the paired-end Hi-C reads. Supported filetypes are *fasta*, *fasta.gz*, *fastq* and *fastq.gz*.
-
-For example
-```yaml
-# trio datasets
-sibling_1_dataset_placeholder:
-  p1: path/to/parent/1/reads
-  p2: path/to/parent/2/reads
-
-sibling_2_dataset_placeholder:
-  p1: path/to/parent/1/reads
-  p2: path/to/parent/2/reads
-
-# Hi-C datasets
-hic_sample_dataset_1_name_placeholder:
-  r1: path/to/r1/reads
-  r2: path/to/r2/reads
-
-hic_sample_dataset_2_name_placeholder:
-  r1: path/to/r1/reads
-  r2: path/to/r2/reads
-```
 
 Modify the `SNG_BIND` variable in `job.sh`, it has to be the same as the variable `root` in `.config/masterconfig.yaml`. Change line 17 to your email adress.
 If Singularity is not in the HPC environement, add `module load singularity` under Module loading.
