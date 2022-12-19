@@ -18,10 +18,10 @@ tarIDS: "tar_filename"
 resdir: workflow_results
 
 ### PREJOB
-# extracted raw data
-rawdir: 00_raw_data
-bamdir: 00_raw_data/bam_files
-fastxdir: 00_raw_data/fastx_files
+# extracted input data
+rawdir: 00_input_data
+bamdir: 00_input_data/bam_files
+fastxdir: 00_input_data/fastx_files
 
 ### JOB
 # QC
