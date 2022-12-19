@@ -1,25 +1,17 @@
 # absolute path to your desired output path
-root: /gpfs/scratch/sdenni/wf/GenomAsm4pg
+root: /output/path
 
-####################### prejob - data preparation #######################
+####################### optional prejob - data preparation #######################
 # path to tar data
 data: /path
-
 # list of tar names
-get_all_tar_filename: True
+get_all_tar_filename: False
 tarIDS: "tar_filename"
 
 ####################### job - workflow #######################
-#### FILES YOU WANT TO RUN THE WORKFLOW ON
-IDS: ["sample_1"]
+### CONFIG
 
-### PARAMETERS
-## default assembly mode
-sample_1:
-  run: name
-  ploidy: 2
-  busco_lineage: eudicots_odb10
-  mode: default
+
 
 ####################### workflow output directories #######################
 # results directory
