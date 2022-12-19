@@ -52,10 +52,12 @@ echo 'Starting Snakemake workflow'
 mkdir -p slurm_logs
 
 ### Snakemake commands
-## Dry run
-# snakemake --profile $PROFILE -j $MAX_CORES --use-singularity  --singularity-args "-B $SNG_BIND" --cluster-config $CLUSTER_CONFIG -n -r
 
-# snakemake --profile $PROFILE -j $MAX_CORES --use-singularity  --singularity-args "-B $SNG_BIND" --cluster-config $CLUSTER_CONFIG -f print
-
-## Run
-snakemake --profile $PROFILE -j $MAX_CORES --use-singularity --singularity-args "-B $SNG_BIND" --cluster-config $CLUSTER_CONFIG
+if [ "$1" = "dry" ]
+then
+    # dry run
+    snakemake --profile $PROFILE -j $MAX_CORES --use-singularity --singularity-args "-B $SNG_BIND" --cluster-config $CLUSTER_CONFIG -n -r
+else
+    # run
+    snakemake --profile $PROFILE -j $MAX_CORES --use-singularity --singularity-args "-B $SNG_BIND" --cluster-config $CLUSTER_CONFIG
+fi
