@@ -36,7 +36,7 @@ rule fastqc:
 
 rule genometools_on_raw_data:
     input:
-        config["root"] + "/" + config["resdir"] + "/" + config["fastxdir"] + "/{id}.fasta.gz"
+        get_fasta
     output:
         res_path + "/{runid}/01_raw_data_QC/03_genometools/{id}.RawStat.txt"
     priority: 1
@@ -52,7 +52,7 @@ rule genometools_on_raw_data:
 
 rule jellyfish:
     input:
-        config["root"] + "/" + config["resdir"] + "/" + config["fastxdir"] + "/{id}.fasta.gz"
+        get_fasta
     output:
         jf = res_path + "/{runid}/01_raw_data_QC/04_kmer/{id}.jf",
         histo = res_path + "/{runid}/01_raw_data_QC/04_kmer/{id}.histo"

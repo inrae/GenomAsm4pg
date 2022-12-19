@@ -3,7 +3,7 @@
 # REGULAR MODE
 rule hifiasm:
     input:
-        config["root"] + "/" + config["resdir"] + "/" + config["fastxdir"] + "/{id}.fasta.gz"
+        get_fasta
     output:
         hap1 = config["root"] + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}.bp.hap1.p_ctg.gfa",
         hap2 = config["root"] + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}.bp.hap2.p_ctg.gfa"
@@ -26,7 +26,7 @@ rule hifiasm_hic:
         r1 = get_r1,
         r2 = get_r2,
         # hifi reads
-        hifi = config["root"] + "/" + config["resdir"] + "/" + config["fastxdir"] + "/{id}.fasta.gz"
+        hifi = get_fasta
     output:
         hap1 = config["root"] + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}.hic.hap1.p_ctg.gfa",
         hap2 = config["root"] + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}.hic.hap2.p_ctg.gfa"
@@ -63,7 +63,7 @@ rule hifiasm_trio:
     input:
         p1 = rules.yak.output.p1,
         p2 = rules.yak.output.p2,
-        child = config["root"] + "/" + config["resdir"] + "/" + config["fastxdir"] + "/{id}.fasta.gz"
+        child = get_fasta
     output:
         hap1 = config["root"] + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}.dip.hap1.p_ctg.gfa",
         hap2 = config["root"] + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}.dip.hap2.p_ctg.gfa"
