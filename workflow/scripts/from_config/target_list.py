@@ -49,24 +49,15 @@ def busco_lin(id_list):
 #### BAM
 def check_bam(dirpath, IDlist):
     IDS = []
-    for file in os.listdir(dirpath):
-        splitResult = file.split(".")
-        if splitResult[0] in IDlist:
-            ext = splitResult[-1]
-            if ext == "bam":
-                filename= ".".join(splitResult[:-1])
-                IDS.append(filename)
+    for i in id_list:
+        if config[i]["bam"]:
+            IDS.append(i)
     return(IDS)
 
 #### FASTQ
 def check_fastq(dirpath, IDlist):
     IDS = []
-    for file in os.listdir(dirpath):
-        splitResult = file.split(".")
-        if splitResult[0] in IDlist:
-            ext = splitResult[-1]
-            if ext == "gz":
-                if splitResult[-2] == "fastq":
-                    filename= ".".join(splitResult[:-2])
-                    IDS.append(filename)
+    for i in id_list:
+        if config[i]["fastq"]:
+            IDS.append(i)
     return(IDS)

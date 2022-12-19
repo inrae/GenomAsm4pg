@@ -18,3 +18,9 @@ def get_run(wildcards):
     id_name = wildcards.id
     run = config[f'{id_name}']["run"]
     return(run)
+
+#### FASTA PATH
+def get_fasta(wildcards):
+    id_name = wildcards.id
+    fa = config[f'{id_name}']["fasta"]
+    return(fa)
