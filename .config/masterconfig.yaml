@@ -1,54 +1,16 @@
 # absolute path to your desired output path
-root: /gpfs/scratch/sdenni/wf/GenomAsm4pg
+root: /output/path
 
-### TEMPLATE
-IDS: ["E742-Rouge_de_Roussillon_ccs-20", "E742-CH-240_1-20"]
-
-# IDS_1:
-  # path: path
-  # bam: true
-#   run: name
-#   ploidy: 2
-#   busco_lineage: eudi
-#   mode: default
-
-# IDS_2:
-  # path: path
-  # bam: false
-#   run: name
-#   ploidy: 2
-#   busco_lineage: eudi
-#   mode: trio
-#   p1: path
-#   p2: path
-
-### TRIAL
-E742-Rouge_de_Roussillon_ccs-20:
-  bam: False
-  run: test_runid
-  ploidy: 2
-  busco_lineage: eudicots_odb10
-  mode: default
-
-E742-CH-240_1-20:
-  bam: False
-  run: test_trio
-  ploidy: 2
-  busco_lineage: eudicots_odb10
-  mode: trio
-  p1: /scratch/sdenni/wf/GenomAsm4pg/workflow_results/00_raw_data/fastx_files/E742-CH-240_1.fasta.gz
-  p2: /scratch/sdenni/wf/GenomAsm4pg/workflow_results/00_raw_data/fastx_files/E742-CH-240_1-20.fasta.gz
-
-####################### prejob - data preparation #######################
+####################### optional prejob - data preparation #######################
 # path to tar data
 data: /path
-
 # list of tar names
-get_all_tar_filename: True
+get_all_tar_filename: False
 tarIDS: "tar_filename"
 
 ####################### job - workflow #######################
-# list of fasta.gz names
+### CONFIG
+
 
 
 ####################### workflow output directories #######################
