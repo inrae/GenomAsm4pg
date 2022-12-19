@@ -18,7 +18,7 @@ rule longqc:
 ### QC on .fastq.gz files with FastQC
 rule fastqc:
     input:
-        config["root"] + "/" + config["resdir"] + "/" + config["fastxdir"] + "/{Fid}.fastq.gz"
+        get_fastq
     output:
         multiext(res_path + "/{Fid}/{run}/01_raw_data_QC/01_fastQC/{Fid}_fastqc", ".html", ".zip")
     params:

@@ -19,8 +19,20 @@ def get_run(wildcards):
     run = config[f'{id_name}']["run"]
     return(run)
 
-#### FASTA PATH
+#### FASTA
 def get_fasta(wildcards):
     id_name = wildcards.id
     fa = config[f'{id_name}']["fasta"]
     return(fa)
+
+#### FASTQ
+def get_fastq(wildcards):
+    id_name = wildcards.Fid
+    fq = config[f'{id_name}']["fastq"]
+    return(fq)
+
+#### BAM
+def get_bam(wildcards):
+    id_name = wildcards.Bid
+    fq = config[f'{id_name}']["bam"]
+    return(fq)
