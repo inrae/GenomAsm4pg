@@ -3,8 +3,6 @@ An automatic and reproducible genome assembly workflow for pangenomic applicatio
 
 This workflow uses [Snakemake](https://snakemake.readthedocs.io/en/stable/) to quickly assemble genomes with a HTML report summarizing obtained assembly stats.
 
-This workflow uses [Snakemake](https://snakemake.readthedocs.io/en/stable/) to quickly assemble genomes with a HTML report summarizing obtained assembly stats.
-
 A first script (```prejob.sh```) prepares the data until *fasta.gz* files are obtained. A second script (```job.sh```) runs the genome assembly and stats.
 
 ![workflow DAG](fig/rule_dag.svg)
