@@ -31,8 +31,8 @@ include: "rules/00_runtime.smk"
 
 ###### get filenames for workflow ######
 IDS=config["IDS"]
-bamIDS=check_bam(config["root"] + "/" + config["resdir"] + "/" + config["bamdir"], IDS)
-fastqIDS=check_fastq(config["root"] + "/" + config["resdir"] + "/" + config["fastxdir"], IDS)
+bamIDS=check_bam(IDS)
+fastqIDS=check_fastq(IDS)
 ####
 RUNID = run_id(config["IDS"])
 BID_RUN = run_BFid(bamIDS)
