@@ -11,6 +11,7 @@
         * [Workflow output](workflow/doc/Outputs.md)
     * [Optional data preparation](workflow/documentation.md#optional-data-preparation)
         * [if your data is in a tarball archive](workflow/doc/Tar-data-preparation.md)
+    * [Going further](workflow/doc/Going-further.md)
     * [Troubleshooting](workflow/documentation.md#known-errors)
         * [known errors](workflow/doc/Known-errors.md)
     * [Software Dependencies](workflow/documentation.md#programs)

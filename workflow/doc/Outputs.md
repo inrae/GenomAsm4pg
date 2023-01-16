@@ -1,6 +1,8 @@
+# Workflow output
+
 [TOC]
 
-# Directories
+## Directories
 There are three directories for the data produced by the workflow:
 - An automatic report is generated in the `RUN` directory.
 - `01_raw_data_QC` contains all quality control ran on the reads. FastQC and LongQC create HTML reports on fastq and bam files respectively, reads stats are given by Genometools, and predictions of genome size and heterozygosity are given by Genomescope (in directory `04_kmer`).
@@ -39,7 +41,7 @@ workflow_results
                     └── telomeres
 ```
 
-# Additional files
+## Additional files
 - Symbolic links to haplotype 1 and haplotype 2 assemblies after purge_dups
 - HTML report with the main results from each program
 - Runtime file with the total workflow runtime for the dataset
