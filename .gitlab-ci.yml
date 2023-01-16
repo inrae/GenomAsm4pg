@@ -1,5 +1,5 @@
-# requiring the environment of NodeJS 10
-image: node:10
+# requiring the environment of NodeJS LTS
+image: node:lts
 
 # add 'node_modules' to cache for speeding up builds
 cache:
