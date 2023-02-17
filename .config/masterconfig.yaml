@@ -1,17 +1,35 @@
 # absolute path to your desired output path
-root: /output/path
+root: /workspace/hrakws/pipelines/genome_assembly_original/GenomAsm4pg
 
 ####################### optional prejob - data preparation #######################
 # path to tar data
-data: /path
+data: /workspace/hrakws/tools/sample_data
 # list of tar names
-get_all_tar_filename: False
-tarIDS: "tar_filename"
+get_all_tar_filename: True
+tarIDS: []
 
 ####################### job - workflow #######################
 ### CONFIG
+get_all_filenames: True
+IDS: ["sd_0001.ccs", "sd_0002.ccs", "sd_0003.ccs"]
 
+sd_0001.ccs:
+  run: sd_0001.ccs
+  ploidy: 2
+  busco_lineage: eudicots_odb10
+  mode: default
 
+sd_0002.ccs:
+  run: sd_0002.ccs
+  ploidy: 2
+  busco_lineage: eudicots_odb10
+  mode: default
+
+sd_0003.ccs:
+  run: sd_0003.ccs
+  ploidy: 2
+  busco_lineage: eudicots_odb10
+  mode: default
 
 ####################### workflow output directories #######################
 # results directory

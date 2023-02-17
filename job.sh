@@ -14,7 +14,7 @@
 #SBATCH -o slurm_logs/snakemake.%N.%j.out
 #SBATCH -e slurm_logs/snakemake.%N.%j.err
 #SBATCH --mail-type=END,FAIL
-#SBATCH --mail-user=sukanya.denni@univ-rouen.fr
+#SBATCH --mail-user=ken.smith@plantandfood.co.nz
 ################################################################################
 
 # Useful information to print
@@ -40,11 +40,12 @@ echo '########################################'
 CLUSTER_CONFIG=".config/snakemake_profile/slurm/cluster_config.yml"
 MAX_CORES=10
 PROFILE=".config/snakemake_profile/slurm"
-SNG_BIND="/gpfs/scratch/sdenni/wf/GenomAsm4pg"
+SNG_BIND="/workspace/hrakws/pipelines/genome_assembly_original/GenomAsm4pg"
 
 ### Module Loading:
 module purge
-module load snakemake/6.5.1
+module load snakemake
+module load singularity
 
 echo 'Starting Snakemake workflow'
 

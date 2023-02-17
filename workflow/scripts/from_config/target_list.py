@@ -70,3 +70,16 @@ def check_fastq(dirpath, IDlist):
                     filename= ".".join(splitResult[:-2])
                     IDS.append(filename)
     return(IDS)
+
+
+### FASTA
+def get_files_id(dirpath):
+    IDS = []
+    for file in os.listdir(dirpath):
+        splitResult = file.split(".")
+        ext = splitResult[-1]
+        if ext == "gz":
+            if splitResult[-2] == "fasta":
+                filename= ".".join(splitResult[:-2])
+                IDS.append(filename)
+    return(IDS)
