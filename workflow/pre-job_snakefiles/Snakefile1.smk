@@ -1,5 +1,7 @@
 configfile: ".config/masterconfig.yaml"
 
+include: "../scripts/path_helper.py"
+
 ######################## Python functions ########################
 import os, re
 # tar & tar.gz filename
@@ -29,14 +31,20 @@ def data_ext(dir, id):
                 return(str(config["data"] + "/{id}.tar.gz"))
 
 ######################## Snakemake ########################
+
+### paths
+if config["root"] == ".":
+    abs_root_path = get_abs_root_path()
+    res_path = get_res_path()
+else:
+    abs_root_path = config["root"]
+    res_path = abs_root_path + "/" + config["resdir"]
+
 ### get filenames for workflow
 if config["get_all_tar_filename"]:
     IDS=get_tar_name(config["data"])
 else:
     IDS=config["tarIDS"]
-
-###### results path ######
-res_path=config["root"] + "/" + config["resdir"]
 
 ### target files
 rule all:
@@ -60,9 +68,9 @@ rule extract_targz_data:
 # move bam and fasta + fastq files
 rule move_files:
     params:
-        root=config["root"],
-        bam_path=config["root"] + "/" + config["resdir"] + "/" + config["bamdir"],
-        fastx_path=config["root"] + "/" + config["resdir"] + "/" + config["fastxdir"],
+        root= abs_root_path,
+        bam_path= abs_root_path + "/" + config["resdir"] + "/" + config["bamdir"],
+        fastx_path= abs_root_path + "/" + config["resdir"] + "/" + config["fastxdir"],
     shell:
         "cd {params.root} && "
         "mkdir -p {params.bam_path} {params.fastx_path} && "

@@ -35,12 +35,28 @@ echo 'scontrol show job:'
 scontrol show job $SLURM_JOB_ID
 echo '########################################'
 
+### get SNG_BIND abs path using python
+function SNG_BIND_ABS_PATH {
+    SNG_BIND="$(python3 - <<END
+import os
+
+abs_path = os.getcwd()
+abs_path_corrected = "/".join(abs_path.split("/")[2:])
+abs_path_final = "/" + abs_path_corrected
+
+print(abs_path_final)
+
+END
+)"
+}
+SNG_BIND_ABS_PATH
+
 ### variables
 CLUSTER_CONFIG=".config/snakemake_profile/slurm/cluster_config.yml"
 MAX_CORES=4
 PROFILE=".config/snakemake_profile/slurm"
 SMK_PATH="workflow/pre-job_snakefiles"
-SNG_BIND="/workspace/hrakws/pipelines/genome_assembly_original/GenomAsm4pg"
+
 
 ### Module Loading:
 module purge

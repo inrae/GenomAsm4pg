@@ -10,7 +10,27 @@ A first script (`prejob.sh`) prepares the data until _fasta.gz_ files are obtain
 
 ## Table of contents
 
-[TOC]
+- [ asm4pg ](#-asm4pg-)
+  - [Table of contents](#table-of-contents)
+  - [Repo directory structure](#repo-directory-structure)
+  - [Requirements](#requirements)
+  - [Workflow steps, programs \& Docker images pulled by Snakemake](#workflow-steps-programs--docker-images-pulled-by-snakemake)
+  - [How to run the workflow](#how-to-run-the-workflow)
+    - [Profile setup](#profile-setup)
+    - [SLURM logs](#slurm-logs)
+  - [Workflow execution](#workflow-execution)
+  - [Running the prejob](#running-the-prejob)
+  - [Running the main workflow](#running-the-main-workflow)
+    - [Dry run](#dry-run)
+    - [Outputs](#outputs)
+  - [Known problems/errors](#known-problemserrors)
+    - [HPC](#hpc)
+    - [BUSCO](#busco)
+    - [HiFi assembly](#hifi-assembly)
+    - [Snakemake locked directory](#snakemake-locked-directory)
+  - [How to cite asm4pg?](#how-to-cite-asm4pg)
+  - [License](#license)
+  - [Contacts](#contacts)
 
 ## Repo directory structure
 
@@ -122,11 +142,10 @@ Navigate into the `GenomAsm4pg` directory to run the bash scripts.
 
 ## Running the prejob
 
-Create a test_data folder to hold the test data that will be used to run the pipeline and cd into it.
+Create a test_data folder to hold the test data that will be used to run the pipeline.
 
 ```
 $ mkdir -p test_data
-$ cd test_data/
 ```
 
 Download the test data from `raw.github...` and place it into the `test_data` folder
@@ -136,22 +155,22 @@ Modify the following variables in the following files:
 `.config/masterconfig.yaml`:
 
 - `root`
-  - The path where you want the output to be.
-  - Set this as `./GenomAsm4pg`.
+  - The path where you want the output to be. This can be relative or absolute
+  - Set this to be the repository folder, `.`.
 - `data`
   - The path where you want the input data to be.
-  - Set this to `./test_data/`.
+  - Set this to `test_data`.
   - Alternatively, you have the option of running only on user-specified files:
     - Setting `get_all_tar_filename: True`, will uncompress all tar files.
-    - If you want to choose the the files to uncompress, set `get_all_tar_filename: False` and type out the filenames as a list in `tarIDS`
+    - If you want to choose the files to uncompress, set `get_all_tar_filename: False` and type out the filenames as a list in `tarIDS`
 
 `./prejob.sh`:
 
 - `SNG_BIND`
-  - Set this to be the same as the variable `root` in `.config/masterconfig.yaml` which should be `./GenomAsm4pg`
+  - Set this to be the same as the variable `root` in `.config/masterconfig.yaml` The default is `.`
 - Line 17, `#SBATCH --mail-user=`
   - Set this to be your email adress.
-- `### Module Loading:`
+- `Module Loading:`
   - If Singularity is not in the HPC environement, add `module load singularity` under Module loading.
 
 Once these variables have been set, run the following:
@@ -179,7 +198,7 @@ You will have to modify other variables in `.config/masterconfig.yaml`:
 - Setting `get_all_filenames: True` will take all of the `.fasta.gz` files in the `fastx_files` directory and set them as a list in `IDS`.
 - Alternatively, give the fasta filenames as a list in `IDS` to specify files you want to run the pipeline on.
 
-Your config should also follow this template
+Your config should also follow this template:
 
 ```yaml
 # default assembly mode
@@ -208,7 +227,7 @@ sample_3_file_name:
   r2: path/to/r2/reads
 ```
 
-- Make sure to set the `Sample_1_file_name` keys to match the file names in the `fastx_files` directory. An example can be seen in the `masterconfig.yaml` file which is configured to run on the provided test data.
+- Make sure to set `Sample_1_file_name` to match the file names in the `fastx_files` directory. An example can be seen in the `masterconfig.yaml` file which is configured to run on the provided test data.
 - Choose your run name by setting `run`.
 - Specify the organism ploidy with `ploidy`.
 - Choose the BUSCO lineage with `lineage`.
@@ -222,10 +241,10 @@ sample_3_file_name:
 Modify the following variables in `./job.sh`:
 
 - `SNG_BIND`
-  - Set this to be the same as the variable `root` in `.config/masterconfig.yaml` which should be `./GenomAsm4pg`
+  - Set this to be the same as the variable `root` in `.config/masterconfig.yaml` The default is `.`
 - Line 17, `#SBATCH --mail-user=`
   - Set this to be your email adress.
-- `### Module Loading:`
+- `Module Loading`
   - If Singularity is not in the HPC environement, add `module load singularity` under Module loading.
 
 Once these variables have been set, run the following:
@@ -250,7 +269,7 @@ Check the snakemake.cortex\*.out file in the `slurm_logs` directory, you should 
 
 These are the directories for the data produced by the workflow:
 
-- An automatic report is generated in the `RUN` directory.
+- An automatic report is generated in each `RUN` directory.
 - `01_raw_data_QC` contains all quality control ran on the reads. FastQC and LongQC create html reports on fastq and bam files respectively, reads stats are given by Genometools, and predictions of genome size and heterozygosity are given by Genomescope (in directory `04_kmer`).
 - `02_genome_assembly` contains 2 assemblies. The first one is in `01_raw_assembly`, it is the assembly obtained with hifiasm. The second one is in `02_after_purge_dups_assembly`, it is the hifiasm assembly after haplotigs removal by purge_dups. Both assemblies have a `01_assembly_QC` directory containing assembly statistics done by Genometools (in directory `assembly_stats`), BUSCO analyses (`busco`), k-mer profiles with KAT (`katplot`) and completedness and QV stats with Merqury (`merqury`) as well as assembled telomeres with FindTelomeres (`telomeres`).
 
@@ -295,6 +314,10 @@ The workflow does not work if the HPC does not allow a job to run other jobs.
 ### BUSCO
 
 The first time you run the workflow, if there are multiple samples, the BUSCO lineage might be downladed multiple times. This can create a conflict between the jobs using BUSCO and may interrupt some of them. In that case, you only need to rerun the workflow once everything is done.
+
+### HiFi assembly
+
+If your pipeline fails at the hifiasm step, this may be a result of improper input data being provided. Please make sure that there are no 'N' or undefined bases in your genome data.
 
 ### Snakemake locked directory
 

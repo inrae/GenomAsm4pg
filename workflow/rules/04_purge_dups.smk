@@ -5,7 +5,7 @@ HAP_FA_GZ = res_path + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/
 rule purge_dups_cutoffs:
     input:
         assembly = HAP_FA_GZ,
-        reads = config["root"] + "/" + config["resdir"] + "/" + config["fastxdir"] + "/{id}.fasta.gz"
+        reads = abs_root_path + "/" + config["resdir"] + "/" + config["fastxdir"] + "/{id}.fasta.gz"
     output:
         paf = res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/00_assembly/{id}_hap{n}/{id}_hap{n}.paf.gz",
         calcuts = res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/00_assembly/{id}_hap{n}/calcuts.log",

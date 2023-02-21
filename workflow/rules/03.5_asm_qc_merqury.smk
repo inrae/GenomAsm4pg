@@ -2,7 +2,7 @@
 ### create reads db necessary for merqury
 rule meryl:
     input:
-        config["root"] + "/" + config["resdir"] + "/" + config["fastxdir"] + "/{id}.fasta.gz"
+        abs_root_path + "/" + config["resdir"] + "/" + config["fastxdir"] + "/{id}.fasta.gz"
     output:
         directory(res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_reads-db_k21.meryl")
     benchmark:
