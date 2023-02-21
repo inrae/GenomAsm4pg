@@ -129,10 +129,9 @@ If you are using the current SLURM setup, change line 13 to your email adress in
 
 ### SLURM logs
 
-SLURM submission scripts, prejob.sh and job.sh, output standard and error output into slurm_logs directory. This directory must exist before running any of these submission script else slurm will refuse to submit these jobs.
+SLURM submission scripts, prejob.sh and job.sh, output standard and error output into slurm_logs directory. This directory must exist before running any of these submission script else slurm will refuse to submit these jobs. If slurm_logs doesn't exist, run the following to create it:
 
 ```
-# create if not exist
 mkdir -p slurm_logs
 ```
 

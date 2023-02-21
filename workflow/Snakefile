@@ -7,8 +7,8 @@ include: "scripts/from_config/parameters.py"
 include: "scripts/from_config/target_list.py"
 include: "scripts/path_helper.py"
 
-##### Set up paths #####
-if config["root"] == ".":
+### paths
+if config["root"].startswith("."):
     abs_root_path = get_abs_root_path()
     res_path = get_res_path()
 else:

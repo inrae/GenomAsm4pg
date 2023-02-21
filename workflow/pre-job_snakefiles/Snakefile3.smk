@@ -21,7 +21,7 @@ def get_fastq_name(dirpath):
 ######################## Snakemake ########################
 
 ### root path
-if config["root"] == ".":
+if config["root"].startswith("."):
     abs_root_path = get_abs_root_path()
     res_path = get_res_path()
 else:
