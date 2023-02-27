@@ -4,7 +4,9 @@ An automatic and reproducible genome assembly workflow for pangenomic applicatio
 
 This workflow uses [Snakemake](https://snakemake.readthedocs.io/en/stable/) to quickly assemble genomes with a HTML report summarizing obtained assembly stats.
 
-A first script (`prejob.sh`) prepares the data until _fasta.gz_ files are obtained. A second script (`job.sh`) runs the genome assembly and stats.
+A first script (`prejob.sh`) taking `.tar` file(s) as input aims to convert `.bam` to `.fastq(a).gz` and create `00.raw_data` folder with several subfolders (detailed folder structure is descriped below). This step can be skipped if the user already has fasta(q).gz files that are put in the folders with the same structure. `fastq.gz` is mandatory for raw data QC steps, and (`fasta.gz`) is mandatory if QC is not required. The user must create a single input from multiple hifi runs for a single assembly run using (`job.sh`).
+
+A second script (`job.sh`) runs the genome assembly and stats.
 
 ![workflow DAG](fig/rule_dag.svg)
 
@@ -17,7 +19,6 @@ A first script (`prejob.sh`) prepares the data until _fasta.gz_ files are obtain
   - [Workflow steps, programs \& Docker images pulled by Snakemake](#workflow-steps-programs--docker-images-pulled-by-snakemake)
   - [How to run the workflow](#how-to-run-the-workflow)
     - [Profile setup](#profile-setup)
-    - [SLURM logs](#slurm-logs)
   - [Workflow execution](#workflow-execution)
   - [Running the prejob](#running-the-prejob)
   - [Running the main workflow](#running-the-main-workflow)
@@ -127,14 +128,6 @@ Images are stored on the project's container registry but come from various cont
 The current profile is made for SLURM. To run this workflow on another HPC, create another profile (https://github.com/Snakemake-Profiles) and add it in the `.config/snakemake_profile` directory. Change the `CLUSTER_CONFIG` and `PROFILE` variables in `job.sh` and `prejob.sh`.
 If you are using the current SLURM setup, change line 13 to your email adress in the `cluster_config`.yml file.
 
-### SLURM logs
-
-SLURM submission scripts, prejob.sh and job.sh, output standard and error output into slurm_logs directory. This directory must exist before running any of these submission script else slurm will refuse to submit these jobs. If slurm_logs doesn't exist, run the following to create it:
-
-```
-mkdir -p slurm_logs
-```
-
 ## Workflow execution
 
 Navigate into the `GenomAsm4pg` directory to run the bash scripts.
@@ -157,7 +150,7 @@ Modify the following variables in the following files:
   - The path where you want the output to be. This can be relative or absolute
   - Set this to be the repository folder, `.`.
 - `data`
-  - The path where you want the input data to be.
+  - The path where you want the input data (`.tar`) to be.
   - Set this to `test_data`.
   - Alternatively, you have the option of running only on user-specified files:
     - Setting `get_all_tar_filename: True`, will uncompress all tar files.
@@ -165,8 +158,6 @@ Modify the following variables in the following files:
 
 `./prejob.sh`:
 
-- `SNG_BIND`
-  - Set this to be the same as the variable `root` in `.config/masterconfig.yaml` The default is `.`
 - Line 17, `#SBATCH --mail-user=`
   - Set this to be your email adress.
 - `Module Loading:`
@@ -239,8 +230,6 @@ sample_3_file_name:
 
 Modify the following variables in `./job.sh`:
 
-- `SNG_BIND`
-  - Set this to be the same as the variable `root` in `.config/masterconfig.yaml` The default is `.`
 - Line 17, `#SBATCH --mail-user=`
   - Set this to be your email adress.
 - `Module Loading`
@@ -316,7 +305,7 @@ The first time you run the workflow, if there are multiple samples, the BUSCO li
 
 ### HiFi assembly
 
-If your pipeline fails at the hifiasm step, this may be a result of improper input data being provided. Please make sure that there are no 'N' or undefined bases in your genome data.
+If your pipeline fails at the hifiasm step, this may be a result of improper input data being provided. Please make sure that there are no 'N' or undefined bases in your raw data.
 
 ### Snakemake locked directory
 

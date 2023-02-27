@@ -1,4 +1,4 @@
-# absolute path to your desired output path
+# absolute/relative path to your desired output path
 root: .
 
 ####################### optional prejob - data preparation #######################
