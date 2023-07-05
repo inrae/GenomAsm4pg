@@ -5,7 +5,9 @@ This workflow uses [Snakemake](https://snakemake.readthedocs.io/en/stable/) to q
 
 A first script (```prejob.sh```) prepares the data until *fasta.gz* files are obtained. A second script (```job.sh```) runs the genome assembly and stats.
 
-![workflow DAG](fig/rule_dag.svg)
+doc: [Gitlab pages](https://asm4pg.pages.mia.inra.fr/genomasm4pg)
+
+![workflow DAG](workflow/doc/fig/rule_dag.svg)
 
 ## Table of contents
 [TOC]
