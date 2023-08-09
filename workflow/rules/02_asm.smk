@@ -90,6 +90,11 @@ rule hap_gfa_to_fasta:
     output:
         hap1_fa =  config["root"] + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}_hap1.fa.gz",
         hap2_fa =  config["root"] + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}_hap2.fa.gz"
+    params:
+        pigz_p = config["pigz_threads"]
+    threads: config["pigz_threads"]
+    container:
+        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/pigz"
     shell:
-        """awk {TO_FA_CMD:q} {input.hap1} | pigz -p 1 > {output.hap1_fa} &&"""
-        """awk {TO_FA_CMD:q} {input.hap2} | pigz -p 1 > {output.hap2_fa}"""
+        """awk {TO_FA_CMD:q} {input.hap1} | pigz -p {params.pigz_p} > {output.hap1_fa} &&"""
+        """awk {TO_FA_CMD:q} {input.hap2} | pigz -p {params.pigz_p} > {output.hap2_fa}"""
