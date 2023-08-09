@@ -9,6 +9,9 @@ get_all_tar_filename: False
 tarIDS: "tar_filename"
 
 ####################### job - workflow #######################
+# number of threads used by pigz
+pigz_threads: 4
+
 ### CONFIG
 
 
