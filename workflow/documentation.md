@@ -4,9 +4,7 @@ Asm4pg is an automatic and reproducible genome assembly workflow for pangenomic 
 
 doc: [Gitlab pages](https://asm4pg.pages.mia.inra.fr/genomasm4pg)
 
-[TOC]
-
-![workflow DAG](../workflow/doc/fig/rule_dag.svg)
+![workflow DAG](doc/fig/rule_dag.svg)
 
 ## Asm4pg Requirements
 - snakemake >= 6.5.1

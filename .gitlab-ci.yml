@@ -24,6 +24,7 @@ pages:
   stage: deploy
   script:
     - npx honkit build . public # build to public path
+    - cp -r workflow/doc/fig public/workflow/doc/ # fix missing images asset not copied to public
   artifacts:
     paths:
       - public
