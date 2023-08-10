@@ -1,7 +1,7 @@
 ### QC on .bam files with LongQC
 rule longqc:
     input:
-        config["root"] + "/" + config["resdir"] + "/" + config["bamdir"] + "/{Bid}.bam"
+        abs_root_path + "/" + config["resdir"] + "/" + config["bamdir"] + "/{Bid}.bam"
     output:
         directory(res_path + "/{Bid}/{run}/01_raw_data_QC/02_longQC")
     benchmark:
@@ -18,7 +18,7 @@ rule longqc:
 ### QC on .fastq.gz files with FastQC
 rule fastqc:
     input:
-        config["root"] + "/" + config["resdir"] + "/" + config["fastxdir"] + "/{Fid}.fastq.gz"
+        abs_root_path + "/" + config["resdir"] + "/" + config["fastxdir"] + "/{Fid}.fastq.gz"
     output:
         multiext(res_path + "/{Fid}/{run}/01_raw_data_QC/01_fastQC/{Fid}_fastqc", ".html", ".zip")
     params:
@@ -36,7 +36,7 @@ rule fastqc:
 
 rule genometools_on_raw_data:
     input:
-        config["root"] + "/" + config["resdir"] + "/" + config["fastxdir"] + "/{id}.fasta.gz"
+        abs_root_path + "/" + config["resdir"] + "/" + config["fastxdir"] + "/{id}.fasta.gz"
     output:
         res_path + "/{runid}/01_raw_data_QC/03_genometools/{id}.RawStat.txt"
     priority: 1
@@ -52,7 +52,7 @@ rule genometools_on_raw_data:
 
 rule jellyfish:
     input:
-        config["root"] + "/" + config["resdir"] + "/" + config["fastxdir"] + "/{id}.fasta.gz"
+        abs_root_path + "/" + config["resdir"] + "/" + config["fastxdir"] + "/{id}.fasta.gz"
     output:
         jf = res_path + "/{runid}/01_raw_data_QC/04_kmer/{id}.jf",
         histo = res_path + "/{runid}/01_raw_data_QC/04_kmer/{id}.histo"
