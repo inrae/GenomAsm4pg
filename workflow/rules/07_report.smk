@@ -1,6 +1,6 @@
 ### create report at the end of the workflow
+
 # path variables
-res_path=config["root"] + "/" + config["resdir"]
 RAW_QC = res_path + "/{runid}/01_raw_data_QC"
 ASM_QC = res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC"
 P_ASM_QC = res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/01_assembly_QC"

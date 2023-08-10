@@ -1,7 +1,7 @@
 ### QC on .bam files with LongQC
 rule longqc:
     input:
-        config["root"] + "/" + config["resdir"] + "/" + config["bamdir"] + "/{Bid}.bam"
+        abs_root_path + "/" + config["resdir"] + "/" + config["bamdir"] + "/{Bid}.bam"
     output:
         directory(res_path + "/{Bid}/{run}/01_raw_data_QC/02_longQC")
     benchmark:
