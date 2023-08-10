@@ -50,11 +50,13 @@
 !*.yaml
 !Snakefile
 !*.smk
-!slurm_logs/
+!*.svg
 
 # 3) add a pattern to track the file patterns of section2 even if they are in
     # subdirectories
 !*/
+node_modules
+node_modules/*
 
 # 4) specific files or folder to TRACK (the '**' sign means 'any path')
 
