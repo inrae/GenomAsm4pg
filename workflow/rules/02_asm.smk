@@ -3,7 +3,7 @@
 # REGULAR MODE
 rule hifiasm:
     input:
-        config["root"] + "/" + config["resdir"] + "/" + config["fastxdir"] + "/{id}.fasta.gz"
+        get_fasta
     output:
         hap1 = config["root"] + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}.bp.hap1.p_ctg.gfa",
         hap2 = config["root"] + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}.bp.hap2.p_ctg.gfa"
@@ -26,7 +26,7 @@ rule hifiasm_hic:
         r1 = get_r1,
         r2 = get_r2,
         # hifi reads
-        hifi = config["root"] + "/" + config["resdir"] + "/" + config["fastxdir"] + "/{id}.fasta.gz"
+        hifi = get_fasta
     output:
         hap1 = config["root"] + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}.hic.hap1.p_ctg.gfa",
         hap2 = config["root"] + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}.hic.hap2.p_ctg.gfa"
@@ -63,7 +63,7 @@ rule hifiasm_trio:
     input:
         p1 = rules.yak.output.p1,
         p2 = rules.yak.output.p2,
-        child = config["root"] + "/" + config["resdir"] + "/" + config["fastxdir"] + "/{id}.fasta.gz"
+        child = get_fasta
     output:
         hap1 = config["root"] + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}.dip.hap1.p_ctg.gfa",
         hap2 = config["root"] + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}.dip.hap2.p_ctg.gfa"
@@ -90,6 +90,11 @@ rule hap_gfa_to_fasta:
     output:
         hap1_fa =  config["root"] + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}_hap1.fa.gz",
         hap2_fa =  config["root"] + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}_hap2.fa.gz"
+    params:
+        pigz_p = config["pigz_threads"]
+    threads: config["pigz_threads"]
+    container:
+        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/pigz"
     shell:
-        """awk {TO_FA_CMD:q} {input.hap1} | pigz -p 1 > {output.hap1_fa} &&"""
-        """awk {TO_FA_CMD:q} {input.hap2} | pigz -p 1 > {output.hap2_fa}"""
+        """awk {TO_FA_CMD:q} {input.hap1} | pigz -p {params.pigz_p} > {output.hap1_fa} &&"""
+        """awk {TO_FA_CMD:q} {input.hap2} | pigz -p {params.pigz_p} > {output.hap2_fa}"""
