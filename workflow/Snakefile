@@ -16,11 +16,11 @@ include: "rules/01_qc.smk"
 include: "rules/02_asm.smk"
 # Statistics
 include: "rules/03_asm_qc.smk"
-include: "rules/03.5_A_qc_merqury.smk"
+include: "rules/03.5_asm_qc_merqury.smk"
 # Purging
 include: "rules/04_purge_dups.smk"
 include: "rules/05_purged_asm_qc.smk"
-include: "rules/05.5_PA_qc_merqury.smk"
+include: "rules/05.5_purged_asm_qc_merqury.smk"
 # Link final assembly
 include: "rules/06_sym_link_hap.smk"
 ## AUTOMATIC REPORT
