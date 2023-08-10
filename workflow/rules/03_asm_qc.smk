@@ -1,5 +1,5 @@
 # input haplotypes
-HAP_FA_GZ = abs_root_path + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}_hap{n}.fa.gz"
+HAP_FA_GZ = config["root"] + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}_hap{n}.fa.gz"
 
 # unzip fasta
 rule unzip_hap_fasta:

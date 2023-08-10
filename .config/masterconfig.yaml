@@ -1,35 +1,17 @@
-# absolute/relative path to your desired output path
-root: .
+# absolute path to your desired output path
+root: /output/path
 
 ####################### optional prejob - data preparation #######################
 # path to tar data
-data: test_data
+data: /path
 # list of tar names
-get_all_tar_filename: True
-tarIDS: []
+get_all_tar_filename: False
+tarIDS: "tar_filename"
 
 ####################### job - workflow #######################
 ### CONFIG
-get_all_filenames: True
-IDS: ["sd_0001.ccs", "sd_0002.ccs", "sd_0003.ccs"]
 
-sd_0001.ccs:
-  run: run001
-  ploidy: 2
-  busco_lineage: eudicots_odb10
-  mode: default
 
-sd_0002.ccs:
-  run: run002
-  ploidy: 2
-  busco_lineage: eudicots_odb10
-  mode: default
-
-sd_0003.ccs:
-  run: run003
-  ploidy: 2
-  busco_lineage: eudicots_odb10
-  mode: default
 
 ####################### workflow output directories #######################
 # results directory

@@ -14,7 +14,7 @@
 #SBATCH -o slurm_logs/snakemake.%N.%j.out
 #SBATCH -e slurm_logs/snakemake.%N.%j.err
 #SBATCH --mail-type=END,FAIL
-#SBATCH --mail-user=ken.smith@plantandfood.co.nz
+#SBATCH --mail-user=sukanya.denni@univ-rouen.fr
 ################################################################################
 
 # Useful information to print
@@ -35,29 +35,16 @@ echo 'scontrol show job:'
 scontrol show job $SLURM_JOB_ID
 echo '########################################'
 
-## get SNG_BIND abs path using python
-function SNG_BIND_ABS_PATH {
-    SNG_BIND="$(python3 - <<END
-import os
-
-abs_path = os.getcwd()
-print(abs_path)
-
-END
-)"
-}
-SNG_BIND_ABS_PATH
 
 ### variables
 CLUSTER_CONFIG=".config/snakemake_profile/slurm/cluster_config.yml"
-MAX_CORES=4
+MAX_CORES=10
 PROFILE=".config/snakemake_profile/slurm"
-SMK_PATH="workflow/pre-job_snakefiles"
+SNG_BIND="/gpfs/scratch/sdenni/wf/GenomAsm4pg"
 
 ### Module Loading:
 module purge
-module load snakemake
-module load singularity
+module load snakemake/6.5.1
 
 echo 'Starting Snakemake workflow'
 

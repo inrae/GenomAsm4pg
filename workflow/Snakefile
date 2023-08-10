@@ -1,52 +1,51 @@
 configfile: ".config/masterconfig.yaml"
 
+res_path=config["root"] + "/" + config["resdir"]
+
 ###### Include all scripts & rules necessary to run the workflow ######
 ### Scripts
+# get parameters from masterconfig
 include: "scripts/from_config/hifiasm_mode.py"
 include: "scripts/from_config/parameters.py"
 include: "scripts/from_config/target_list.py"
-include: "scripts/path_helper.py"
-
-### paths
-if config["root"].startswith("."):
-    abs_root_path = get_abs_root_path()
-    res_path = get_res_path()
-else:
-    abs_root_path = config["root"]
-    res_path = abs_root_path + "/" + config["resdir"]
 
 ### Rules
-include: "rules/01_pre_asm_qc.smk"
+## PRE ASSEMBLY QC
+include: "rules/01_qc.smk"
+## ASSEMBLY
 include: "rules/02_asm.smk"
 # Statistics
 include: "rules/03_asm_qc.smk"
-include: "rules/03.5_asm_qc_merqury.smk"
+include: "rules/03.5_A_qc_merqury.smk"
 # Purging
 include: "rules/04_purge_dups.smk"
 include: "rules/05_purged_asm_qc.smk"
-include: "rules/05.5_pa_qc_merqury.smk"
+include: "rules/05.5_PA_qc_merqury.smk"
 # Link final assembly
 include: "rules/06_sym_link_hap.smk"
-# Automatic report
+## AUTOMATIC REPORT
 include: "rules/07_report.smk"
 
 ###### get filenames for workflow ######
-if config["get_all_filenames"]:
-    IDS=get_files_id(abs_root_path + "/" + config["resdir"] + "/" + config["fastxdir"])
-else:
-    IDS=config["IDS"]
-bamIDS=check_bam(abs_root_path + "/" + config["resdir"] + "/" + config["bamdir"], IDS)
-fastqIDS=check_fastq(abs_root_path + "/" + config["resdir"] + "/" + config["fastxdir"], IDS)
+IDS=config["IDS"]
+bamIDS=check_bam(config["root"] + "/" + config["resdir"] + "/" + config["bamdir"], IDS)
+fastqIDS=check_fastq(config["root"] + "/" + config["resdir"] + "/" + config["fastxdir"], IDS)
+####
 RUNID = run_id(config["IDS"])
 BID_RUN = run_BFid(bamIDS)
 FID_RUN = run_BFid(fastqIDS)
 
+###### results path ######
+res_path=config["root"] + "/" + config["resdir"]
+
 ###### Target files ######
-### raw data stats
+## raw data stats
 longqc_output = expand(res_path + "/{Bid}/{run}/01_raw_data_QC/02_longQC", zip,
     run=BID_RUN, Bid=bamIDS),
 fastqc_output =  expand(res_path + "/{Fid}/{run}/01_raw_data_QC/01_fastQC/{Fid}_fastqc.{ext}", zip,
     run=FID_RUN, Fid=fastqIDS, ext=["html", "zip"])
+
+
 
 ### REPORT
 REP_ID = for_report(IDS)
@@ -61,17 +60,21 @@ REP_TRIO_ID = for_report_trio(IDS)
 RUNID_TRIO = run_id(REP_TRIO_ID)
 BUSCO_LIN_TRIO = busco_lin(REP_TRIO_ID)
 
+
 report_trio_output = expand(res_path + "/{runid}/report_trio_{id}.{lin}.html", zip,
     runid=RUNID_TRIO, id=REP_TRIO_ID, lin = BUSCO_LIN_TRIO)
 
+
+
+
 ### SYM LINK
-# symbolic link to final assembly
+## symbolic link to final assembly
 symb_link1 = expand(res_path + "/{runid}/{id}_hap{n}.fa", zip,
     runid=RUNID_REG, id=REP_ID, n=["1", "2"])
 symb_link2 = expand(res_path + "/{runid}/{id}_hap{n}.fa", zip,
     runid=RUNID_TRIO, id=REP_TRIO_ID, n=["1", "2"])
 
-# PURGE_DUPS CUTOFFS GRAPH
+## PURGE_DUPS CUTOFFS GRAPH
 cut_eval1 = expand(res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/00_assembly/{id}_hap{n}/cutoffs_graph_hap{n}.png", zip,
     runid=RUNID_REG, id=REP_ID, n=["1", "2"])
 cut_eval2 = expand(res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/00_assembly/{id}_hap{n}/cutoffs_graph_hap{n}.png", zip,
@@ -103,7 +106,7 @@ rule_all_input_list = [
     busco_purged_trio
 ]
 
-##### target files #####
+#### target files
 rule all:
     input:
         all_input = rule_all_input_list

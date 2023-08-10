@@ -1,7 +1,5 @@
 configfile: ".config/masterconfig.yaml"
 
-include: "../scripts/path_helper.py"
-
 ######################## Python functions ########################
 import os
 # fastq without fasta filename
@@ -19,32 +17,26 @@ def get_fastq_name(dirpath):
     return(IDS)
 
 ######################## Snakemake ########################
-
-### root path
-if config["root"].startswith("."):
-    abs_root_path = get_abs_root_path()
-    res_path = get_res_path()
-else:
-    abs_root_path = config["root"]
-    res_path = abs_root_path + "/" + config["resdir"]
+###### results path ######
+res_path=config["root"] + "/" + config["resdir"]
 
 ### get filenames
-IDS = get_fastq_name(abs_root_path + "/" + config["resdir"] + "/" + config["fastxdir"])
+IDS = get_fastq_name(config["root"] + "/" + config["resdir"] + "/" + config["fastxdir"])
 
 ### target files
 rule all:
     input:
-        expand(abs_root_path + "/" + config["resdir"] + "/" + config["fastxdir"] + "/{id}.fasta.gz", id=IDS)
+        expand(config["root"] + "/" + config["resdir"] + "/" + config["fastxdir"] + "/{id}.fasta.gz", id=IDS)
 
 ### rules
 # if only fastq : convert to fasta with seqtk + zip
 rule convert_to_fasta:
     input:
-        abs_root_path + "/" + config["resdir"] + "/" + config["fastxdir"] + "/{id}.fastq.gz"
+        config["root"] + "/" + config["resdir"] + "/" + config["fastxdir"] + "/{id}.fastq.gz"
     output:
-        abs_root_path + "/" + config["resdir"] + "/" + config["fastxdir"] + "/{id}.fasta.gz"
+        config["root"] + "/" + config["resdir"] + "/" + config["fastxdir"] + "/{id}.fasta.gz"
     params:
-        path= abs_root_path + "/" + config["resdir"] + "/" + config["fastxdir"]
+        path=config["root"] + "/" + config["resdir"] + "/" + config["fastxdir"]
     threads: 10
     container:
         "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/seqtk1.3"
