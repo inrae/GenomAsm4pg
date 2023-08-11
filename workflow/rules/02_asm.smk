@@ -5,12 +5,12 @@ rule hifiasm:
     input:
         get_fasta
     output:
-        hap1 = config["root"] + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}.bp.hap1.p_ctg.gfa",
-        hap2 = config["root"] + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}.bp.hap2.p_ctg.gfa"
+        hap1 = abs_root_path + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}.bp.hap1.p_ctg.gfa",
+        hap2 = abs_root_path + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}.bp.hap2.p_ctg.gfa"
     params:
-        prefix = config["root"] + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}"
+        prefix = abs_root_path + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}"
     benchmark:
-        config["root"] + "/" + config["resdir"] + "/{runid}/benchmark/{id}_hifiasm_benchmark.txt"
+        abs_root_path + "/" + config["resdir"] + "/{runid}/benchmark/{id}_hifiasm_benchmark.txt"
     threads: 20
     resources:
         mem_mb=250000
@@ -28,12 +28,12 @@ rule hifiasm_hic:
         # hifi reads
         hifi = get_fasta
     output:
-        hap1 = config["root"] + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}.hic.hap1.p_ctg.gfa",
-        hap2 = config["root"] + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}.hic.hap2.p_ctg.gfa"
+        hap1 = abs_root_path + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}.hic.hap1.p_ctg.gfa",
+        hap2 = abs_root_path + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}.hic.hap2.p_ctg.gfa"
     params:
-        prefix= config["root"] + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}"
+        prefix= abs_root_path + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}"
     benchmark:
-        config["root"] + "/" + config["resdir"] + "/{runid}/benchmark/{id}_hifiasm_hic_benchmark.txt"
+        abs_root_path + "/" + config["resdir"] + "/{runid}/benchmark/{id}_hifiasm_hic_benchmark.txt"
     threads: 20
     resources:
         mem_mb=250000
@@ -48,10 +48,10 @@ rule yak:
         p1 = get_p1,
         p2 = get_p2
     output:
-        p1 = config["root"] + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/yak/{id}_parent1.yak",
-        p2 = config["root"] + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/yak/{id}_parent2.yak"
+        p1 = abs_root_path + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/yak/{id}_parent1.yak",
+        p2 = abs_root_path + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/yak/{id}_parent2.yak"
     benchmark:
-        config["root"] + "/" + config["resdir"] + "/{runid}/benchmark/{id}_yak_benchmark.txt"
+        abs_root_path + "/" + config["resdir"] + "/{runid}/benchmark/{id}_yak_benchmark.txt"
     container:
         "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/hifiasm0.16.1"
     shell:
@@ -65,12 +65,12 @@ rule hifiasm_trio:
         p2 = rules.yak.output.p2,
         child = get_fasta
     output:
-        hap1 = config["root"] + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}.dip.hap1.p_ctg.gfa",
-        hap2 = config["root"] + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}.dip.hap2.p_ctg.gfa"
+        hap1 = abs_root_path + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}.dip.hap1.p_ctg.gfa",
+        hap2 = abs_root_path + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}.dip.hap2.p_ctg.gfa"
     params:
-        prefix = config["root"] + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}"
+        prefix = abs_root_path + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}"
     benchmark:
-        config["root"] + "/" + config["resdir"] + "/{runid}/benchmark/{id}_hifiasm_trio_benchmark.txt"
+        abs_root_path + "/" + config["resdir"] + "/{runid}/benchmark/{id}_hifiasm_trio_benchmark.txt"
     threads: 20
     resources:
         mem_mb=250000
@@ -88,8 +88,8 @@ rule hap_gfa_to_fasta:
         hap1 = get_mode_hap1,
         hap2 = get_mode_hap2
     output:
-        hap1_fa =  config["root"] + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}_hap1.fa.gz",
-        hap2_fa =  config["root"] + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}_hap2.fa.gz"
+        hap1_fa =  abs_root_path + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}_hap1.fa.gz",
+        hap2_fa =  abs_root_path + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}_hap2.fa.gz"
     params:
         pigz_p = config["pigz_threads"]
     threads: config["pigz_threads"]

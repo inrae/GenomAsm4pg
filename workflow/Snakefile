@@ -1,13 +1,21 @@
 configfile: ".config/masterconfig.yaml"
 
-res_path=config["root"] + "/" + config["resdir"]
-
 ###### Include all scripts & rules necessary to run the workflow ######
 ### Scripts
 # get parameters from masterconfig
 include: "scripts/from_config/hifiasm_mode.py"
 include: "scripts/from_config/parameters.py"
 include: "scripts/from_config/target_list.py"
+include: "scripts/path_helper.py"
+
+### paths
+if config["root"].startswith("."):
+    abs_root_path = get_abs_root_path()
+    res_path = get_res_path()
+else:
+    abs_root_path = config["root"]
+    res_path = abs_root_path + "/" + config["resdir"]
+
 
 ### Rules
 ## PRE ASSEMBLY QC
@@ -39,7 +47,6 @@ BID_RUN = run_BFid(bamIDS)
 FID_RUN = run_BFid(fastqIDS)
 
 ###### results path ######
-res_path=config["root"] + "/" + config["resdir"]
 
 ###### Target files ######
 ## raw data stats

@@ -35,12 +35,23 @@ echo 'scontrol show job:'
 scontrol show job $SLURM_JOB_ID
 echo '########################################'
 
+## get SNG_BIND abs path using python
+function SNG_BIND_ABS_PATH {
+    SNG_BIND="$(python3 - <<END
+import os
+
+abs_path = os.getcwd()
+print(abs_path)
+
+END
+)"
+}
+SNG_BIND_ABS_PATH
 
 ### variables
 CLUSTER_CONFIG=".config/snakemake_profile/slurm/cluster_config.yml"
 MAX_CORES=10
 PROFILE=".config/snakemake_profile/slurm"
-SNG_BIND="/gpfs/scratch/sdenni/wf/GenomAsm4pg"
 
 ### Module Loading:
 module purge
@@ -48,8 +59,6 @@ module load snakemake/6.5.1
 
 echo 'Starting Snakemake workflow'
 
-### create a log directory for slurm output files
-mkdir -p slurm_logs
 
 ### Snakemake commands
 

@@ -1,5 +1,5 @@
 # absolute path to your desired output path
-root: /output/path
+root: .
 
 ####################### optional prejob - data preparation #######################
 # path to tar data

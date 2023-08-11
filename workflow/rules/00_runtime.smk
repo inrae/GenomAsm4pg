@@ -28,8 +28,6 @@ rule elasped_time:
         with open(output[0], "w") as out:
             out.write("Runtime (hh:mm:ss): " + str(td))
 
-        # os.remove(input[0])
-
 
 rule elasped_time_trio:
     input: 
@@ -50,5 +48,3 @@ rule elasped_time_trio:
 
         with open(output[0], "w") as out:
             out.write("Runtime (hh:mm:ss): " + str(td))
-
-        # os.remove(input[0])
