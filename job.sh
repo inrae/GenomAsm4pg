@@ -3,7 +3,7 @@
 ### prepare_calling_jobs
 #SBATCH -J smk_main
 ### Max run time "hours:minutes:seconds"
-#SBATCH --time=120:00:00
+#SBATCH --time=96:00:00
 #SBATCH --ntasks=1 #nb of processes
 #SBATCH --cpus-per-task=1 # nb of cores for each process(1 process)
 #SBATCH --mem=10G # max of memory (-m) 
@@ -14,7 +14,7 @@
 #SBATCH -o slurm_logs/snakemake.%N.%j.out
 #SBATCH -e slurm_logs/snakemake.%N.%j.err
 #SBATCH --mail-type=END,FAIL
-#SBATCH --mail-user=sukanya.denni@univ-rouen.fr
+#SBATCH --mail-user=lucien.piat@inare.fr
 ################################################################################
 
 # Useful information to print
@@ -35,38 +35,29 @@ echo 'scontrol show job:'
 scontrol show job $SLURM_JOB_ID
 echo '########################################'
 
-## get SNG_BIND abs path using python
-function SNG_BIND_ABS_PATH {
-    SNG_BIND="$(python3 - <<END
-import os
-
-abs_path = os.getcwd()
-print(abs_path)
-
-END
-)"
-}
-SNG_BIND_ABS_PATH
+# relocate the modules and load python
+module purge 
+module load python/3.9.7
+module load snakemake/6.5.1
 
 ### variables
+SNG_BIND="/mnt/cbib/pangenoak_trials/GenomAsm4pg/"
 CLUSTER_CONFIG=".config/snakemake_profile/slurm/cluster_config.yml"
 MAX_CORES=10
 PROFILE=".config/snakemake_profile/slurm"
 
-### Module Loading:
-module purge
-module load snakemake/6.5.1
-
 echo 'Starting Snakemake workflow'
 
-
 ### Snakemake commands
-
 if [ "$1" = "dry" ]
 then
     # dry run
     snakemake --profile $PROFILE -j $MAX_CORES --use-singularity --singularity-args "-B $SNG_BIND" --cluster-config $CLUSTER_CONFIG -n -r
-else
+elif [ -z "$1" ]
+then
     # run
     snakemake --profile $PROFILE -j $MAX_CORES --use-singularity --singularity-args "-B $SNG_BIND" --cluster-config $CLUSTER_CONFIG
+else
+    echo "Error: Invalid argument. Use 'dry' or no argument." >&2
+    exit 1
 fi
