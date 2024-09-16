@@ -35,10 +35,18 @@ echo 'scontrol show job:'
 scontrol show job $SLURM_JOB_ID
 echo '########################################'
 
-# relocate the modules and load python
-module purge 
-module load python/3.9.7
-module load snakemake/6.5.1
+# Function to load modules
+load_modules() {
+    module purge  # Clear any previously loaded modules
+
+    # Loop through each module and load it
+    for module_name in "$@"; do
+        module load "$module_name"
+    done
+}
+
+# Here specify the modules to load and their path
+load_modules "python/3.9.7" "snakemake/6.5.1"
 
 ### variables
 SNG_BIND="/mnt/cbib/pangenoak_trials/GenomAsm4pg/"
