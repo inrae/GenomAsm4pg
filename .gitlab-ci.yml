@@ -1,33 +1,11 @@
-# requiring the environment of NodeJS LTS
-image: node:lts
+#Test file for CICD
+build-job:
+  stage: build
+  script:
+    - echo "Starting the CICD testing"
 
-# add 'node_modules' to cache for speeding up builds
-cache:
-  paths:
-    - node_modules/ # Node modules and dependencies
-
-before_script:
-  - npm init --yes
-  - npm install honkit --save-dev
-
-test:
+test_job:
   stage: test
   script:
-    - npx honkit build . public # build to public path
-  only:
-    - branches # this job will affect every branch except 'main'
-  except:
-    - main
+    - echo "This job will check if job.sh is running smoothly"
     
-# the 'pages' job will deploy and build your site to the 'public' path
-pages:
-  stage: deploy
-  script:
-    - npx honkit build . public # build to public path
-    - cp -r workflow/doc/fig public/workflow/doc/ # fix missing images asset not copied to public
-  artifacts:
-    paths:
-      - public
-    expire_in: 1 week
-  only:
-    - main # this job will affect only the 'main' branch
