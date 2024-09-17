@@ -1,6 +1,0 @@
-### This file is here to avoid a SLURM error when running a job because of the missing slurm_logs directory
-
-# Ignore everything in this directory
-*
-# Except this file
-!.gitignore
