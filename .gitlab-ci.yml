@@ -1,16 +1,29 @@
-#Test file for CICD
-build-job:
-  stage: build
-  script:
-    - echo "Starting the CICD testing"
+stages:
+  - setup
+  - run
 
-test_prejob:
-  stage: test
+# Job to set up the environment and install dependencies
+setup_environment:
+  stage: setup
+  image: continuumio/miniconda3
   script:
-    - echo "This job will check if job.sh is running smoothly"
+    - conda install -c conda-forge mamba  # Install Mamba
+    - mamba create -n snakemake -c conda-forge -c bioconda snakemake  # Create environment and install Snakemake
+    - echo "source activate snakemake" > ~/.bashrc  # Ensure the environment is activated
+    - source activate snakemake
+    - snakemake --version
+  artifacts:
+    paths:
+      - .conda/
+      - .snakemake/
 
 test_job:
   stage: test
+  image: continuumio/miniconda3  
   script:
-    - echo "This job will check if job.sh is running smoothly"
-    
+    - git clone https://forgemia.inra.fr/asm4pg/GenomAsm4pg.git
+    - touch test_data.fasta.gz
+    - cd GenomAsm4pg
+    - source activate snakemake  
+  dependencies:
+    - setup_environment
