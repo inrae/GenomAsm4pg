@@ -4,6 +4,11 @@ build-job:
   script:
     - echo "Starting the CICD testing"
 
+test_prejob:
+  stage: test
+  script:
+    - echo "This job will check if job.sh is running smoothly
+
 test_job:
   stage: test
   script:
