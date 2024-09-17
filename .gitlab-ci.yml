@@ -7,7 +7,7 @@ build-job:
 test_prejob:
   stage: test
   script:
-    - echo "This job will check if job.sh is running smoothly
+    - echo "This job will check if job.sh is running smoothly"
 
 test_job:
   stage: test
