@@ -3,7 +3,7 @@
 ### prepare_calling_jobs
 #SBATCH -J smk_prejob
 ### Max run time "hours:minutes:seconds"
-#SBATCH --time=120:00:00
+#SBATCH --time=96:00:00
 #SBATCH --ntasks=1 #nb of processes
 #SBATCH --cpus-per-task=1 # nb of cores for each process(1 process)
 #SBATCH --mem=10G # max of memory (-m) 
@@ -14,7 +14,7 @@
 #SBATCH -o slurm_logs/snakemake_prejob.%N.%j.out
 #SBATCH -e slurm_logs/snakemake_prejob.%N.%j.err
 #SBATCH --mail-type=END,FAIL
-#SBATCH --mail-user=sukanya.denni@univ-rouen.fr
+#SBATCH --mail-user=lucien.piat@inrae.fr
 ################################################################################
 
 # Useful information to print
@@ -36,33 +36,28 @@ scontrol show job $SLURM_JOB_ID
 echo '########################################'
 
 
-## get SNG_BIND abs path using python
-function SNG_BIND_ABS_PATH {
-    SNG_BIND="$(python3 - <<END
-import os
+# Function to load modules
+load_modules() {
+    module purge  # Clear any previously loaded modules
 
-abs_path = os.getcwd()
-print(abs_path)
-
-END
-)"
+    # Loop through each module and load it
+    for module_name in "$@"; do
+        module load "$module_name"
+    done
 }
-SNG_BIND_ABS_PATH
+load_modules "python/3.9.7" "snakemake/6.5.1"
 
-### variables
+### variable
+SNG_BIND="/mnt/cbib/pangenoak_trials/GenomeAsm4pg/"
 CLUSTER_CONFIG=".config/snakemake_profile/slurm/cluster_config.yml"
 MAX_CORES=4
 PROFILE=".config/snakemake_profile/slurm"
 SMK_PATH="workflow/pre-job_snakefiles"
 
-### Module Loading:
-module purge
-module load snakemake/6.5.1
-
 echo 'Starting Snakemake - data preparation'
 
-### create a log directory for slurm logs
-mkdir -p slurm_logs
+# Create a directory for slurm logs if it is absent
+[ -d "slurm_logs" ] || mkdir -p "slurm_logs"
 
 ### Snakemake commands
 # extract data 

@@ -48,6 +48,9 @@ load_modules() {
 # Here specify the modules to load and their path
 load_modules "python/3.9.7" "snakemake/6.5.1"
 
+# Create a directory for slurm logs if it is absent
+[ -d "slurm_logs" ] || mkdir -p "slurm_logs"
+
 ### variables
 SNG_BIND="/mnt/cbib/pangenoak_trials/GenomAsm4pg/"
 CLUSTER_CONFIG=".config/snakemake_profile/slurm/cluster_config.yml"
