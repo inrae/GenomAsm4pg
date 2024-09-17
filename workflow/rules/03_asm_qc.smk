@@ -48,12 +48,13 @@ rule kat:
         res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/katplot/hap{n}/{id}_hap{n}.katplot.png"
     params:
         prefix="{id}_hap{n}",
-        path=res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/katplot/hap{n}/{id}_hap{n}"
+        path=res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/katplot/hap{n}/{id}_hap{n}",
+        km_size = config["km_size"]
     threads: 4
     container: 
         "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/kat2.4.1"
     shell:
-        "kat comp -o {params.path} -t {threads} -m 21 --output_type png -v {input.jellyfish} {input.hap} && "
+        "kat comp -o {params.path} -t {threads} -m {params.km_size} --output_type png -v {input.jellyfish} {input.hap} && "
         "kat plot spectra-cn -x 200 -o {params.path}.katplot.png {params.path}-main.mx"
 
 # telomeres

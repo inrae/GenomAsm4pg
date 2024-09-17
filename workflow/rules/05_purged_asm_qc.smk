@@ -30,8 +30,9 @@ use rule kat as purge_kat with:
     output:
         res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/01_assembly_QC/katplot/hap{n}/{id}_purged_hap{n}.katplot.png"
     params:
+        km_size = config["km_size"],
         prefix="{id}_hap{n}",
-        path= res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/01_assembly_QC/katplot//hap{n}/{id}_purged_hap{n}"
+        path= res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/01_assembly_QC/katplot/hap{n}/{id}_purged_hap{n}"
 
 rule purge_find_telomeres:
     input:
