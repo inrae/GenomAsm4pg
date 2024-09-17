@@ -1,6 +1,6 @@
 stages:
   - setup
-  - run
+  - test
 
 # Job to set up the environment and install dependencies
 setup_environment:
