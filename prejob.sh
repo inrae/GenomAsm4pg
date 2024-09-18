@@ -56,9 +56,6 @@ SMK_PATH="workflow/pre-job_snakefiles"
 
 echo 'Starting Snakemake - data preparation'
 
-# Create a directory for slurm logs if it is absent
-[ -d "slurm_logs" ] || mkdir -p "slurm_logs"
-
 ### Snakemake commands
 # extract data 
 snakemake -s $SMK_PATH/Snakefile1.smk --profile $PROFILE -j $MAX_CORES --cluster-config $CLUSTER_CONFIG
