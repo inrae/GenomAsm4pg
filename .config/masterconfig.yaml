@@ -1,9 +1,9 @@
 # absolute path to your desired output path
-root: /mnt/cbib/pangenoak_trials/GenomAsm4pg/tutorial_output
+root: .
 
 ####################### optional prejob - data preparation #######################
 # path to tar data
-data: /mnt/cbib/pangenoak_trials/GenomAsm4pg/
+data: /path
 # list of tar names
 get_all_tar_filename: False
 tarIDS: "tar_filename"
@@ -11,22 +11,14 @@ tarIDS: "tar_filename"
 ####################### job - workflow #######################
 # number of threads used by pigz
 pigz_threads: 4
-# k-mers size (reduce for small datasets)
-km_size: 21 #TODO
 
 ### CONFIG
-IDS: ["toy_dataset_bug"]
 
-toy_dataset_bug:
-  fasta: "/mnt/cbib/pangenoak_trials/GenomAsm4pg/lady_bug_data.fasta.gz"
-  run: toy_test_run
-  ploidy: 2
-  busco_lineage: arthropoda_odb10
-  mode: default
+
 
 ####################### workflow output directories #######################
 # results directory
-resdir: results
+resdir: workflow_results
 
 ### PREJOB
 # extracted input data
