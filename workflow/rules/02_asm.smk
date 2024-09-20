@@ -15,7 +15,7 @@ rule hifiasm:
     resources:
         mem_mb=250000
     container:
-        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/hifiasm0.16.1"
+        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/hifiasm:0.19.6"
     shell:
         "hifiasm -l3 -o {params.prefix} -t {threads} {input}"
 
@@ -38,7 +38,7 @@ rule hifiasm_hic:
     resources:
         mem_mb=250000
     container:
-        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/hifiasm0.16.1"
+        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/hifiasm:0.19.6"
     shell:
         "hifiasm -l3 -o {params.prefix} -t {threads} --h1 {input.r1} --h2 {input.r2} {input.hifi}"
 
@@ -75,7 +75,7 @@ rule hifiasm_trio:
     resources:
         mem_mb=250000
     container:
-        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/hifiasm0.16.1"
+        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/hifiasm:0.19.6"
     shell:
         "hifiasm -o {params.prefix} -t {threads} -1 {input.p1} -2 {input.p2} {input.child}"
 
