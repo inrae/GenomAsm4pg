@@ -17,7 +17,7 @@ use rule genometools_on_raw_data as genometools_on_assembly with:
     output:
         res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/assembly_stats/{id}_hap{n}.AStats.txt"
 
-### BUSCO stats on assembly
+### BUSCO stats on assembly (may not work on first run, rerun the WF)
 rule busco:
     input:
         rules.unzip_hap_fasta.output
