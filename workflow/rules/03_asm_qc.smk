@@ -33,7 +33,7 @@ rule busco:
     resources:
         mem_mb=100000
     container:
-        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/busco5.3.1"
+        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/busco:5.7.1"
     shell:
         "busco -f -i {input[0]} -l {params.lineage} --out_path {params.prefix} -o {params.sample} -m genome -c {threads}"
 

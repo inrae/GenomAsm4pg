@@ -28,11 +28,11 @@ rule fastqc:
     priority: 1
     threads: 4
     container:
-        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/fastqc0.11.5"
+        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/fastqc:0.12.1"
     shell:
         "fastqc -o {params.output_path} {input}"
 
-        ### read stats
+### read stats
 
 rule genometools_on_raw_data:
     input:
