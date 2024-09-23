@@ -53,7 +53,7 @@ rule yak:
     benchmark:
         abs_root_path + "/" + config["resdir"] + "/{runid}/benchmark/{id}_yak_benchmark.txt"
     container:
-        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/hifiasm0.16.1"
+        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/yak:0.1"
     shell:
         "yak count -k31 -b37 -t16 -o {output.p1} {input.p1} && "
         "yak count -k31 -b37 -t16 -o {output.p2} {input.p2}"
