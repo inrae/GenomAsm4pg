@@ -68,7 +68,6 @@ REP_TRIO_ID = for_report_trio(IDS)
 RUNID_TRIO = run_id(REP_TRIO_ID)
 BUSCO_LIN_TRIO = busco_lin(REP_TRIO_ID)
 
-
 report_trio_output = expand(res_path + "/{runid}/report_trio_{id}.{lin}.html", zip,
     runid=RUNID_TRIO, id=REP_TRIO_ID, lin = BUSCO_LIN_TRIO)
 
@@ -102,6 +101,12 @@ time = expand(res_path + "/{runid}/runtime.{id}.{lin}.txt", zip,
 time_trio = expand(res_path + "/{runid}/runtime_trio.{id}.{lin}.txt", zip,
     runid = RUNID_TRIO, id=REP_TRIO_ID, lin=BUSCO_LIN_TRIO)
 
+# LAI output 
+lai = expand(res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/LAI/{id}_hap{n}.out.LAI", 
+    runid=RUNID_REG, id=REP_ID, n=["1", "2"])
+lai_purge = expand(res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/01_assembly_QC/LAI/purge_{id}_hap{n}.out.LAI", 
+    runid=RUNID_REG, id=REP_ID, n=["1", "2"])    
+
 rule_all_input_list = [
     longqc_output,
     fastqc_output,
@@ -116,7 +121,9 @@ rule_all_input_list = [
     busco_trio,
     busco_purged_trio,
     time,
-    time_trio
+    time_trio,
+    lai,
+    lai_purge
 ]
 
 #### target files
