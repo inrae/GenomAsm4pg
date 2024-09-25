@@ -43,3 +43,19 @@ rule purge_find_telomeres:
         "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/biopython1.75"
     shell:
         "python3 workflow/scripts/FindTelomeres.py {input} > {output}"
+
+use rule LTR_finder as purge_LTR_finder with :
+    input:
+        rules.purge_dups.output.purge
+    output:
+        res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/01_assembly_QC/LAI/purge_{id}_hap{n}.scn"
+
+use rule LTR_retriever as purge_LTR_retriever with : 
+    input:
+        scn=rules.purge_LTR_finder.output,
+        genome=rules.purge_dups.output.purge
+    output:
+        lai=res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/01_assembly_QC/LAI/purge_{id}_hap{n}.out.LAI",
+        recap=res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/01_assembly_QC/LAI/purge_recap_{id}_hap{n}.tbl"
+    params:
+        prefix="{id}_hap{n}.purged"

@@ -19,6 +19,10 @@ rule report:
         kplot_2 = ASM_QC + "/katplot/hap2/{id}_hap2.katplot.png",
         tel_1 = ASM_QC + "/telomeres/{id}_hap1_telomeres.txt",
         tel_2 = ASM_QC + "/telomeres/{id}_hap2_telomeres.txt",
+        LRT_recap_1 = ASM_QC + "/LAI/recap_{id}_hap1.tbl",
+        LAI_1 = ASM_QC + "/LAI/{id}_hap1.out.LAI",
+        LRT_recap_2 = ASM_QC + "/LAI/recap_{id}_hap2.tbl",
+        LAI_2 = ASM_QC + "/LAI/{id}_hap2.out.LAI",
         merq_comp = rules.merqury.output.stat,
         merq_err = rules.merqury.output.qv,
         # after purge_dups assembly QC
@@ -30,6 +34,10 @@ rule report:
         P_kplot_2 = P_ASM_QC + "/katplot/hap2/{id}_purged_hap2.katplot.png",
         P_tel_1 = P_ASM_QC + "/telomeres/{id}_hap1_purged_telomeres.txt",
         P_tel_2 = P_ASM_QC + "/telomeres/{id}_hap2_purged_telomeres.txt",
+        P_LRT_recap_1 = P_ASM_QC + "/LAI/purge_recap_{id}_hap1.tbl",
+        P_LAI_1 = P_ASM_QC + "/LAI/purge_{id}_hap1.out.LAI",
+        P_LRT_recap_2 = P_ASM_QC + "/LAI/purge_recap_{id}_hap2.tbl",
+        P_LAI_2 = P_ASM_QC + "/LAI/purge_{id}_hap2.out.LAI",
         P_merq_comp = rules.purge_merqury.output.stat,
         P_merq_err = rules.purge_merqury.output.qv
     output:

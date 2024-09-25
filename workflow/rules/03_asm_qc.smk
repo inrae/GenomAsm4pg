@@ -67,3 +67,36 @@ rule find_telomeres:
         "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/biopython1.75"
     shell:
         "python3 workflow/scripts/FindTelomeres.py {input} > {output}"
+
+rule LTR_finder:
+    input:
+        rules.unzip_hap_fasta.output
+    output:
+        res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/LAI/{id}_hap{n}.scn"
+    singularity:
+        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/ltr_finder:latest"
+    shell:
+        "ltr_finder -C {input} > {output}"
+
+rule LTR_retriever:
+    input:
+        scn=rules.LTR_finder.output,
+        genome=rules.unzip_hap_fasta.output
+    output:
+        lai=res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/LAI/{id}_hap{n}.out.LAI",
+        recap=res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/LAI/recap_{id}_hap{n}.tbl"
+    params:
+        prefix="{id}_hap{n}" 
+    threads: 10
+    singularity:
+        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/ltr_retriever:3.0.1"
+    shell:
+        'export PATH="/opt/LTR_retriever:$PATH" && '
+        'LTR_retriever -threads {threads} -genome {input.genome} -infinder {input.scn} && '
+        'mv {params.prefix}.fa.out.LAI {output.lai} && '
+        'mv {params.prefix}.fa.tbl {output.recap}  && '
+        'rm {params.prefix}.fa?* && ' 
+        'rm -rf .RepeatMaskerCache &&'
+        'rm {params.prefix}.fa'
+
+        
