@@ -85,6 +85,25 @@ cat(readLines(snakemake@input[["tel_1"]]), sep = '\n')
 cat(readLines(snakemake@input[["tel_2"]]), sep = '\n')
 ```
 
+### LTR Assembly Index (LAI) 
+#### Hap 1
+LTR recap
+```{r comment='', echo=FALSE}
+cat(head(readLines(snakemake@input[["LRT_recap_1"]]), 50), sep = '\n')
+```
+LAI
+```{r comment='', echo=FALSE}
+cat(head(readLines(snakemake@input[["LAI_1"]]), 2), sep = '\n')
+```
+#### Hap 2
+LTR recap
+```{r comment='', echo=FALSE}
+cat(head(readLines(snakemake@input[["LRT_recap_2"]]), 50), sep = '\n')
+```
+LAI
+```{r comment='', echo=FALSE}
+cat(head(readLines(snakemake@input[["LAI_2"]]), 2), sep = '\n')
+```
 
 ## Assembly QC - After Purge_dups
 ### Assembly statistics
@@ -134,4 +153,24 @@ cat(readLines(snakemake@input[["P_tel_1"]]), sep = '\n')
 #### Hap 2
 ```{r comment='', echo=FALSE}
 cat(readLines(snakemake@input[["P_tel_2"]]), sep = '\n')
+```
+
+### LTR Assembly Index (LAI) 
+#### Hap 1
+LTR recap
+```{r comment='', echo=FALSE}
+cat(head(readLines(snakemake@input[["P_LRT_recap_1"]]), 50), sep = '\n')
+```
+LAI
+```{r comment='', echo=FALSE}
+cat(head(readLines(snakemake@input[["P_LAI_1"]]), 2), sep = '\n')
+```
+#### Hap 2
+LTR recap
+```{r comment='', echo=FALSE}
+cat(head(readLines(snakemake@input[["P_LRT_recap_2"]]), 50), sep = '\n')
+```
+LAI
+```{r comment='', echo=FALSE}
+cat(head(readLines(snakemake@input[["P_LAI_2"]]), 2), sep = '\n')
 ```
