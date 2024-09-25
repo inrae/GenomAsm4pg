@@ -17,6 +17,10 @@ __default__:
 convert_to_fasta:
   cpus-per-task: 10
 
+# LTR_retriever
+LTR_retriever:
+  cpus-per-task: 10
+
 # BUSCO
 busco:
   mem: "100G"
