@@ -61,11 +61,16 @@ if [ "$1" = "dry" ]
 then
     # dry run
     snakemake --profile $PROFILE -j $MAX_CORES --use-singularity --singularity-args "-B $SNG_BIND" --cluster-config $CLUSTER_CONFIG -n -r
+elif [ "$1" = "dag" ]
+then
+    # generate DAG
+    snakemake --profile $PROFILE -j $MAX_CORES --use-singularity --singularity-args "-B $SNG_BIND" --cluster-config $CLUSTER_CONFIG --dag > dag.dot
+    echo "DAG has been generated as dag.png"
 elif [ -z "$1" ]
 then
     # run
     snakemake --profile $PROFILE -j $MAX_CORES --use-singularity --singularity-args "-B $SNG_BIND" --cluster-config $CLUSTER_CONFIG
 else
-    echo "Error: Invalid argument. Use 'dry' or no argument." >&2
+    echo "Error: Invalid argument. Use 'dry', 'dag', or no argument." >&2
     exit 1
 fi
