@@ -1,27 +1,38 @@
 # absolute path to your desired output path
-root: /mnt/cbib/pangenoak_trials/GenomAsm4pg/tutorial_output
+root: /mnt/cbib/pangenoak_trials/GenomAsm4pg
 
 ####################### optional prejob - data preparation #######################
 # path to tar data
-data: /mnt/cbib/pangenoak_trials/GenomAsm4pg/
+data: /mnt/cbib/pangenoak_trails/GenomAsm4pg
 # list of tar names
 get_all_tar_filename: False
-tarIDS: "tar_filename"
+tarIDS: "<tar_filenames>"
 
 ####################### job - workflow #######################
 # number of threads used by pigz
 pigz_threads: 4
 # k-mers size (reduce for small datasets)
-km_size: 21 #TODO
+km_size: 21 #TODO, would be nice if that was modulable
 
-### CONFIG
-IDS: ["toy_dataset_bug"]
+### CONFIG 
+IDS: ["purge", "no_purge"]
 
-toy_dataset_bug:
-  fasta: "/mnt/cbib/pangenoak_trials/GenomAsm4pg/lady_bug_data.fasta.gz"
-  run: toy_test_run
+purge:
+  run: purge_test
+  fasta: "/mnt/cbib/pangenoak_trials/GenomAsm4pg/yeast_data.fasta.gz"
   ploidy: 2
-  busco_lineage: arthropoda_odb10
+  busco_lineage: saccharomycetes_odb10
+  assembly_purge_force: 0  #[0-3]
+  purge_dups : False
+  mode: default
+
+no_purge:
+  run: purge_test
+  fasta: "/mnt/cbib/pangenoak_trials/GenomAsm4pg/yeast_data.fasta.gz"
+  ploidy: 2
+  busco_lineage: saccharomycetes_odb10
+  assembly_purge_force: 3  #[0-3]
+  purge_dups : True
   mode: default
 
 ####################### workflow output directories #######################
