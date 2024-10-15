@@ -19,21 +19,25 @@ def run_BFid(id_list):
     RUNID = expand("{runid}", runid = run_list)
     return(RUNID)
 
-#### REPORT
-def for_report(id_list):
+# Create a list of purge datasets
+def for_purge(id_list, trio =False):
     NAME = []
     for i in id_list:
         mode = config[i]["mode"]
-        if mode != "trio":
+        if mode == "trio" and trio and config[i]["purge"]:
+            NAME.append(i)
+        elif trio == False and config[i]["purge"]:
             NAME.append(i)
     return(NAME)
 
-#### REPORT TRIO
-def for_report_trio(id_list):
+# Create a list of not_purged datasets
+def for_report(id_list, trio =False):
     NAME = []
     for i in id_list:
         mode = config[i]["mode"]
-        if mode == "trio":
+        if mode == "trio" and trio and config[i]["purge"]==False:
+            NAME.append(i)
+        elif trio == False and config[i]["purge"]==False:
             NAME.append(i)
     return(NAME)
 
