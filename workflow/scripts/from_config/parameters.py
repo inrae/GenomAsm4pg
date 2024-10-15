@@ -36,3 +36,15 @@ def get_bam(wildcards):
     id_name = wildcards.Bid
     fq = config[f'{id_name}']["bam"]
     return(fq)
+
+# Fetch the purge mode, return a boolean from config file
+def get_purge(wildcards):
+    id_name = wildcards.id
+    purge_bool = config[f'{id_name}']["purge_dups"]
+    return purge_bool
+
+# Fetch the purge level for hifiasm, return a boolean from config file
+def get_purge(wildcards):
+    id_name = wildcards.id
+    force = config[f'{id_name}']["assembly_purge_force"]
+    return force
