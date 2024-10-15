@@ -22,6 +22,7 @@ output:
 # `r snakemake@params[["id"]]` - run: `r snakemake@params[["run"]]`
 * Run : `r snakemake@params[["run"]]`
 * Hifiasm mode : `r snakemake@params[["mode"]]`
+* Hifiasm purge mode [0-3]: `r snakemake@params[["purge_force"]]`
 * Parent 1 : `r snakemake@params[["p1"]]`
 * Parent 2 : `r snakemake@params[["p2"]]`
 * Purge conducted: `r if (snakemake@params[["purge"]]) { "Yes" } else { "No" }`

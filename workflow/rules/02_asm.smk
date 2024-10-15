@@ -8,7 +8,8 @@ rule hifiasm:
         hap1 = abs_root_path + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}.bp.hap1.p_ctg.gfa",
         hap2 = abs_root_path + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}.bp.hap2.p_ctg.gfa"
     params:
-        prefix = abs_root_path + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}"
+        prefix = abs_root_path + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}",
+        purge_force = get_purge_force
     benchmark:
         abs_root_path + "/" + config["resdir"] + "/{runid}/benchmark/{id}_hifiasm_benchmark.txt"
     threads: 20
@@ -17,7 +18,7 @@ rule hifiasm:
     container:
         "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/hifiasm:0.19.6"
     shell:
-        "hifiasm -l3 -o {params.prefix} -t {threads} {input}"
+        "hifiasm -l{params.purge_force} -o {params.prefix} -t {threads} {input}"
 
 # HI-C
 rule hifiasm_hic:
@@ -31,7 +32,8 @@ rule hifiasm_hic:
         hap1 = abs_root_path + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}.hic.hap1.p_ctg.gfa",
         hap2 = abs_root_path + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}.hic.hap2.p_ctg.gfa"
     params:
-        prefix= abs_root_path + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}"
+        prefix= abs_root_path + "/" + config["resdir"] + "/{runid}/02_genome_assembly/01_raw_assembly/00_assembly/{id}",
+        purge_force = get_purge_force
     benchmark:
         abs_root_path + "/" + config["resdir"] + "/{runid}/benchmark/{id}_hifiasm_hic_benchmark.txt"
     threads: 20
@@ -40,7 +42,7 @@ rule hifiasm_hic:
     container:
         "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/hifiasm:0.19.6"
     shell:
-        "hifiasm -l3 -o {params.prefix} -t {threads} --h1 {input.r1} --h2 {input.r2} {input.hifi}"
+        "hifiasm -l{params.purge_force} -o {params.prefix} -t {threads} --h1 {input.r1} --h2 {input.r2} {input.hifi}"
 
 # TRIO BINNING
 rule yak:

@@ -44,7 +44,7 @@ def get_purge(wildcards):
     return purge_bool
 
 # Fetch the purge level for hifiasm, return a boolean from config file
-def get_purge(wildcards):
+def get_purge_force(wildcards):
     id_name = wildcards.id
     force = config[f'{id_name}']["assembly_purge_force"]
     return force
