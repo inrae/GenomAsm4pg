@@ -12,27 +12,27 @@ tarIDS: "<tar_filenames>"
 # number of threads used by pigz
 pigz_threads: 4
 # k-mers size (reduce for small datasets)
-km_size: 21 #TODO, would be nice if that was modulable
+km_size: 21 #Todo, add support for modularity of this value
 
 ### CONFIG 
 IDS: ["purge", "no_purge"]
 
 purge:
-  run: purge_test
-  fasta: "/mnt/cbib/pangenoak_trials/GenomAsm4pg/yeast_data.fasta.gz"
+  run: purge
+  fasta: "/mnt/cbib/pangenoak_trials/GenomAsm4pg/Q_alba.fasta.gz"
   ploidy: 2
-  busco_lineage: saccharomycetes_odb10
-  assembly_purge_force: 0  #[0-3]
-  purge_dups : False
+  busco_lineage: eudicots_odb10
+  assembly_purge_force: 3 
+  run_purge_dups : True
   mode: default
 
 no_purge:
-  run: purge_test
-  fasta: "/mnt/cbib/pangenoak_trials/GenomAsm4pg/yeast_data.fasta.gz"
+  run: no_purge
+  fasta: "/mnt/cbib/pangenoak_trials/GenomAsm4pg/Q_alba.fasta.gz"
   ploidy: 2
-  busco_lineage: saccharomycetes_odb10
-  assembly_purge_force: 3  #[0-3]
-  purge_dups : True
+  busco_lineage: eudicots_odb10
+  assembly_purge_force: 1
+  run_purge_dups : False
   mode: default
 
 ####################### workflow output directories #######################

@@ -44,7 +44,7 @@ rule report:
         mode=get_mode,
         run=get_run,
         purge=get_purge,
-        purge_force = str(get_purge_force)
+        purge_force = str(get_purge_force),
     container:
         "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/rmarkdown4.0.3"
     script:

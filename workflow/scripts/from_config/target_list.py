@@ -24,9 +24,9 @@ def for_purge(id_list, trio =False):
     NAME = []
     for i in id_list:
         mode = config[i]["mode"]
-        if mode == "trio" and trio and config[i]["purge"]:
+        if mode == "trio" and trio and config[i]["run_purge_dups"]:
             NAME.append(i)
-        elif trio == False and config[i]["purge"]:
+        elif trio == False and config[i]["run_purge_dups"]:
             NAME.append(i)
     return(NAME)
 
@@ -35,9 +35,9 @@ def for_report(id_list, trio =False):
     NAME = []
     for i in id_list:
         mode = config[i]["mode"]
-        if mode == "trio" and trio and config[i]["purge"]==False:
+        if mode == "trio" and trio and config[i]["run_purge_dups"]==False:
             NAME.append(i)
-        elif trio == False and config[i]["purge"]==False:
+        elif trio == False and config[i]["run_purge_dups"]==False:
             NAME.append(i)
     return(NAME)
 

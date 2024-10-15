@@ -62,3 +62,4 @@ node_modules/*
 # 4) specific files or folder to TRACK (the '**' sign means 'any path')
 
 # 5) specific folders to UNTRACK (wherever it may be in the treeview)
+.snakemake/*
