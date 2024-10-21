@@ -39,7 +39,7 @@ toy_dataset:
   fasta: "./GenomAsm4pg/tutorial_data/toy_dataset.fasta"
   run: tutorial
   ploidy: 2
-  busco_lineage: eudicots_odb10 
+  busco_lineage: eudicots_odb10
   mode: default
 ```
 ## 2. Addapt the scripts to your HPC
@@ -51,6 +51,7 @@ The current profile is configured for SLURM. If you use SLURM, change line 13 to
 To run this workflow on another HPC, create a new profile (https://github.com/Snakemake-Profiles) and add it to the .config/snakemake_profile directory. Update the CLUSTER_CONFIG and PROFILE variables in the job.sh and prejob.sh scripts.
 
 If your cluster doesn’t have Singularity enabled by default, add it to the list of modules to load in job.sh.
+
 ## 3. Dry run
 To check the configuration, first perform a dry run of the workflow:
 ```bash
@@ -65,5 +66,3 @@ sbatch job.sh
 ```
 ## Other assembly modes
 If you want to use additional Hi-C data or parental data, follow the [Hi-C assembly mode tutorial](Assembly-Mode/Hi-C-tutorial.md) or the [Trio assembly mode tutorial](Assembly-Mode/Trio-tutorial.md). To go further with the workflow use go [here](Going-further.md).
-
-**TO-DO : add a toy fasta.**

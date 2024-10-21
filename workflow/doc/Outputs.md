@@ -29,7 +29,7 @@ workflow_results
             |       ├── katplot
             |       ├── merqury
             |       └── telomeres
-            └── 02_after_purge_dups_assembly
+            └── 02_after_purge_dups_assembly (optional)
                 ├── 00_assembly
                 |   ├── hap1
                 |   └── hap2
@@ -45,3 +45,4 @@ workflow_results
 - Symbolic links to haplotype 1 and haplotype 2 assemblies after purge_dups
 - HTML report with the main results from each program
 - Runtime file with the total workflow runtime for the dataset
+- Global QUAST report
