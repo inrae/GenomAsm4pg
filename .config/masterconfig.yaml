@@ -9,11 +9,6 @@ get_all_tar_filename: False
 tarIDS: "<tar_filenames>"
 
 ####################### job - workflow #######################
-# number of threads used by pigz
-pigz_threads: 4
-# k-mers size (reduce for small datasets)
-km_size: 21 #Todo, add support for modularity of this value
-
 ### CONFIG 
 IDS: ["purge", "no_purge"]
 
@@ -34,6 +29,9 @@ no_purge:
   assembly_purge_force: 1
   run_purge_dups : False
   mode: default
+
+reference_genome : "/mnt/cbib/pangenoak_trials/GenomAsm4pg/my_reference.fasta.gz"
+run_quast: True
 
 ####################### workflow output directories #######################
 # results directory
@@ -60,3 +58,6 @@ asm_purged: 02_after_purge_dups_assembly
 asm_conta: 03_uncontaminated_assembly
 asm: 00_assembly
 asm_qc: 01_assembly_QC
+
+# number of threads used by pigz
+pigz_threads: 4

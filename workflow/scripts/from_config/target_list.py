@@ -65,3 +65,12 @@ def check_fastq(id_list):
         if "fastq" in config[i]:
             IDS.append(i)
     return(IDS)
+
+# QUAST
+def check_quast(res_path):
+    """
+    Check if run_quast is set to true in the masterconfig
+    """
+    if config["run_quast"]: 
+        return res_path + "/global_quast_report/report.html"
+    return []
