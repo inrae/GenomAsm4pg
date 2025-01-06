@@ -80,3 +80,6 @@ toy_dataset:
   busco_lineage: eudicots_odb10
   mode: default
 ```
+
+## 4. Add a reference genome
+You can add a reference genome to the `.masterconfig` and set `scafold_output` to True to run ragtag on your output. 

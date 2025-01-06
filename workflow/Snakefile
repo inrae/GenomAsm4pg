@@ -25,7 +25,6 @@ include: "rules/05.5_purged_asm_qc_merqury.smk"
 include: "rules/06_sym_link_hap.smk"
 include: "rules/07_report.smk"
 include: "rules/00_runtime.smk"
-include: "rules/08_QUAST.smk"
 
 # Get the filenames of inputs
 IDS=config["IDS"]
@@ -106,9 +105,6 @@ time_purge = expand(res_path + "/{runid}/p_runtime.{id}.{lin}.txt", zip,
 time_trio_purge = expand(res_path + "/{runid}/p_runtime_trio.{id}.{lin}.txt", zip,
     runid = RUNID_PURGE_TRIO, id=PURGE_ID_TRIO, lin=BUSCO_LIN_TRIO)
 
-# QUAST
-quast = check_quast(res_path)
-
 rule_all_input_list = [
     longqc_output,
     fastqc_output,
@@ -127,8 +123,7 @@ rule_all_input_list = [
     time_trio_purge,
     time_purge,
     purged_report_output,
-    purged_report_trio_output,
-    quast
+    purged_report_trio_output
 ]
 
 #### target files
