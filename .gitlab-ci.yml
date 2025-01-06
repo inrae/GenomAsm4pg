@@ -1,5 +1,0 @@
-test_job:
-  stage: test
-  image: continuumio/miniconda3  
-  script:
-    - echo "Temporarily clear this file to reduce computational load on every push."
