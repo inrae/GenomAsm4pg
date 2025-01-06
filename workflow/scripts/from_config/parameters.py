@@ -7,11 +7,14 @@ def get_busco_lin(wildcards):
     lineage = config[f'{id_name}']["busco_lineage"]
     return(lineage)
 
-#### PLOIDY
+#### Ploidy
 def get_ploidy(wildcards):
     id_name = wildcards.id
-    ploidy = config[f'{id_name}']["ploidy"]
-    return(ploidy)
+    try :
+        ploidy = config[f'{id_name}']["ploidy"]
+    except KeyError:
+        return 2
+    return ploidy
 
 #### RUN NAME
 def get_run(wildcards):
@@ -40,11 +43,17 @@ def get_bam(wildcards):
 # Fetch the purge mode, return a boolean from config file
 def get_purge(wildcards):
     id_name = wildcards.id
-    purge_bool = config[f'{id_name}']["run_purge_dups"]
+    try : 
+        purge_bool = config[f'{id_name}']["run_purge_dups"]
+    except KeyError:
+        return False
     return purge_bool
 
-# Fetch the purge level for hifiasm, return a boolean from config file
+# Fetch the purge level for hifiasm
 def get_purge_force(wildcards):
     id_name = wildcards.id
-    force = config[f'{id_name}']["assembly_purge_force"]
+    try :
+        force = config[f'{id_name}']["assembly_purge_force"]
+    except KeyError:
+        return '3'
     return force
