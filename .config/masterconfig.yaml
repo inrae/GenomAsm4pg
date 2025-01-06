@@ -1,33 +1,24 @@
-# absolute path to your desired output path
-root: /mnt/cbib/pangenoak_trials/GenomAsm4pg
+# Config file
 
-####################### optional prejob - data preparation #######################
-# path to tar data
-data: /mnt/cbib/pangenoak_trails/GenomAsm4pg
-# list of tar names
-get_all_tar_filename: False
-tarIDS: "<tar_filenames>"
+samples:
+  test_sample1:        
+    fasta_gz: "input_reads.fa.gz"
+    run: purge
+    fasta: "Q_alba.fasta.gz"
+    busco_lineage: eudicots_odb10
+    mode: default                 
 
-####################### job - workflow #######################
-
-
-### CONFIG 
-IDS: ["purge", "no_purge"]
-
-purge:
-  run: purge
-  fasta: "/mnt/cbib/pangenoak_trials/GenomAsm4pg/Q_alba.fasta.gz"
-  ploidy: 2
-  busco_lineage: eudicots_odb10
-  mode: default
-
-reference_genome : "/mnt/cbib/pangenoak_trials/GenomAsm4pg/my_reference.fasta.gz"
+reference_genome : "my_reference.fasta.gz"
 run_quast: True
 run_ragtag: True
 
-####################### workflow output directories #######################
-# results directory
-resdir: results
+memory_multiplier: 100  # Multiplier for scaling memory across all rules
+container_registry: "docker://registry.forgemia.inra.fr/pangepop/mspangepop"
+output_dir: "results/"
+
+
+
+
 
 ### PREJOB
 # extracted input data
