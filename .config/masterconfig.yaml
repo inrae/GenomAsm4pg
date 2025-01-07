@@ -1,30 +1,25 @@
 # Config file
 
 samples:
-  test_sample1:        
-    fasta_gz: "input_reads.fa.gz"
-    run: purge
-    fasta: "Q_alba.fasta.gz"
-    busco_lineage: eudicots_odb10
-    mode: default                 
+  test_default:        
+    fasta_gz: small_example.fasta.gz
+    busco_lineage: eudicots_odb10              
+  test_hi-c:        
+    fasta_gz: small_example.fasta.gz
+    mode: hi-c
+    r1: small_example.fasta.gz
+    r2: small_example.fasta.gz
+    assembly_purge_force: 2
+    busco_lineage: eudicots_odb10     
+
 
 reference_genome : "my_reference.fasta.gz"
 run_quast: True
 run_ragtag: True
 
-memory_multiplier: 100  # Multiplier for scaling memory across all rules
-container_registry: "docker://registry.forgemia.inra.fr/pangepop/mspangepop"
+container_registry: "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg"
 output_dir: "results/"
 
-
-
-
-
-### PREJOB
-# extracted input data
-rawdir: 00_input_data
-bamdir: 00_input_data/bam_files
-fastxdir: 00_input_data/fastx_files
 
 ### JOB
 # QC
