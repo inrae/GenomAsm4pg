@@ -37,5 +37,3 @@ asm_conta: 03_uncontaminated_assembly
 asm: 00_assembly
 asm_qc: 01_assembly_QC
 
-# number of threads used by pigz
-pigz_threads: 4

@@ -10,11 +10,11 @@ output_dir = config.get("output_dir", "results/")
 rule all:
     input:
         expand(
-            os.path.join(output_dir, "{sample}_results", "01_raw_assembly", "{sample}.bp.hap1.p_ctg.gfa"),
+            os.path.join(output_dir, "{sample}_results", "01_raw_assembly", "{sample}_hap1.fa.gz"),
             sample=config["samples"].keys()
         ),
         expand(
-            os.path.join(output_dir, "{sample}_results", "01_raw_assembly", "{sample}.bp.hap2.p_ctg.gfa"),
+            os.path.join(output_dir, "{sample}_results", "01_raw_assembly", "{sample}_hap2.fa.gz"),
             sample=config["samples"].keys()
         )
 
@@ -43,3 +43,31 @@ rule hifiasm:
     shell:
         "./workflow/scripts/hifiasm_call.sh {params.mode} {params.purge_force} {threads} {input.fasta} {params.run_1} {params.run_2} {params.prefix}"
 
+# Convert the gfa files of hifiasm to fasta
+TO_FA_CMD = r"""/^S/{print ">"$2;print $3}"""
+
+rule pigz_gfa_to_fasta:
+    input:
+        hap1_gfa = rules.hifiasm.output.hap1,
+        hap2_gfa = rules.hifiasm.output.hap2
+    output:
+        hap1 =  os.path.join(output_dir, "{sample}_results", "01_raw_assembly","{sample}_hap1.fa.gz"),
+        hap2 =  os.path.join(output_dir, "{sample}_results", "01_raw_assembly","{sample}_hap2.fa.gz")
+    threads: 4
+    resources:
+        mem_mb=25000,
+    container:
+        f"{container_registry}/pigz"
+    shell:
+        """awk {TO_FA_CMD:q} {input.hap1_gfa} | pigz -p {threads} > {output.hap1} &&"""
+        """awk {TO_FA_CMD:q} {input.hap2_gfa} | pigz -p {threads} > {output.hap2}"""
+
+# Potentialy purge the haplotigs using purge_dups
+rule pruge_haplotigs:
+    input:
+        hap1_fasta = rules.pigz_gfa_to_fasta.output.hap1,
+        hap2_fasta = rules.pigz_gfa_to_fasta.output.hap2
+    output:
+        hap1 = os.path.join(output_dir, "{sample}_results", "02_final_asembly","{sample}_final_hap1.fasta.gz"),
+        hap2 = os.path.join(output_dir, "{sample}_results", "02_final_asembly","{sample}_final_hap2.fasta.gz")
+    params:
