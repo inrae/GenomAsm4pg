@@ -8,7 +8,7 @@ include: "scripts/parameter_retrieval.py"
 import os
 import yaml
 
-container_registry = config.get("container_registry", "docker://registry.forgemia.inra.fr/pangepop/mspangepop")
+container_registry = config.get("container_registry", "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg")
 output_dir = config.get("output_dir", "results/")
 
 rule all:
@@ -44,7 +44,7 @@ rule hifiasm:
     threads: 20
     resources:
         mem_mb=250000,
-        time="10:00:00"
+        time="80:00:00"
     container:
         f"{container_registry}/hifiasm:0.19.6"
     shell:
@@ -66,6 +66,7 @@ rule pigz_gfa_to_fasta:
     threads: 4
     resources:
         mem_mb=25000,
+        time="10:00:00"
     container:
         f"{container_registry}/pigz"
     shell:
@@ -89,7 +90,7 @@ rule haplotigs_handling:
     threads: 20
     resources:
         mem_mb=100000,
-        time="10:00:00"
+        time="80:00:00"
     container:
         f"{container_registry}/purge_dups1.2.5"
     shell:
