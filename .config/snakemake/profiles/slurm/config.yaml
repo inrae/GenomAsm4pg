@@ -1,0 +1,9 @@
+executor: slurm
+jobs: 10
+use-singularity: true
+singularity-args: "--bind $(pwd)"
+
+default-resources:
+  #slurm_account: add if needed on your hpc
+  runtime: 60
+  cpus_per_task: 1
