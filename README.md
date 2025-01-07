@@ -1,3 +1,5 @@
+# TODO, ADAPT THIS OBSOLOETE README
+
 # <A HREF="https://forgemia.inra.fr/asm4pg/GenomAsm4pg"> asm4pg </A>
 An automatic and reproducible genome assembly workflow for pangenomic applications using PacBio HiFi data.
 
