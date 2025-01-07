@@ -17,9 +17,9 @@ run_snakemake() {
         dag)
             snakemake --use-singularity --singularity-args "-B $SNG_BIND" -j $CORES --dag > dag.dot
             if [ $? -eq 0 ]; then
-                echo "DAG has been successfully generated as dag.dot"
+                echo "Asm4pg -> DAG has been successfully generated as dag.dot"
             else
-                echo "Error: Failed to generate DAG."
+                echo "Asm4pg -> Error: Failed to generate DAG."
                 exit 1
             fi
             ;;
@@ -35,9 +35,9 @@ run_snakemake() {
 
     # Check if the Snakemake command was successful
     if [ $? -eq 0 ]; then
-        echo "Snakemake completed successfully."
+        echo "Asm4pg -> Snakemake workflow completed successfully."
     else
-        echo "Error: Snakemake execution failed."
+        echo "Asm4pg -> Error: Snakemake workflow execution failed."
         exit 1
     fi
 }
