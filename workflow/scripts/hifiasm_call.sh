@@ -14,6 +14,7 @@ RUN_1=$5
 RUN_2=$6
 PREFIX=$7
 
+echo "Asm4pg -> Given hifiasm parameters :"
 echo "MODE: $MODE"
 echo "PURGE_FORCE: $PURGE_FORCE"
 echo "THREADS: $THREADS"
@@ -23,22 +24,19 @@ echo "RUN_2: $RUN_2"
 echo "PREFIX: $PREFIX"
 
 
-echo ${INPUT}
-ls
-
 # Run the appropriate hifiasm command based on the mode
 case "$MODE" in
     default)
-        echo "Running in default mode..."
+        echo "Asm4pg -> Running hifiasm in default mode..."
         hifiasm -l${PURGE_FORCE} -o ${PREFIX} -t ${THREADS} ${INPUT}
         ;;
     hi-c)
-        echo "Running in hi-c mode..."
+        echo "Asm4pg -> Running hifiasm in hi-c mode..."
         hifiasm -l${PURGE_FORCE} -o ${PREFIX} -t ${THREADS} --h1 ${RUN_1} --h2 ${RUN_2} ${INPUT}
         mv ${PREFIX}.hic.hap1.p_ctg.gfa ${PREFIX}.bp.hap1.p_ctg.gfa 
         mv ${PREFIX}.hic.hap2.p_ctg.gfa ${PREFIX}.bp.hap2.p_ctg.gfa 
         ;;
     *)
-        echo "Unknown mode: $MODE"
+        echo "Asm4pg -> Unknown hifiasm mode: $MODE"
         ;;
 esac
