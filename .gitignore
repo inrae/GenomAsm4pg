@@ -1,3 +1,4 @@
+*
 !.gitignore
 !*.md
 !*.py
@@ -15,4 +16,5 @@
 !*/
 node_modules
 node_modules/*
-.snakemake/*
+!slurm_logs/*
+!workflow/*
