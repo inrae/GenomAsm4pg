@@ -1,58 +1,37 @@
-######### MERQURY
-### create reads db necessary for merqury
-rule meryl:
+### QC on .bam files with LongQC
+rule longqc:
     input:
-        get_fasta
+        abs_root_path + "/" + config["resdir"] + "/" + config["bamdir"] + "/{Bid}.bam"
     output:
-        directory(res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_reads-db_k21.meryl")
+        directory(res_path + "/{Bid}/{run}/01_raw_data_QC/02_longQC")
     benchmark:
-        res_path + "/{runid}/benchmark/{id}_meryl.txt"
-    threads: 20
+        res_path + "/{Bid}/{run}/benchmark/longqc.txt"
+    priority: 1
+    threads: 8
     resources:
         mem_mb=60000
     container:
-        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/merqury1.3"
+        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/longqc1.2.0c"
     shell:
-        "meryl k=21 count {input} output {output}"
+        "longQC sampleqc -x pb-hifi -o {output} {input}"
 
-### temporary haplotype copy used by merqury
-rule cp_hap:
+### QC on .fastq.gz files with FastQC
+rule fastqc:
     input:
-        hap1=rules.hap_gfa_to_fasta.output.hap1_fa,
-        hap2=rules.hap_gfa_to_fasta.output.hap2_fa
+        get_fastq
     output:
-        hap1=temp(res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_hap1.fa.gz"),
-        hap2=temp(res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_hap2.fa.gz")
+        multiext(res_path + "/{Fid}/{run}/01_raw_data_QC/01_fastQC/{Fid}_fastqc", ".html", ".zip")
     params:
-        path = res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury"
-    shell:
-        "cp {{{input.hap1},{input.hap2}}} {params.path}"
-
-### assembly quality
-rule merqury:
-    input:
-        read_db = rules.meryl.output,
-        hap1 = rules.cp_hap.output.hap1,
-        hap2 = rules.cp_hap.output.hap2
-    output:
-        qv = res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_merqury.qv",
-        stat = res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_merqury.completeness.stats"
-    params:
-        prefix = "{id}_merqury",
-        path = res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury",
+        output_path=res_path + "/{Fid}/{run}//01_raw_data_QC/01_fastQC/"
     benchmark:
-        res_path + "/{runid}/benchmark/{id}_merqury.txt"
-    threads: 20
-    resources:
-        mem_mb=60000
+        res_path + "/{Fid}/{run}/benchmark/fastqc.txt"
+    priority: 1
+    threads: 4
     container:
-        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/merqury1.3"
+        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/fastqc:0.12.1"
     shell:
-        "cd {params.path} && "
-        "export MERQURY=/usr/local/share/merqury && "
-        "merqury.sh {input.read_db} {input.hap1} {input.hap2} {params.prefix}"
+        "fastqc -o {params.output_path} {input}"
 
-######### MERQURY TRIO
 rule meryl_trio:
     input:
         p1 = get_p1,
