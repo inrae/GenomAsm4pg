@@ -182,3 +182,19 @@ rule busco:
     shell:
         "busco -f -i {input} -l {params.lineage} --out_path {params.prefix} -o {params.sample} -m genome -c {threads}"
 
+# NOT TESTED
+# Estimate telomeric region content
+rule find_telomeres:
+    input:
+        rules.unpigz_to_fasta.output
+    output:
+        os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "telomeres", "{sample}_hap{n}_telomeres.txt")
+    threads: 4
+    resources:
+        mem_mb=40000
+        time="10:00:00"
+    container:
+        f"{container_registry}/biopython1.75"
+    shell:
+        "python3 workflow/scripts/FindTelomeres.py {input} > {output}"
+
