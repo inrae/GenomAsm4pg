@@ -35,3 +35,11 @@ def get_purge_bool(wildcards):
         print('Asm4pg -> "run_purge_dups" unspecified, using "False" by default')
         return False
     return purge_bool
+
+def get_busco_lin(wildcards) -> str:
+    try : 
+        lin = config["samples"][wildcards.sample]["busco_lineage"]
+    except KeyError:
+        print('Asm4pg -> "busco_lineage" unspecified for ' + config["samples"][wildcards.sample]+ ', using "eukaryota_odb10" by default')
+        return "eukaryota_odb10"
+    return lin
