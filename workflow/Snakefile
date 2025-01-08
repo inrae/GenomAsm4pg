@@ -11,25 +11,31 @@ import yaml
 container_registry = config.get("container_registry", "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg")
 output_dir = config.get("output_dir", "results/")
 
+        
 rule all:
     input:
+        # Required final assemblies and graphs
         expand(
-            os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap{n}","{sample}_final_hap{n}.fasta.gz"),
-            sample=config["samples"].keys(), n =[1, 2]
+            os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "{sample}_final_hap{n}.fasta.gz"),
+            sample=config["samples"].keys(), n=[1, 2]
         ),
         expand(
-            os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap{n}","cutoffs_graph_hap{n}.png"),
-            sample=config["samples"].keys(), n =[1, 2]
+            os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "cutoffs_graph_hap{n}.png"),
+            sample=config["samples"].keys(), n=[1, 2]
         ),
         expand(
-            os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "{sample}_genometools_stats.txt"),
-            sample=config["samples"].keys()
+            os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "{sample}_hap{n}_genometools_stats.txt"),
+            sample=config["samples"].keys(), n=[1, 2]
+        ),
+        expand(
+            os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "busco", "short_summary.specific.{sample}_hap{n}.txt"),
+            sample=config["samples"].keys(), n=[1, 2]
         )
-        
+
 # Genome assembly using hifiasm
 rule hifiasm:
     input:
-        reads=lambda wildcards: config["samples"][wildcards.sample]["fasta_gz"]
+        reads = lambda wildcards: config["samples"][wildcards.sample]["fasta_gz"]
     output:
         hap1 = os.path.join(output_dir, "{sample}_results", "01_raw_assembly","{sample}.bp.hap1.p_ctg.gfa"),
         hap2 = os.path.join(output_dir, "{sample}_results", "01_raw_assembly","{sample}.bp.hap2.p_ctg.gfa")
@@ -79,7 +85,7 @@ rule pigz_gfa_to_fasta:
 rule haplotigs_handling:
     input:
         hap_fasta = os.path.join(output_dir, "{sample}_results", "01_raw_assembly","{sample}_hap{n}.fasta.gz"),
-        reads=lambda wildcards: config["samples"][wildcards.sample]["fasta_gz"]
+        reads = lambda wildcards: config["samples"][wildcards.sample]["fasta_gz"]
     output:
         hap = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap{n}","{sample}_final_hap{n}.fasta.gz"),
         cutoffs = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap{n}","cutoffs")
@@ -115,9 +121,10 @@ rule cutoffs_graph:
     shell:
         "python3 workflow/scripts/hist_plot.py -c {input} {params.dirr}/PB.stat {output.graph}"
 
+# Produce basic stats for the reads files
 rule genometools_on_raw_data:
     input:
-        reads=lambda wildcards: config["samples"][wildcards.sample]["fasta_gz"]
+        lambda wildcards: config["samples"][wildcards.sample]["fasta_gz"]
     output:
         os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "{sample}_genometools_stats.txt")
     priority: 1
@@ -128,4 +135,14 @@ rule genometools_on_raw_data:
     container:
         f"{container_registry}/genometools1.5.9"
     shell:
-        "gt seqstat {input.reads} > {output}"
+        "gt seqstat {input} > {output}"
+
+# NOT TESTED
+# Produce basic stats for each haplotypes assembled
+use rule genometools_on_raw_data as genometools_on_assembly with:
+    input:
+        rules.haplotigs_handling.output.hap
+    output:
+        os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "{sample}_hap{n}_genometools_stats.txt")
+    priority: 0
+
