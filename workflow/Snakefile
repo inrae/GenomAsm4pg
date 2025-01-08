@@ -191,7 +191,7 @@ rule find_telomeres:
         os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "telomeres", "{sample}_hap{n}_telomeres.txt")
     threads: 4
     resources:
-        mem_mb=40000
+        mem_mb=40000,
         time="10:00:00"
     container:
         f"{container_registry}/biopython1.75"
@@ -210,7 +210,7 @@ rule jellyfish:
         km_size = get_kmer_size
     threads: 10
     resources:
-        mem_mb=8000
+        mem_mb=8000,
         time="10:00:00"
     container:
         f"{container_registry}/jellyfish2.3.0"
@@ -233,7 +233,7 @@ rule genomescope:
         dirr = os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "genomescope"),
     threads: 1
     resources:
-        mem_mb=40000
+        mem_mb=40000,
         time="10:00:00"
     container:
         f"{container_registry}/genomescope2.0"
@@ -253,7 +253,7 @@ rule kat:
         km_size = get_kmer_size
     threads: 4
     resources:
-        mem_mb=40000
+        mem_mb=40000,
         time="10:00:00"
     container: 
         f"{container_registry}/kat2.4.1"
@@ -263,6 +263,23 @@ rule kat:
         kat plot spectra-cn -x 200 -o {params.dirr}.katplot.png {params.path}-main.mx
         """
 
+# NOT TESTED
 # Creates a k-mer database from the input reads 
+rule meryl:
+    input:
+        lambda wildcards: config["samples"][wildcards.sample]["fasta_gz"]
+    output:
+        os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "merqury", "{sample}_reads-db.meryl")
+    params:
+        km_size = get_kmer_size
+    threads: 20
+    resources:
+        mem_mb=60000, 
+        time="10:00:00"
+    container:
+        f"{container_registry}/merqury1.3"
+    shell:
+        "meryl k={params.km_size} threads={threads} count {input} output {output}"
+
 
 # Calculate assembly quality metrics
