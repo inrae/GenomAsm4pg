@@ -206,6 +206,8 @@ rule jellyfish:
     output:
         jf = os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "jellyfish", "{sample}.jf"),
         histo = os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "jellyfish", "{sample}.histo")
+    params:
+        km_size = get_kmer_size
     threads: 10
     resources:
         mem_mb=8000
@@ -213,8 +215,10 @@ rule jellyfish:
     container:
         f"{container_registry}/jellyfish2.3.0"
     shell:
-        "jellyfish count -m 21 -s 100M -t 10 -o {output.jf} -C <(zcat {input.reads}) && "
-        "jellyfish histo -h 1000000 -t 10 {output.jf} > {output.histo}"
+        """
+        jellyfish count -m {params.km_size} -s 100M -t {threads} -o {output.jf} -C <(zcat {input.reads}) && 
+        jellyfish histo -h 1000000 -t {threads} {output.jf} > {output.histo}
+        """
 
 # NOT TESTED
 # Analyze the k-mer histogram and estimate genome characteristics, including genome size, heterozygosity, and error rates. 
@@ -222,9 +226,10 @@ rule genomescope:
     input:
         rules.jellyfish.output.histo
     output:
-        plot = os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "genomescope", "linear_plot.png"),
+        plot = os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "genomescope", "linear_plot.png")
     params:
         ploidy = get_ploidy,
+        km_size = get_kmer_size,
         dirr = os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "genomescope"),
     threads: 1
     resources:
@@ -233,7 +238,7 @@ rule genomescope:
     container:
         f"{container_registry}/genomescope2.0"
     shell:
-        "genomescope.R -k 21 -i {input} -o {params.dirr} -p {params.ploidy}"
+        "genomescope.R -k {params.km_size} -i {input} -o {params.dirr} -p {params.ploidy}"
 
 # NOT TESTED
 # Compare the k-mer content between the assembly and the raw reads.
@@ -244,7 +249,8 @@ rule kat:
     output:
         os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "katplot", "{sample}_hap{n}.katplot.png")
     params:
-        dirr = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "katplot", "{sample}_hap{n}")
+        dirr = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "katplot", "{sample}_hap{n}"),
+        km_size = get_kmer_size
     threads: 4
     resources:
         mem_mb=40000
@@ -252,5 +258,11 @@ rule kat:
     container: 
         f"{container_registry}/kat2.4.1"
     shell:
-        "kat comp -o {params.dirr} -t {threads} -m 21--output_type png -v {input.jellyfish} {input.hap} && "
-        "kat plot spectra-cn -x 200 -o {params.dirr}.katplot.png {params.path}-main.mx"
+        """
+        kat comp -o {params.dirr} -t {threads} -m {params.km_size}--output_type png -v {input.jellyfish} {input.hap} && 
+        kat plot spectra-cn -x 200 -o {params.dirr}.katplot.png {params.path}-main.mx
+        """
+
+# Creates a k-mer database from the input reads 
+
+# Calculate assembly quality metrics
