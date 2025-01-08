@@ -146,3 +146,19 @@ use rule genometools_on_raw_data as genometools_on_assembly with:
         os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "{sample}_hap{n}_genometools_stats.txt")
     priority: 0
 
+# NOT TESTED
+# Rule to unsip the haplotypes if needed for other rules
+rule unpigz_to_fasta:
+    input:
+        rules.haplotigs_handling.output.hap
+    output:
+        hap_unziped = temp(os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap{n}","{sample}_final_hap{n}.fa"))
+    container:
+        f"{container_registry}/pigz"
+    threads: 4
+    resources:
+        mem_mb=25000,
+        time="10:00:00"
+    shell:
+        "unpigz -k -p 1 {input}"
+
