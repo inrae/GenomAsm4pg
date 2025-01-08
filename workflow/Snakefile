@@ -281,5 +281,64 @@ rule meryl:
     shell:
         "meryl k={params.km_size} threads={threads} count {input} output {output}"
 
+rule merqury:
+    input:
+        km_database = rules.meryl.output,
+        hap1 = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap1","{sample}_final_hap1.fasta.gz"),
+        hap2 = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap2","{sample}_final_hap2.fasta.gz"),
+    output:
+        qv = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "merqury", "{sample}_merqury.qv"),
+        stats = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "merqury", "{sample}_merqury.completeness.stats")
+    params:
+        prefix = "{sample}_merqury",
+        dirr = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "merqury")
+    threads: 20
+    resources:
+        mem_mb=60000, 
+        time="10:00:00"
+    container:
+        f"{container_registry}/merqury1.3"
+    shell:
+        """
+        # Create temporary copies of haplotypes
+        cp {input.hap1} {params.dirr}/tmp_hap1.fasta.gz
+        cp {input.hap2} {params.dirr}/tmp_hap2.fasta.gz
 
-# Calculate assembly quality metrics
+        # Run Merqury
+        cd {params.dirr} && \
+        export MERQURY=/usr/local/share/merqury && \
+        merqury.sh {input.read_db} {params.dirr}/tmp_hap1.fasta.gz {params.dirr}/tmp_hap1.fasta.gz {params.prefix}
+        """
+
+rule LTR_finder:
+    input:
+        rules.unzip_hap_fasta.output
+    output:
+        res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/LAI/{id}_hap{n}.scn"
+    singularity:
+        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/ltr_finder:latest"
+    shell:
+        "ltr_finder -C {input} > {output}"
+
+rule LTR_retriever:
+    input:
+        scn=rules.LTR_finder.output,
+        genome=rules.unzip_hap_fasta.output
+    output:
+        lai=res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/LAI/{id}_hap{n}.out.LAI",
+        recap=res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/LAI/recap_{id}_hap{n}.tbl"
+    params:
+        prefix="{id}_hap{n}" 
+    threads: 10
+    singularity:
+        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/ltr_retriever:3.0.1"
+    shell:
+        'export PATH="/opt/LTR_retriever:$PATH" && '
+        'LTR_retriever -threads {threads} -genome {input.genome} -infinder {input.scn} && '
+        'mv {params.prefix}.fa.out.LAI {output.lai} && '
+        'mv {params.prefix}.fa.tbl {output.recap}  && '
+        'rm {params.prefix}.fa?* && ' 
+        'rm -rf .RepeatMaskerCache &&'
+        'rm {params.prefix}.fa'
+
+        
