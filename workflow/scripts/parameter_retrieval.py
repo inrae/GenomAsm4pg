@@ -43,3 +43,11 @@ def get_busco_lin(wildcards) -> str:
         print('Asm4pg -> "busco_lineage" unspecified for ' + config["samples"][wildcards.sample]+ ', using "eukaryota_odb10" by default')
         return "eukaryota_odb10"
     return lin
+
+def get_ploidy(wildcards) -> int:
+    try : 
+        ploidy = config["samples"][wildcards.sample]["ploidy"]
+    except KeyError:
+        print('Asm4pg -> "ploidy" unspecified for ' + config["samples"][wildcards.sample]+ ', using 2 by default')
+        return 2
+    return ploidy
