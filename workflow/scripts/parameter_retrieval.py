@@ -51,3 +51,11 @@ def get_ploidy(wildcards) -> int:
         print('Asm4pg -> "ploidy" unspecified for ' + config["samples"][wildcards.sample]+ ', using 2 by default')
         return 2
     return ploidy
+
+def get_kmer_size(wildcards) -> int:
+    try : 
+        size = config["samples"][wildcards.sample]["kmer_size"]
+    except KeyError:
+        print('Asm4pg -> "kmer_size" unspecified for ' + config["samples"][wildcards.sample]+ ', using 21 by default')
+        return 21
+    return size
