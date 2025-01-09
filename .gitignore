@@ -21,3 +21,4 @@ node_modules/*
 .snakemake
 busco_downloads
 .cache
+results
