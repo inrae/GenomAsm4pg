@@ -19,3 +19,4 @@ node_modules/*
 !slurm_logs/*
 !workflow/*
 .snakemake
+busco_downloads
