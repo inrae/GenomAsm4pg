@@ -20,3 +20,4 @@ node_modules/*
 !workflow/*
 .snakemake
 busco_downloads
+.cache
