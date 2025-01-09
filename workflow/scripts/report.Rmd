@@ -38,7 +38,7 @@ output:
 
 ### Reads statistics
 ```{r comment='', echo=FALSE}
-cat(readLines(snakemake@input[["gt_reads"]]), sep = '\n')
+cat(readLines(snakemake@input[["genometools_on_raw_data"]]), sep = '\n')
 ```
 
 
@@ -46,39 +46,39 @@ cat(readLines(snakemake@input[["gt_reads"]]), sep = '\n')
 ### Assembly statistics
 #### Hap 1
 ```{r comment='', echo=FALSE}
-cat(readLines(snakemake@input[["gt_asm_1"]]), sep = '\n')
+cat(readLines(snakemake@input[["genometools_hap1"]]), sep = '\n')
 ```
 
 #### Hap 2
 ```{r comment='', echo=FALSE}
-cat(readLines(snakemake@input[["gt_asm_2"]]), sep = '\n')
+cat(readLines(snakemake@input[["genometools_hap2"]]), sep = '\n')
 ```
 
 ### K-mer profiles
 | Hap 1 | Hap 2 |
 |-------|-------|
-| ![](`r snakemake@input[["kplot_1"]]`) | ![](`r snakemake@input[["kplot_2"]]`) |
+| ![](`r snakemake@input[["kplot_hap1"]]`) | ![](`r snakemake@input[["kplot_hap2"]]`) |
 
 ### K-mer completeness and error rate
 Completeness
 
 ```{r comment='', echo=FALSE}
-cat(readLines(snakemake@input[["merq_comp"]]), sep = '\n')
+cat(readLines(snakemake@input[["merqury_stats"]]), sep = '\n')
 ```
 
 Error rate 
 ```{r comment='', echo=FALSE}
-cat(readLines(snakemake@input[["merq_err"]]), sep = '\n')
+cat(readLines(snakemake@input[["merqury_qv"]]), sep = '\n')
 ```
 
 ### BUSCO
 #### Hap 1
 ```{r comment='', echo=FALSE}
-cat(readLines(snakemake@input[["busco_1"]]), sep = '\n')
+cat(readLines(snakemake@input[["busco_hap1"]]), sep = '\n')
 ```
 #### Hap 2
 ```{r comment='', echo=FALSE}
-cat(readLines(snakemake@input[["busco_2"]]), sep = '\n')
+cat(readLines(snakemake@input[["busco_hap2"]]), sep = '\n')
 ```
 
 ### Telomeres
@@ -86,29 +86,29 @@ Telomeres present in assembly
 
 #### Hap 1
 ```{r comment='', echo=FALSE}
-cat(readLines(snakemake@input[["tel_1"]]), sep = '\n')
+cat(readLines(snakemake@input[["telomeres_hap1"]]), sep = '\n')
 ```
 #### Hap 2
 ```{r comment='', echo=FALSE}
-cat(readLines(snakemake@input[["tel_2"]]), sep = '\n')
+cat(readLines(snakemake@input[["telomeres_hap2"]]), sep = '\n')
 ```
 
 ### LTR Assembly Index (LAI) 
 #### Hap 1
 LTR recap
 ```{r comment='', echo=FALSE}
-cat(head(readLines(snakemake@input[["LRT_recap_1"]]), 50), sep = '\n')
+cat(head(readLines(snakemake@input[["LRT_recap_hap1"]]), 50), sep = '\n')
 ```
 LAI
 ```{r comment='', echo=FALSE}
-cat(head(readLines(snakemake@input[["LAI_1"]]), 2), sep = '\n')
+cat(head(readLines(snakemake@input[["LAI_hap1"]]), 2), sep = '\n')
 ```
 #### Hap 2
 LTR recap
 ```{r comment='', echo=FALSE}
-cat(head(readLines(snakemake@input[["LRT_recap_2"]]), 50), sep = '\n')
+cat(head(readLines(snakemake@input[["LRT_recap_hap2"]]), 50), sep = '\n')
 ```
 LAI
 ```{r comment='', echo=FALSE}
-cat(head(readLines(snakemake@input[["LAI_2"]]), 2), sep = '\n')
+cat(head(readLines(snakemake@input[["LAI_hap2"]]), 2), sep = '\n')
 ```
