@@ -23,7 +23,7 @@ This workflow uses [Snakemake](https://snakemake.readthedocs.io/en/stable/) to q
 ```
 
 ## Requirement
-Miniforge, Singularity/Apptainer
+Miniforge, Singularity/Apptainer, Snakemake
 
 ## How to Use
 ### 1. Set up
@@ -32,27 +32,27 @@ Clone the Git repository
 git clone https://forgemia.inra.fr/asm4pg/GenomAsm4pg.git && cd GenomAsm4pg
 ```
 
-Install Miniforge and create a virtual environement :
+### 2. Configure the pipeline
+- Edit the `masterconfig` file in the `.config/` directory with your sample information. 
+
+### 3. Run the workflow
+#### A. On a HPC
+Create a virtual environement for the workflow to run into :
 ```bash
 conda create -n wf_env -c conda-forge -c bioconda snakemake=8.4.7 snakemake-executor-plugin-slurm
 ```  
 > Use Miniforge with the conda-forge chanel, see why [here](https://science-ouverte.inrae.fr/fr/offre-service/fiches-pratiques-et-recommandations/quelles-alternatives-aux-fonctionnalites-payantes-danaconda) (french)
 
-### 2. Configure the pipeline
-- Edit the `masterconfig` file in the `.config/` directory with your sample information. 
-
-### 3. Run the workflow
-#### On a HPC
 - Edit `job.sh` with your email and add path to the needed modules (`Singularity/Apptainer`, `Miniforge`)
-- Provide the needed conda environement in `job.sh`, under `source activate wf_env`
+- Provide the environement you created in `job.sh`, under `source activate wf_env`
 - Run the workflow :
 ```bash
 sbatch job.sh dry # Check for warnings
 sbatch job.sh run # Then
 ```
 > **Nb 1:** If the your account name cant be automaticly determined, add it in the `.config/snakemake/profiles/slurm/config.yaml` file.
-#### Localy
-- Activate the environement `source activate wf_env`
+#### B. Localy
+- Make sure you have Snakemake and Singularity/Apptainer instaled
 - Run the workflow :
 ```bash
 ./local_run dry # Check for warnings
