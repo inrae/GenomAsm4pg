@@ -10,8 +10,7 @@ import yaml
 
 container_registry = config.get("container_registry", "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg")
 output_dir = config.get("output_dir", "results/")
-
-        
+     
 rule all:
     input:
         # Required final assemblies and graphs
@@ -30,6 +29,10 @@ rule all:
         expand(
             os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "busco", "short_summary.specific.{sample}_hap{n}.txt"),
             sample=config["samples"].keys(), n=[1, 2]
+        ),
+        expand(
+            os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "{sample}_genometools_stats.txt"),
+            sample=config["samples"].keys()
         )
 
 # Genome assembly using hifiasm
@@ -146,13 +149,12 @@ use rule genometools_on_raw_data as genometools_on_assembly with:
         os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "{sample}_hap{n}_genometools_stats.txt")
     priority: 0
 
-# NOT TESTED
 # Rule to unsip the haplotypes if needed for other rules
 rule unpigz_to_fasta:
     input:
         rules.haplotigs_handling.output.hap
     output:
-        temp(os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap{n}","{sample}_final_hap{n}.fa"))
+        temp(os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap{n}","{sample}_final_hap{n}.fasta"))
     container:
         f"{container_registry}/pigz"
     threads: 4
@@ -329,7 +331,7 @@ rule LTR_finder:
 rule LTR_retriever:
     input:
         scn = rules.LTR_finder.output,
-        hap = ules.unpigz_to_fasta.output
+        hap = rules.unpigz_to_fasta.output
     output:
         lai = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "LTR", "{sample}_hap{n}.out.LAI"),
         recap =  os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "LTR", "recap_{sample}_hap{n}.tbl")
