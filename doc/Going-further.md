@@ -1,7 +1,5 @@
 # Going further
 
-[TOC]
-
 ## 01. In-depth options 
 ### Job.sh options
 
@@ -63,23 +61,6 @@ You can remove dataset from IDS to assemble only chosen genomes:
 IDS: ["toy_dataset", "toy_dataset_trio"]
 ```
 Running the workflow with this config will assemble only `toy_dataset` and `toy_dataset_trio`.
-
-
-## 3. Optional fastq and bam files
-If fastq and bam are available and you want to do raw QC with fastQC and longQC, add the `fastq` and/or `bam` key in your config. The fasta, fastq and bam filenames have to be the same. For example:
-
-```yaml
-IDS: ["toy_dataset"]
-
-toy_dataset:
-  fasta: "./GenomAsm4pg/tutorial_data/toy_dataset.fasta"
-  fastq: "./GenomAsm4pg/tutorial_data/toy_dataset.fastq"
-  bam: "./GenomAsm4pg/tutorial_data/toy_dataset.bam"
-  run: tutorial
-  ploidy: 2
-  busco_lineage: eudicots_odb10
-  mode: default
-```
 
 ## 4. Add a reference genome
 You can add a reference genome to the `.masterconfig` and set `scafold_output` to True to run ragtag on your output. 
