@@ -235,7 +235,6 @@ rule genomescope:
         ploidy = get_ploidy,
         km_size = get_kmer_size,
         dirr = os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "genomescope"),
-    threads: 1
     resources:
         mem_mb=40000,
         time="10:00:00"
@@ -399,6 +398,9 @@ rule generate_report:
         kmer_size = get_kmer_size,
         r1 = lambda wildcards: get_run(wildcards, run=1),
         r2 = lambda wildcards: get_run(wildcards, run=2)
+    resources:
+        mem_mb=10000, 
+        time="10:00:00"
     container:
         f"{container_registry}/rmarkdown4.0.3"
     script:
