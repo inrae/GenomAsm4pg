@@ -1,4 +1,16 @@
 ### QC on .bam files with LongQC
+rule multiqc:
+    output:
+        res_path + "/{runid}/multiqc/{id}_multiqc.html"
+    params:
+        indir = res_path + "/{runid}",
+        name = "{id}_multiqc",
+        out = res_path + "/{runid}/multiqc"
+    container:
+        "docker://ewels/multiqc"
+    shell:
+        "multiqc {params.indir} --filename {params.name} --outdir {params.out} --ignore \"*multiqc*\" -d -dd 1 -f"
+
 rule longqc:
     input:
         abs_root_path + "/" + config["resdir"] + "/" + config["bamdir"] + "/{Bid}.bam"
@@ -106,3 +118,38 @@ rule merqury_trio:
         "$MERQURY/trio/hapmers.sh {input.p1} {input.p2} {input.read_db} && "
         "merqury.sh {input.read_db} {output.p1_hapmer} {output.p2_hapmer} {input.hap1} {input.hap2} {params.prefix}"
 
+rule no_purge_report_trio:
+    input:
+        # Reads QC
+        genomescope=RAW_QC + "/04_kmer/{id}_genomescope/linear_plot.png",
+        gt_reads=RAW_QC + "/03_genometools/{id}.RawStat.txt",
+        # Hifiasm assembly QC
+        gt_asm_1=ASM_QC + "/assembly_stats/{id}_hap1.AStats.txt",
+        gt_asm_2=ASM_QC + "/assembly_stats/{id}_hap2.AStats.txt",
+        busco_1=ASM_QC + "/busco/{id}_hap1/short_summary.specific.{lin}.{id}_hap1.txt",
+        busco_2=ASM_QC + "/busco/{id}_hap2/short_summary.specific.{lin}.{id}_hap2.txt",
+        kplot_1=ASM_QC + "/katplot/hap1/{id}_hap1.katplot.png",
+        kplot_2=ASM_QC + "/katplot/hap2/{id}_hap2.katplot.png",
+        tel_1=ASM_QC + "/telomeres/{id}_hap1_telomeres.txt",
+        tel_2=ASM_QC + "/telomeres/{id}_hap2_telomeres.txt",
+        merq_comp=ASM_QC + "/merqury/{id}_merqury_trio.completeness.stats",
+        merq_err=ASM_QC + "/merqury/{id}_merqury_trio.qv",
+        merq_blob=ASM_QC + "/merqury/{id}_merqury_trio.hapmers.blob.png",
+        merq_block_1=ASM_QC + "/merqury/{id}_merqury_trio.{id}_hap1.block.N.png",
+        merq_block_2=ASM_QC + "/merqury/{id}_merqury_trio.{id}_hap2.block.N.png",
+        merq_block_stats_1=ASM_QC + "/merqury/{id}_merqury_trio.{id}_hap1.100_20000.phased_block.stats",
+        merq_block_stats_2=ASM_QC + "/merqury/{id}_merqury_trio.{id}_hap2.100_20000.phased_block.stats"
+    output:
+        res_path + "/{runid}/{id}/{lin}/report_trio.html"
+    params:
+        id="{id}",  # get filename
+        mode=get_mode,  # get assembly mode
+        p1=get_p1,
+        p2=get_p2,
+        run=get_run,
+        purge=get_purge,
+        purge_force = get_purge_force
+    container:
+        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/rmarkdown4.0.3"
+    script:
+        "../scripts/report_trio.Rmd"
