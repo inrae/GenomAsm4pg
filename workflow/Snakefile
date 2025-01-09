@@ -369,8 +369,8 @@ rule generate_report:
         genometools_hap1 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "{sample}_hap1_genometools_stats.txt"),
         genometools_hap2 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "{sample}_hap2_genometools_stats.txt"),
         
-        busco_hap2 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "busco", "short_summary.specific.{sample}_hap1.txt"),
-        busco_hap1 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "busco", "short_summary.specific.{sample}_hap2.txt"),
+        busco_hap1 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "busco", "short_summary.specific.{sample}_hap1.txt"),
+        busco_hap2 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "busco", "short_summary.specific.{sample}_hap2.txt"),
 
         kplot_hap1 =os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "katplot", "{sample}_hap1.katplot.png"),
         kplot_hap2 =os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "katplot", "{sample}_hap2.katplot.png"),
