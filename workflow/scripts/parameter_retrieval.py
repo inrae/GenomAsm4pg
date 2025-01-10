@@ -2,7 +2,7 @@ from snakemake.io import expand
 # Used to retrive the parameters for rules
 
 # Fetch the purge level for hifiasm
-def get_purge_force(wildcards):
+def get_purge_force(wildcards) -> str:
     try :
         force = config["samples"][wildcards.sample]["assembly_purge_force"]
     except KeyError:
@@ -11,7 +11,7 @@ def get_purge_force(wildcards):
     return force
 
 # Fetch the mode for hifiasm
-def get_mode(wildcards):
+def get_mode(wildcards) -> str:
     try :
         mode = config["samples"][wildcards.sample]["mode"]
     except KeyError:
@@ -20,7 +20,7 @@ def get_mode(wildcards):
     return mode
 
 # Fetch r1/r2 fasta file for hi-c
-def get_run(wildcards, run:int):
+def get_run(wildcards, run:int) -> str:
     try :
         run= config["samples"][wildcards.sample][f"r{run}"]
     except KeyError:
@@ -28,7 +28,7 @@ def get_run(wildcards, run:int):
     return run
 
 # Fetch the purge mode, return a boolean from config file
-def get_purge_bool(wildcards):
+def get_purge_bool(wildcards) -> bool:
     try : 
         purge_bool = config["samples"][wildcards.sample]["run_purge_dups"]
     except KeyError:
@@ -59,3 +59,18 @@ def get_kmer_size(wildcards) -> int:
         print('Asm4pg -> "kmer_size" unspecified for ' + wildcards.sample + ', using 21 by default')
         return 21
     return size
+
+def get_reference(wildcards) -> str:
+    try : 
+        reference_genome = config["samples"][wildcards.sample]["reference_genome"]
+    except KeyError:
+        return 'None'
+    return reference_genome
+
+def get_ragtag_bool(wildcards) -> bool:
+    try : 
+        ragtag_bool = config["samples"][wildcards.sample]["run_ragtag"]
+    except KeyError:
+        print('Asm4pg -> "run_ragtag" unspecified for ' + wildcards.sample + ', using "False" by default')
+        return False
+    return ragtag_bool
