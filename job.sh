@@ -31,7 +31,7 @@ run_snakemake() {
 
     case "$option" in
         dry)
-            snakemake -s "$snakefile" -c $(nproc) --dry-run
+            snakemake -c $(nproc) --dry-run
             ;;
         dag)
             snakemake -c $(nproc) --dag > dag.dot
