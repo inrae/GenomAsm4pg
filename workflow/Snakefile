@@ -22,52 +22,12 @@ rule all:
             sample=config["samples"].keys(), n=[1, 2]
         ),
         expand(
-            os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "cutoffs_graph_hap{n}.png"),
+            os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "ragtag_scafold", "recap.txt"),
             sample=config["samples"].keys(), n=[1, 2]
         ),
         expand(
-            os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "{sample}_genometools_stats.txt"),
+            os.path.join(output_dir, "{sample}_results", "{sample}_assembly_report.html"),
             sample=config["samples"].keys()
-        ),
-        expand(
-            os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "genomescope", "linear_plot.png"),
-            sample=config["samples"].keys()
-        ),
-        expand(
-            os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "genomescope", "summary.txt"),
-            sample=config["samples"].keys()
-        ),
-        expand(
-            os.path.join(assembly_qc_folder, "merqury", "{sample}_merqury.qv"),
-            sample=config["samples"].keys()
-        ),
-        expand(
-            os.path.join(assembly_qc_folder, "merqury", "{sample}_merqury.completeness.stats"),
-            sample=config["samples"].keys()
-        ),
-        expand(
-            os.path.join(assembly_qc_folder, "hap{n}", "{sample}_hap{n}_genometools_stats.txt"),
-            sample=config["samples"].keys(), n=[1, 2]
-        ),
-        expand(
-            os.path.join(assembly_qc_folder, "hap{n}", "telomeres", "{sample}_hap{n}_telomeres.txt"),
-            sample=config["samples"].keys(), n=[1, 2]
-        ),
-        expand(
-            os.path.join(assembly_qc_folder, "hap{n}", "katplot", "{sample}_hap{n}.katplot.png"),
-            sample=config["samples"].keys(), n=[1, 2]
-        ),
-        expand(
-            os.path.join(assembly_qc_folder, "hap{n}", "LTR", "{sample}_hap{n}.out.LAI"),
-            sample=config["samples"].keys(), n=[1, 2]
-        ), 
-        expand(
-            os.path.join(assembly_qc_folder, "hap{n}", "LTR", "recap_{sample}_hap{n}.tbl"),
-            sample=config["samples"].keys(), n=[1, 2]
-        ),
-        expand(
-            os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "busco", "short_summary.specific.{sample}_hap{n}.txt"),
-            sample=config["samples"].keys(), n=[1, 2]
         )
         
 # Genome assembly using hifiasm
@@ -382,11 +342,8 @@ rule LTR_retriever:
         cp {input.hap} {params.out_dir}/tmp_hap.fasta && 
         cd {params.out_dir} &&
         LTR_retriever -threads {threads} -genome tmp_hap.fasta -infinder {params.scn} && 
-        mv tmp_hap{params.prefix}.fasta.out.LAI {params.prefix}.out.LAI && 
-        mv tmp_hap{params.prefix}.fasta.tbl recap_{params.prefix}.tbl && 
-        rm tmp_hap{params.prefix}.fa?* &&  
-        rm {params.prefix}.fa
-        rm tmp_hap.fasta
+        mv tmp_hap.fasta.out.LAI {params.prefix}.out.LAI && 
+        mv tmp_hap.fasta.tbl recap_{params.prefix}.tbl 
         '''
 
 # NOT TESTED
@@ -438,24 +395,15 @@ rule generate_report:
         "../scripts/report.Rmd"
 
 # NOT TESTED
-# Rule to relocate the report 
-rule relocate_report:
-    input:
-        rules.generate_report.output
-    output:
-        os.path.join(output_dir, "{sample}_results", "{sample}_assembly_report.html"),
-    shell:
-        "mv {input} {output}"
-
-# NOT TESTED
 # Rule to create scafold on assemblies
-rule ragtag:
+rule scafolding:
     input:
-        rules.unpigz_to_fasta.output
+        os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "{sample}_final_hap{n}.fasta")
     output:
-        dir(os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap{n}","ragtag_scafold"))
+        os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "ragtag_scafold", "recap.txt")
     params:
-        out_file = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap{n}","ragtag_scafold", "{sample}_scafold_hap{n}.fasta.gz"),
+        out_file = os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "ragtag_scafold", "{sample}_scafold_hap{n}.fasta.gz"),
+        out_dir = os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "ragtag_scafold"),
         reference_genome = get_reference,
         ragtag_bool = get_ragtag_bool
     threads: 4
@@ -466,5 +414,5 @@ rule ragtag:
         f"{container_registry}/ragtag:2.0.1"
     shell:
         """
-        ./workflow/scripts/ragtag_call.sh {params.ragtag_bool} {params.hap} {params.out_file} {params.reference_genome} {output} {threads}
+        ./workflow/scripts/ragtag_call.sh {params.ragtag_bool} {params.out_dir} {threads} {params.reference_genome} {input} {params.out_file} {output}
         """
