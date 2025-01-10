@@ -359,6 +359,7 @@ rule LTR_retriever:
         recap =  os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "LTR", "recap_{sample}_hap{n}.tbl")
     params:
         prefix="{sample}_hap{n}",
+        scn="{sample}_hap{n}.scn",
         out_dir = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "LTR")
     threads: 20
     resources:
@@ -369,13 +370,15 @@ rule LTR_retriever:
     shell:
         '''
         export PATH="/opt/LTR_retriever:$PATH" && 
+        cp {input.hap} {params.out_dir}/tmp_hap.fasta && 
         cd {params.out_dir} &&
-        LTR_retriever -threads {threads} -genome {input.hap} -infinder {input.scn} && 
-        mv {params.prefix}.fa.out.LAI {output.lai} && 
-        mv {params.prefix}.fa.tbl {output.recap}  && 
+        LTR_retriever -threads {threads} -genome tmp_hap.fasta -infinder {params.scn} && 
+        mv {params.prefix}.fa.out.LAI {params.prefix}.out.LAI && 
+        mv {params.prefix}.fa.tbl recap_{params.prefix}.tbl && 
         rm {params.prefix}.fa?* &&  
         rm -rf .RepeatMaskerCache &&
         rm {params.prefix}.fa
+        rm tmp_hap.fasta
         '''
 
 # Rule to generate the html report
@@ -439,8 +442,7 @@ rule ragtag:
     output:
         dir(os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap{n}","ragtag_scafold"))
     params:
-        out_dir = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap{n}","ragtag_scafold"),
-        hap = rules.unpigz_to_fasta.output,
+        out_file = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap{n}","ragtag_scafold", "{sample}_scafold_hap{n}.fasta.gz"),
         reference_genome = get_reference,
         ragtag_bool = get_ragtag_bool
     threads: 4
@@ -451,5 +453,5 @@ rule ragtag:
         f"{container_registry}/ragtag:2.0.1"
     shell:
         """
-        ./workflow/scripts/ragtag_call.sh
+        ./workflow/scripts/ragtag_call.sh {params.ragtag_bool} {params.hap} {params.out_file} {params.reference_genome} {output} {threads}
         """
