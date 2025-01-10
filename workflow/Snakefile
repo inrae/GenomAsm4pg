@@ -11,7 +11,9 @@ import yaml
 
 container_registry = config.get("container_registry", "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg")
 output_dir = config.get("output_dir", "results/")
-     
+
+assembly_qc_folder = os.path.join(output_dir, "{sample}_results", "04_assembly_qc")
+
 rule all:
     input:
         # Required final assemblies and graphs
@@ -32,31 +34,31 @@ rule all:
             sample=config["samples"].keys()
         ),
         expand(
-            os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "merqury", "{sample}_merqury.qv"),
+            os.path.join(assembly_qc_folder, "merqury", "{sample}_merqury.qv"),
             sample=config["samples"].keys()
         ),
         expand(
-            os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "merqury", "{sample}_merqury.completeness.stats"),
+            os.path.join(assembly_qc_folder, "merqury", "{sample}_merqury.completeness.stats"),
             sample=config["samples"].keys()
         ),
         expand(
-            os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "{sample}_hap{n}_genometools_stats.txt"),
+            os.path.join(assembly_qc_folder, "hap{n}", "{sample}_hap{n}_genometools_stats.txt"),
             sample=config["samples"].keys(), n=[1, 2]
         ),
         expand(
-            os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "telomeres", "{sample}_hap{n}_telomeres.txt"),
+            os.path.join(assembly_qc_folder, "hap{n}", "telomeres", "{sample}_hap{n}_telomeres.txt"),
             sample=config["samples"].keys(), n=[1, 2]
         ),
         expand(
-            os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "katplot", "{sample}_hap{n}.katplot.png"),
+            os.path.join(assembly_qc_folder, "hap{n}", "katplot", "{sample}_hap{n}.katplot.png"),
             sample=config["samples"].keys(), n=[1, 2]
         ),
         expand(
-            os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "LTR", "{sample}_hap{n}.out.LAI"),
+            os.path.join(assembly_qc_folder, "hap{n}", "LTR", "{sample}_hap{n}.out.LAI"),
             sample=config["samples"].keys(), n=[1, 2]
         ), 
         expand(
-            os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "LTR", "recap_{sample}_hap{n}.tbl"),
+            os.path.join(assembly_qc_folder, "hap{n}", "LTR", "recap_{sample}_hap{n}.tbl"),
             sample=config["samples"].keys(), n=[1, 2]
         )
         
@@ -88,15 +90,12 @@ rule hifiasm:
 
 # Convert the gfa files of hifiasm to fasta
 TO_FA_CMD = r"""/^S/{print ">"$2;print $3}"""
-
 rule pigz_gfa_to_fasta:
     input:
-        hap1_gfa = rules.hifiasm.output.hap1,
-        hap2_gfa = rules.hifiasm.output.hap2, 
+        gfa = os.path.join(output_dir, "{sample}_results", "01_raw_assembly", "{sample}.bp.hap{n}.p_ctg.gfa"),
         reads = lambda wildcards: config["samples"][wildcards.sample]["fasta_gz"]
     output:
-        hap1 =  os.path.join(output_dir, "{sample}_results", "01_raw_assembly","{sample}_hap1.fasta.gz"),
-        hap2 =  os.path.join(output_dir, "{sample}_results", "01_raw_assembly","{sample}_hap2.fasta.gz")
+        fasta = os.path.join(output_dir, "{sample}_results", "01_raw_assembly", "{sample}_hap{n}.fasta.gz")
     threads: 4
     resources:
         mem_mb=25000,
@@ -105,9 +104,9 @@ rule pigz_gfa_to_fasta:
         f"{container_registry}/pigz"
     shell:
         """
-        awk {TO_FA_CMD:q} {input.hap1_gfa} | pigz -p {threads} > {output.hap1} &&
-        awk {TO_FA_CMD:q} {input.hap2_gfa} | pigz -p {threads} > {output.hap2}
+        awk {TO_FA_CMD:q} {input.gfa} | pigz -p {threads} > {output.fasta}
         """
+
 
 # Potentialy purge the haplotigs using purge_dups
 rule haplotigs_handling:
@@ -304,7 +303,6 @@ rule meryl:
     shell:
         "meryl k={params.km_size} threads={threads} count {input} output {output}"
 
-# NOT TESTED
 # Calculates metrics like QV and completeness, providing a quantitative assessment of the genome assembly.
 rule merqury:
     input:
@@ -350,6 +348,7 @@ rule LTR_finder:
     shell:
         "ltr_finder -C {input} > {output}"
 
+# NOT TESTED
 # Calculates the LTR Assembly Index (LAI), a metric for assembly quality based on LTR retrotransposons
 rule LTR_retriever:
     input:
@@ -382,6 +381,7 @@ rule LTR_retriever:
         rm tmp_hap.fasta
         '''
 
+# NOT TESTED
 # Rule to generate the html report
 rule generate_report:
     input:
@@ -428,6 +428,7 @@ rule generate_report:
     script:
         "../scripts/report.Rmd"
 
+# NOT TESTED
 # Rule to relocate the report 
 rule relocate_report:
     input:
@@ -437,6 +438,8 @@ rule relocate_report:
     shell:
         "mv {input} {output}"
 
+# NOT TESTED
+# Rule to create scafold on assemblies
 rule ragtag:
     input:
         rules.unpigz_to_fasta.output
@@ -455,4 +458,30 @@ rule ragtag:
     shell:
         """
         ./workflow/scripts/ragtag_call.sh {params.ragtag_bool} {params.hap} {params.out_file} {params.reference_genome} {output} {threads}
+        """
+
+# NOT TESTED
+# Rule to create a quast report assessing the quality of all assemblies
+rule quast:
+    input:
+        raw_hap1=os.path.join(output_dir, "{sample}_results", "01_raw_assembly", "{sample}_hap1.fasta.gz"),
+        raw_hap2=os.path.join(output_dir, "{sample}_results", "01_raw_assembly", "{sample}_hap2.fasta.gz"),
+        final_hap1=os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap1", "{sample}_final_hap1.fasta.gz"),
+        final_hap2=os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap2", "{sample}_final_hap2.fasta.gz"),
+        rules.ragtag.output
+    params:
+        reference_genome=get_reference,
+        purge_bool=get_purge_bool,
+        ragtag_bool=get_ragtag_bool,
+        ragtag_hap1=os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap1", "ragtag_scafold", "{sample}_scafold_hap1.fasta.gz"),
+        ragtag_hap2=os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap2", "ragtag_scafold", "{sample}_scafold_hap2.fasta.gz")
+    output:
+        quast_output=os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "quast")
+    container:
+        f"{container_registry}/staphb/quast:5.2.0"
+    shell:
+        """
+        bash ./workflow/scripts/quast_call.sh "{params.reference_genome}" "{params.purge_bool}" "{params.ragtag_bool}" \
+            "{input.raw_hap1}" "{input.raw_hap2}" "{input.final_hap1}" "{input.final_hap2}" \
+            "{params.ragtag_hap1}" "{params.ragtag_hap2}" "{output.quast_output}"
         """
