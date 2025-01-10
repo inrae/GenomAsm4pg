@@ -5,17 +5,16 @@
 # 07/01/24
 
 SNG_BIND=$(pwd)
-CORES=$(nproc)
 
 run_snakemake() {
     local option="$1"
 
     case "$option" in
         dry)
-            snakemake --use-singularity --singularity-args "-B $SNG_BIND" -j $CORES -n -R all
+            snakemake --use-singularity --singularity-args "-B $SNG_BIND" -j $(nproc) -n -R all
             ;;
         dag)
-            snakemake --use-singularity --singularity-args "-B $SNG_BIND" -j $CORES -R all --dag > dag.dot
+            snakemake --use-singularity --singularity-args "-B $SNG_BIND" -j $(nproc) -R all --dag > dag.dot
             if [ $? -eq 0 ]; then
                 echo "Asm4pg -> DAG has been successfully generated as dag.dot"
             else
@@ -24,7 +23,7 @@ run_snakemake() {
             fi
             ;;
         run)
-            snakemake --use-singularity --singularity-args "-B $SNG_BIND" -j $CORES -R all #--forceall
+            snakemake --use-singularity --singularity-args "-B $SNG_BIND" -j $(nproc) -R all #--forceall
             ;;
         *)
             echo "Invalid option: $option"
