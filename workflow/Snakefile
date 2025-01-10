@@ -201,7 +201,6 @@ rule busco:
         lineage=get_busco_lin, 
         sample="{sample}_hap{n}"
     threads: 20
-    restart_times: 2
     resources:
         mem_mb=100000,
         time="10:00:00"
