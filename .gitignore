@@ -16,7 +16,6 @@
 !*/
 node_modules
 node_modules/*
-!slurm_logs/*
 !workflow/*
 .snakemake
 busco_downloads
@@ -24,3 +23,4 @@ busco_downloads
 results
 dag.dot
 .RepeatMaskerCache
+slurm_logs
