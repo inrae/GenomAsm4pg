@@ -22,3 +22,4 @@ node_modules/*
 busco_downloads
 .cache
 results
+dag.dot
