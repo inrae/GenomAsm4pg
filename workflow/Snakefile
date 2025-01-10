@@ -201,6 +201,7 @@ rule busco:
         lineage=get_busco_lin, 
         sample="{sample}_hap{n}"
     threads: 20
+    restart_times: 2
     resources:
         mem_mb=100000,
         time="10:00:00"
@@ -333,6 +334,7 @@ rule merqury:
         cd {params.out_dir} && \
         export MERQURY=/usr/local/share/merqury && \
         merqury.sh {input.km_database} {params.out_dir}/tmp_hap1.fasta.gz {params.out_dir}/tmp_hap1.fasta.gz {params.prefix}
+        rm {params.out_dir}/tmp_hap?.fasta.gz
         """
 
 # Identifies LTR retrotransposons
