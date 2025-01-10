@@ -34,6 +34,10 @@ rule all:
             sample=config["samples"].keys()
         ),
         expand(
+            os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "genomescope", "summary.txt"),
+            sample=config["samples"].keys()
+        ),
+        expand(
             os.path.join(assembly_qc_folder, "merqury", "{sample}_merqury.qv"),
             sample=config["samples"].keys()
         ),
@@ -59,6 +63,10 @@ rule all:
         ), 
         expand(
             os.path.join(assembly_qc_folder, "hap{n}", "LTR", "recap_{sample}_hap{n}.tbl"),
+            sample=config["samples"].keys(), n=[1, 2]
+        ),
+        expand(
+            os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "busco", "short_summary.specific.{sample}_hap{n}.txt"),
             sample=config["samples"].keys(), n=[1, 2]
         )
         
@@ -251,7 +259,8 @@ rule genomescope:
     input:
         rules.jellyfish.output.histo
     output:
-        plot = os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "genomescope", "linear_plot.png")
+        plot = os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "genomescope", "linear_plot.png"),
+        summary = os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "genomescope", "summary.txt")
     params:
         ploidy = get_ploidy,
         km_size = get_kmer_size,
@@ -373,10 +382,9 @@ rule LTR_retriever:
         cp {input.hap} {params.out_dir}/tmp_hap.fasta && 
         cd {params.out_dir} &&
         LTR_retriever -threads {threads} -genome tmp_hap.fasta -infinder {params.scn} && 
-        mv {params.prefix}.fa.out.LAI {params.prefix}.out.LAI && 
-        mv {params.prefix}.fa.tbl recap_{params.prefix}.tbl && 
-        rm {params.prefix}.fa?* &&  
-        rm -rf .RepeatMaskerCache &&
+        mv tmp_hap{params.prefix}.fasta.out.LAI {params.prefix}.out.LAI && 
+        mv tmp_hap{params.prefix}.fasta.tbl recap_{params.prefix}.tbl && 
+        rm tmp_hap{params.prefix}.fa?* &&  
         rm {params.prefix}.fa
         rm tmp_hap.fasta
         '''
@@ -386,6 +394,7 @@ rule LTR_retriever:
 rule generate_report:
     input:
         genomescope = rules.genomescope.output.plot,
+        genomescope_sum = rules.genomescope.output.summary,
         genometools_on_raw_data = rules.genometools_on_raw_data.output,
 
         genometools_hap1 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "{sample}_hap1_genometools_stats.txt"),
@@ -458,30 +467,4 @@ rule ragtag:
     shell:
         """
         ./workflow/scripts/ragtag_call.sh {params.ragtag_bool} {params.hap} {params.out_file} {params.reference_genome} {output} {threads}
-        """
-
-# NOT TESTED
-# Rule to create a quast report assessing the quality of all assemblies
-rule quast:
-    input:
-        raw_hap1=os.path.join(output_dir, "{sample}_results", "01_raw_assembly", "{sample}_hap1.fasta.gz"),
-        raw_hap2=os.path.join(output_dir, "{sample}_results", "01_raw_assembly", "{sample}_hap2.fasta.gz"),
-        final_hap1=os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap1", "{sample}_final_hap1.fasta.gz"),
-        final_hap2=os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap2", "{sample}_final_hap2.fasta.gz"),
-        rules.ragtag.output
-    output:
-        quast_output=os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "quast")
-    params:
-        ragtag_hap1 = os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap1", "ragtag_scafold", "{sample}_scafold_hap1.fasta.gz"),
-        ragtag_hap2 = os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap2", "ragtag_scafold", "{sample}_scafold_hap2.fasta.gz"),
-        reference_genome = get_reference,
-        purge_bool = get_purge_bool,
-        ragtag_bool = get_ragtag_bool
-    container:
-        f"{container_registry}/staphb/quast:5.2.0"
-    shell:
-        """
-        bash ./workflow/scripts/quast_call.sh "{params.reference_genome}" "{params.purge_bool}" "{params.ragtag_bool}" \
-            "{input.raw_hap1}" "{input.raw_hap2}" "{input.final_hap1}" "{input.final_hap2}" \
-            "{params.ragtag_hap1}" "{params.ragtag_hap2}" "{output.quast_output}"
         """

@@ -15,7 +15,8 @@ if [[ "$RAGTAG" == "True" || "$RAGTAG" == "true" ]]; then
     echo "Asm4pg -> Running ragtag"
     mkdir -p $DIRR
     ragtag.py scaffold -o $DIRR -t $THREADS $REF $HAP_IN
-    mv $DIRR/ragtag.scaffold.fasta $HAP_OUT
+    gzip $DIRR/ragtag.scaffold.fasta
+    mv $DIRR/ragtag.scaffold.fasta.gz $HAP_OUT
     mv $DIRR/ragtag.scaffold.paf $HAP_OUT
 else
     echo "Asm4pg -> Ragtag option is off"

@@ -7,3 +7,12 @@ samples:
 
 container_registry: "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg"
 output_dir: "results/"
+
+#  run2:
+#    fasta_gz: small_example.fasta.gz
+#    assembly_purge_force: 2
+#    mode: default
+#    run_purge_dups: True
+#    busco_lineage: eudicots_odb10
+#    ploidy: 2
+#    kmer_size: 21

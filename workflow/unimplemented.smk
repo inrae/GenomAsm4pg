@@ -153,3 +153,29 @@ rule no_purge_report_trio:
         "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/rmarkdown4.0.3"
     script:
         "../scripts/report_trio.Rmd"
+
+# NOT TESTED
+# Rule to create a quast report assessing the quality of all assemblies
+rule quast:
+    input:
+        raw_hap1=os.path.join(output_dir, "{sample}_results", "01_raw_assembly", "{sample}_hap1.fasta.gz"),
+        raw_hap2=os.path.join(output_dir, "{sample}_results", "01_raw_assembly", "{sample}_hap2.fasta.gz"),
+        final_hap1=os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap1", "{sample}_final_hap1.fasta.gz"),
+        final_hap2=os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap2", "{sample}_final_hap2.fasta.gz"),
+        rules.ragtag.output
+    output:
+        quast_output=os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "quast")
+    params:
+        ragtag_hap1=os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap1", "ragtag_scafold", "{sample}_scafold_hap1.fasta.gz"),
+        ragtag_hap2=os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap2", "ragtag_scafold", "{sample}_scafold_hap2.fasta.gz"),
+        reference_genome=get_reference,
+        purge_bool=get_purge_bool,
+        ragtag_bool=get_ragtag_bool
+    container:
+        f"{container_registry}/staphb/quast:5.2.0"
+    shell:
+        """
+        bash ./workflow/scripts/quast_call.sh "{params.reference_genome}" "{params.purge_bool}" "{params.ragtag_bool}" \
+            "{input.raw_hap1}" "{input.raw_hap2}" "{input.final_hap1}" "{input.final_hap2}" \
+            "{params.ragtag_hap1}" "{params.ragtag_hap2}" "{output.quast_output}"
+        """
