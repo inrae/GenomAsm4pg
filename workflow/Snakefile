@@ -24,18 +24,42 @@ rule all:
             sample=config["samples"].keys(), n=[1, 2]
         ),
         expand(
+            os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "{sample}_genometools_stats.txt"),
+            sample=config["samples"].keys()
+        ),
+        expand(
+            os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "genomescope", "linear_plot.png"),
+            sample=config["samples"].keys()
+        ),
+        expand(
+            os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "merqury", "{sample}_merqury.qv"),
+            sample=config["samples"].keys()
+        ),
+        expand(
+            os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "merqury", "{sample}_merqury.completeness.stats"),
+            sample=config["samples"].keys()
+        ),
+        expand(
             os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "{sample}_hap{n}_genometools_stats.txt"),
             sample=config["samples"].keys(), n=[1, 2]
         ),
         expand(
-            os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "busco", "short_summary.specific.{sample}_hap{n}.txt"),
+            os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "telomeres", "{sample}_hap{n}_telomeres.txt"),
             sample=config["samples"].keys(), n=[1, 2]
         ),
         expand(
-            os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "{sample}_genometools_stats.txt"),
-            sample=config["samples"].keys()
+            os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "katplot", "{sample}_hap{n}.katplot.png"),
+            sample=config["samples"].keys(), n=[1, 2]
+        ),
+        expand(
+            os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "LTR", "{sample}_hap{n}.out.LAI"),
+            sample=config["samples"].keys(), n=[1, 2]
+        ), 
+        expand(
+            os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "LTR", "recap_{sample}_hap{n}.tbl"),
+            sample=config["samples"].keys(), n=[1, 2]
         )
-
+        
 # Genome assembly using hifiasm
 rule hifiasm:
     input:
@@ -157,7 +181,6 @@ rule genometools_on_raw_data:
     shell:
         "gt seqstat {input} > {output}"
 
-# NOT TESTED
 # Produce basic stats for each haplotypes assembled
 use rule genometools_on_raw_data as genometools_on_assembly with:
     input:
@@ -186,7 +209,6 @@ rule busco:
     shell:
         "busco -f -i {input} -l {params.lineage} --out_path {params.prefix} -o {params.sample} -m genome -c {threads}"
 
-# NOT TESTED
 # Estimate telomeric region content
 rule find_telomeres:
     input:
@@ -202,7 +224,6 @@ rule find_telomeres:
     shell:
         "python3 workflow/scripts/FindTelomeres.py {input} > {output}"
 
-# NOT TESTED
 # Count k-mers in the input reads and generate a histogram of k-mer frequencies.
 rule jellyfish:
     input:
@@ -220,11 +241,12 @@ rule jellyfish:
         f"{container_registry}/jellyfish2.3.0"
     shell:
         """
+        echo "Aasm4pg -> starting jellyfish counts of kmers of size {params.km_size}" &&
         jellyfish count -m {params.km_size} -s 100M -t {threads} -o {output.jf} -C <(zcat {input.reads}) && 
-        jellyfish histo -h 1000000 -t {threads} {output.jf} > {output.histo}
+        echo "Aasm4pg -> starting to compute jellyfish histogram"
+        jellyfish histo -h 1000000 -t {threads} {output.jf} > {output.histo} 
         """
 
-# NOT TESTED
 # Analyze the k-mer histogram and estimate genome characteristics, including genome size, heterozygosity, and error rates. 
 rule genomescope:
     input:
@@ -243,12 +265,11 @@ rule genomescope:
     shell:
         "genomescope.R -k {params.km_size} -i {input} -o {params.out_dir} -p {params.ploidy}"
 
-# NOT TESTED
 # Compare the k-mer content between the assembly and the raw reads.
 rule kat:
     input:
         hap = rules.haplotigs_handling.output.hap,
-        jellyfish = rules.jellyfish.output.histo
+        jellyfish = rules.jellyfish.output.jf
     output:
         os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "katplot", "{sample}_hap{n}.katplot.png")
     params:
@@ -262,17 +283,16 @@ rule kat:
         f"{container_registry}/kat2.4.1"
     shell:
         """
-        kat comp -o {params.out_dir} -t {threads} -m {params.km_size}--output_type png -v {input.jellyfish} {input.hap} && 
-        kat plot spectra-cn -x 200 -o {params.out_dir}.katplot.png {params.path}-main.mx
+        kat comp -o {params.out_dir} -t {threads} -m {params.km_size} --output_type png -v {input.jellyfish} {input.hap} && 
+        kat plot spectra-cn -x 200 -o {params.out_dir}.katplot.png {params.out_dir}-main.mx
         """
 
-# NOT TESTED
 # Creates a k-mer database from the input reads 
 rule meryl:
     input:
         lambda wildcards: config["samples"][wildcards.sample]["fasta_gz"]
     output:
-        os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "merqury", "{sample}_reads-db.meryl")
+        directory(os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "meryl", "{sample}_reads-db.meryl"))
     params:
         km_size = get_kmer_size
     threads: 20
@@ -312,10 +332,9 @@ rule merqury:
         # Run Merqury
         cd {params.out_dir} && \
         export MERQURY=/usr/local/share/merqury && \
-        merqury.sh {input.read_db} {params.out_dir}/tmp_hap1.fasta.gz {params.out_dir}/tmp_hap1.fasta.gz {params.prefix}
+        merqury.sh {input.km_database} {params.out_dir}/tmp_hap1.fasta.gz {params.out_dir}/tmp_hap1.fasta.gz {params.prefix}
         """
 
-# NOT TESTED
 # Identifies LTR retrotransposons
 rule LTR_finder:
     input:
@@ -330,7 +349,6 @@ rule LTR_finder:
     shell:
         "ltr_finder -C {input} > {output}"
 
-# NOT TESTED
 # Calculates the LTR Assembly Index (LAI), a metric for assembly quality based on LTR retrotransposons
 rule LTR_retriever:
     input:
@@ -421,7 +439,10 @@ rule ragtag:
     output:
         dir(os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap{n}","ragtag_scafold"))
     params:
-        out_dir = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap{n}","ragtag_scafold") 
+        out_dir = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap{n}","ragtag_scafold"),
+        hap = rules.unpigz_to_fasta.output,
+        reference_genome = get_reference,
+        ragtag_bool = get_ragtag_bool
     threads: 4
     resources:
         mem_mb = 80000,
