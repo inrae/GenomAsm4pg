@@ -43,7 +43,7 @@ run_snakemake() {
             fi
             ;;
         run)
-            snakemake --workflow-profile ./.config/snakemake/profiles/slurm
+            snakemake --workflow-profile ./.config/snakemake/profiles/slurm #--unlock
             ;;
         *)
             echo "Invalid option: $option"
