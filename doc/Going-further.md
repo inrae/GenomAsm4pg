@@ -1,8 +1,6 @@
 # Going further
-
 ## 01. In-depth options 
-### Job.sh options
-
+### Job.sh/local_run.sh options
 For a dry run
 ```bash
 sbatch job.sh dry
@@ -13,7 +11,7 @@ sbatch job.sh dag
 ```
 To run the workflow
 ```bash
-sbatch job.sh 
+sbatch job.sh run
 ```
 
 ## Workflow options
