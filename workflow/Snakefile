@@ -162,7 +162,7 @@ rule busco:
     input:
         rules.unpigz_to_fasta.output
     output:
-        os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "busco", "short_summary.specific.{sample}_hap{n}.txt")
+        os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "busco", "busco_{sample}_hap{n}.txt")
     params:
         prefix = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "busco"),
         lineage=get_busco_lin, 
@@ -174,7 +174,12 @@ rule busco:
     container:
         f"{container_registry}/busco:5.7.1"
     shell:
-        "busco -f -i {input} -l {params.lineage} --out_path {params.prefix} -o {params.sample} -m genome -c {threads}"
+        """
+        busco -f -i {input} -l {params.lineage} --out_path {params.prefix} -o {params.sample} -m genome -c {threads} && 
+        echo "Aasm4pg -> cleaning busco output files" && 
+        mv {params.prefix}/{params.sample}/short_summary.specific.{params.lineage}.{params.sample}.txt {output} && 
+        rm -rf {params.prefix}/{params.sample}
+        """
 
 # Estimate telomeric region content
 rule find_telomeres:
@@ -210,7 +215,7 @@ rule jellyfish:
         """
         echo "Aasm4pg -> starting jellyfish counts of kmers of size {params.km_size}" &&
         jellyfish count -m {params.km_size} -s 100M -t {threads} -o {output.jf} -C <(zcat {input.reads}) && 
-        echo "Aasm4pg -> starting to compute jellyfish histogram"
+        echo "Aasm4pg -> starting to compute jellyfish histogram" &&
         jellyfish histo -h 1000000 -t {threads} {output.jf} > {output.histo} 
         """
 
@@ -283,7 +288,8 @@ rule merqury:
         stats = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "merqury", "{sample}_merqury.completeness.stats")
     params:
         prefix = "{sample}_merqury",
-        out_dir = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "merqury")
+        out_dir = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "merqury"),
+        hap = "{n}"
     threads: 20
     resources:
         mem_mb=60000, 
@@ -299,8 +305,9 @@ rule merqury:
         # Run Merqury
         cd {params.out_dir} && \
         export MERQURY=/usr/local/share/merqury && \
-        merqury.sh {input.km_database} {params.out_dir}/tmp_hap1.fasta.gz {params.out_dir}/tmp_hap1.fasta.gz {params.prefix}
-        rm {params.out_dir}/tmp_hap?.fasta.gz
+        merqury.sh {input.km_database} {params.out_dir}/tmp_hap1.fasta.gz {params.out_dir}/tmp_hap2.fasta.gz {params.prefix}
+        rm {params.out_dir}/tmp_hap1.fasta.gz
+        rm {params.out_dir}/tmp_hap2.fasta.gz
         """
 
 # Identifies LTR retrotransposons
@@ -340,10 +347,12 @@ rule LTR_retriever:
         '''
         export PATH="/opt/LTR_retriever:$PATH" && 
         cp {input.hap} {params.out_dir}/tmp_hap.fasta && 
-        cd {params.out_dir} &&
+        cd {params.out_dir} && 
         LTR_retriever -threads {threads} -genome tmp_hap.fasta -infinder {params.scn} && 
         mv tmp_hap.fasta.out.LAI {params.prefix}.out.LAI && 
-        mv tmp_hap.fasta.tbl recap_{params.prefix}.tbl 
+        mv tmp_hap.fasta.tbl recap_{params.prefix}.tbl && 
+        echo "Asm4pg -> Cleaning LTR_retriever tmp output files" &&
+        rm tmp*
         '''
 
 # NOT TESTED
@@ -357,8 +366,8 @@ rule generate_report:
         genometools_hap1 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "{sample}_hap1_genometools_stats.txt"),
         genometools_hap2 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "{sample}_hap2_genometools_stats.txt"),
         
-        busco_hap1 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "busco", "short_summary.specific.{sample}_hap1.txt"),
-        busco_hap2 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "busco", "short_summary.specific.{sample}_hap2.txt"),
+        busco_hap1 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "busco", "busco_{sample}_hap1.txt"),
+        busco_hap2 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "busco", "busco_{sample}_hap2.txt"),
 
         kplot_hap1 =os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "katplot", "{sample}_hap1.katplot.png"),
         kplot_hap2 =os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "katplot", "{sample}_hap2.katplot.png"),
@@ -415,4 +424,30 @@ rule scafolding:
     shell:
         """
         ./workflow/scripts/ragtag_call.sh {params.ragtag_bool} {params.out_dir} {threads} {params.reference_genome} {input} {params.out_file} {output}
+        """
+
+# NOT TESTED
+# Rule to create a quast report assessing the quality of all assemblies
+rule quast:
+    input:
+        raw_hap1=os.path.join(output_dir, "{sample}_results", "01_raw_assembly", "{sample}_hap1.fasta.gz"),
+        raw_hap2=os.path.join(output_dir, "{sample}_results", "01_raw_assembly", "{sample}_hap2.fasta.gz"),
+        final_hap1=os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap1", "{sample}_final_hap1.fasta.gz"),
+        final_hap2=os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap2", "{sample}_final_hap2.fasta.gz"),
+        scafold = os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "ragtag_scafold", "recap.txt")
+    output:
+        quast_output=os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "quast")
+    params:
+        ragtag_hap1=lambda wildcards: os.path.join(output_dir, f"{wildcards.sample}_results", "02_final_assembly", "hap1", "ragtag_scafold", f"{wildcards.sample}_scafold_hap1.fasta.gz"),
+        ragtag_hap2=lambda wildcards: os.path.join(output_dir, f"{wildcards.sample}_results", "02_final_assembly", "hap2", "ragtag_scafold", f"{wildcards.sample}_scafold_hap2.fasta.gz"),
+        reference_genome=lambda wildcards: get_reference(wildcards.sample),
+        purge_bool=lambda wildcards: get_purge_bool(wildcards.sample),
+        ragtag_bool=lambda wildcards: get_ragtag_bool(wildcards.sample)
+    container:
+        f"{container_registry}/staphb/quast:5.2.0"
+    shell:
+        """
+        bash ./workflow/scripts/quast_call.sh {params.reference_genome} {params.purge_bool} {params.ragtag_bool} \
+            {input.raw_hap1} {input.raw_hap2} {input.final_hap1} {input.final_hap2} \
+            {params.ragtag_hap1} {params.ragtag_hap2} output.quast_output}
         """
