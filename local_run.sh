@@ -3,7 +3,7 @@
 ## TMP config to run on the CBIB
 #SBATCH --job-name=asm4pg
 #SBATCH --ntasks=20
-#SBATCH --mem=100G
+#SBATCH --mem=200G
 #SBATCH -o slurm_logs/out_job_%j.out
 #SBATCH -e slurm_logs/err_job_%j.err
 
@@ -20,7 +20,7 @@ run_snakemake() {
             snakemake --use-singularity --singularity-args "-B $SNG_BIND" -j $(nproc) -n 
             ;;
         dag)
-            snakemake --use-singularity --singularity-args "-B $SNG_BIND" -j $(nproc) --dag > dag.dot
+            snakemake --use-singularity --singularity-args "-B $SNG_BIND" -j $(nproc) --rulegraph > dag.dot
             if [ $? -eq 0 ]; then
                 echo "Asm4pg -> DAG has been successfully generated as dag.dot"
             else
