@@ -1,48 +1,3 @@
-### QC on .bam files with LongQC
-rule multiqc:
-    output:
-        res_path + "/{runid}/multiqc/{id}_multiqc.html"
-    params:
-        indir = res_path + "/{runid}",
-        name = "{id}_multiqc",
-        out = res_path + "/{runid}/multiqc"
-    container:
-        "docker://ewels/multiqc"
-    shell:
-        "multiqc {params.indir} --filename {params.name} --outdir {params.out} --ignore \"*multiqc*\" -d -dd 1 -f"
-
-rule longqc:
-    input:
-        abs_root_path + "/" + config["resdir"] + "/" + config["bamdir"] + "/{Bid}.bam"
-    output:
-        directory(res_path + "/{Bid}/{run}/01_raw_data_QC/02_longQC")
-    benchmark:
-        res_path + "/{Bid}/{run}/benchmark/longqc.txt"
-    priority: 1
-    threads: 8
-    resources:
-        mem_mb=60000
-    container:
-        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/longqc1.2.0c"
-    shell:
-        "longQC sampleqc -x pb-hifi -o {output} {input}"
-
-### QC on .fastq.gz files with FastQC
-rule fastqc:
-    input:
-        get_fastq
-    output:
-        multiext(res_path + "/{Fid}/{run}/01_raw_data_QC/01_fastQC/{Fid}_fastqc", ".html", ".zip")
-    params:
-        output_path=res_path + "/{Fid}/{run}//01_raw_data_QC/01_fastQC/"
-    benchmark:
-        res_path + "/{Fid}/{run}/benchmark/fastqc.txt"
-    priority: 1
-    threads: 4
-    container:
-        "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/fastqc:0.12.1"
-    shell:
-        "fastqc -o {params.output_path} {input}"
 
 rule meryl_trio:
     input:
@@ -61,29 +16,6 @@ rule meryl_trio:
     shell:
         "meryl k=21 count {input.p1} output {output.p1} && "
         "meryl k=21 count {input.p2} output {output.p2}"
-
-rule cp_trio:
-    input:
-        hap1 = rules.hap_gfa_to_fasta.output.hap1_fa,
-        hap2 = rules.hap_gfa_to_fasta.output.hap2_fa
-    output:
-        hap1 = temp(res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_hap1.fasta.gz"),
-        hap2 = temp(res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_hap2.fasta.gz")
-    params:
-        path=res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury"
-    shell:
-        "cp {input.hap1} {output.hap1} && "
-        "cp {input.hap2} {output.hap2}"
-
-rule unzip:
-    input:
-        rules.cp_trio.output.hap1,
-        rules.cp_trio.output.hap2
-    output:
-        hap1 = temp(res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_hap1.fasta"),
-        hap2 = temp(res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/merqury/{id}_hap2.fasta")
-    shell:
-        "unpigz -k -p 1 {input}"
 
 rule merqury_trio:
     input:
@@ -153,4 +85,3 @@ rule no_purge_report_trio:
         "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg/rmarkdown4.0.3"
     script:
         "../scripts/report_trio.Rmd"
-
