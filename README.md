@@ -25,13 +25,14 @@ This workflow uses [Snakemake](https://snakemake.readthedocs.io/en/stable/) to q
 ## Requirement
 Miniforge, Singularity/Apptainer, Snakemake
 
+
 ## How to Use
 ### 1. Set up
 Clone the Git repository
 ```bash
 git clone https://forgemia.inra.fr/asm4pg/GenomAsm4pg.git && cd GenomAsm4pg
 ```
-
+> All other tools will be ran in Singularity/Apptainer images automaticly downloaded by Snakemake. Total size of the images is ~5.5G
 ### 2. Configure the pipeline
 - Edit the `masterconfig` file in the `.config/` directory with your sample information. 
 
