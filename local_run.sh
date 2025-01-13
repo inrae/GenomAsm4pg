@@ -1,8 +1,14 @@
 #!/bin/bash
-# Script to run locally, DO NOT USE AS IS ON A CLUSTER!
+
+## TMP config to run on the CBIB
+#SBATCH --job-name=asm4pg
+#SBATCH --ntasks=20
+#SBATCH --mem=100G
+#SBATCH -o slurm_logs/out_job_%j.out
+#SBATCH -e slurm_logs/err_job_%j.err
 
 # Written by Lucien Piat at INRAe
-# 07/01/24
+# 07/01/25
 
 SNG_BIND=$(pwd)
 
@@ -11,10 +17,10 @@ run_snakemake() {
 
     case "$option" in
         dry)
-            snakemake --use-singularity --singularity-args "-B $SNG_BIND" -j $(nproc) -n -R all
+            snakemake --use-singularity --singularity-args "-B $SNG_BIND" -j $(nproc) -n 
             ;;
         dag)
-            snakemake --use-singularity --singularity-args "-B $SNG_BIND" -j $(nproc) -R all --dag > dag.dot
+            snakemake --use-singularity --singularity-args "-B $SNG_BIND" -j $(nproc) --dag > dag.dot
             if [ $? -eq 0 ]; then
                 echo "Asm4pg -> DAG has been successfully generated as dag.dot"
             else
@@ -23,7 +29,7 @@ run_snakemake() {
             fi
             ;;
         run)
-            snakemake --use-singularity --singularity-args "-B $SNG_BIND" -j $(nproc) -R all #--forceall
+            snakemake --use-singularity --singularity-args "-B $SNG_BIND" -j $(nproc) #--unlock
             ;;
         *)
             echo "Invalid option: $option"
