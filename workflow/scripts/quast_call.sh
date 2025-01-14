@@ -33,7 +33,7 @@ fi
 
 # Build the quast command
 echo "Asm4pg -> Building the QUAST command..."
-quast_cmd="quast "
+quast_cmd="python /quast-5.2.0/metaquast.py --threads 20 --large "
 if [ "$REFERENCE_GENOME" != "None" ]; then
     echo " - Reference genome specified: $REFERENCE_GENOME"
     quast_cmd+="--reference $REFERENCE_GENOME "
@@ -48,6 +48,12 @@ echo "$quast_cmd"
 # Run the quast command
 echo "Asm4pg -> Running QUAST..."
 eval $quast_cmd
+
+echo "Asm4pg -> Isolating QUAST output"
+cp $OUTPUT_DIR/combined_reference/basic_stats/cumulative_plot.pdf $OUTPUT_DIR cumulative_plot.pdf 
+cp $OUTPUT_DIR/combined_reference/basic_stats/CG_content_plot.pdf $OUTPUT_DIR CG_content_plot.pdf 
+cp $OUTPUT_DIR/combined_reference/basic_stats/Nx_plot.pdf $OUTPUT_DIR Nx_plot.pdf
+
 
 # Exit status check
 if [ $? -eq 0 ]; then
