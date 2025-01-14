@@ -16,7 +16,7 @@ assembly_qc_folder = os.path.join(output_dir, "{sample}_results", "04_assembly_q
 
 rule all:
     input:
-        # Required final assemblies and graphs
+        # Required final assemblies and report
         expand(
             os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "{sample}_final_hap{n}.fasta.gz"),
             sample=config["samples"].keys(), n=[1, 2]
@@ -84,7 +84,6 @@ rule pigz_gfa_to_fasta:
         """
         awk {TO_FA_CMD:q} {input.gfa} | pigz -p {threads} > {output.fasta}
         """
-
 
 # Potentialy purge the haplotigs using purge_dups
 rule haplotigs_handling:
@@ -166,7 +165,7 @@ use rule genometools_on_raw_data as genometools_on_assembly with:
         os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "{sample}_hap{n}_genometools_stats.txt")
     priority: 0
 
-# BUSCO stats on assembly (may not work on first run, rerun the WF)
+# BUSCO stats on assembly
 rule busco:
     input:
         rules.unpigz_to_fasta.output
@@ -210,7 +209,7 @@ rule jellyfish:
     input:
         reads = lambda wildcards: config["samples"][wildcards.sample]["fasta_gz"]
     output:
-        jf = os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "jellyfish", "{sample}.jf"),
+        jf = temp(os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "jellyfish", "{sample}.jf")),
         histo = os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "jellyfish", "{sample}.histo")
     params:
         km_size = get_kmer_size
@@ -274,7 +273,7 @@ rule meryl:
     input:
         lambda wildcards: config["samples"][wildcards.sample]["fasta_gz"]
     output:
-        directory(os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "meryl", "{sample}_reads-db.meryl"))
+        temp(directory(os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "meryl", "{sample}_reads-db.meryl")))
     params:
         km_size = get_kmer_size
     threads: 20
@@ -311,11 +310,11 @@ rule merqury:
         cp {input.hap2} {params.out_dir}/tmp_hap2.fasta.gz
 
         # Run Merqury
-        cd {params.out_dir} && \
-        export MERQURY=/usr/local/share/merqury && \
-        merqury.sh {input.km_database} {params.out_dir}/tmp_hap1.fasta.gz {params.out_dir}/tmp_hap2.fasta.gz {params.prefix} && 
-        rm {params.out_dir}/tmp_hap* &&
-        rm {params.out_dir}/*reads-db*
+        cd {params.out_dir} 
+        export MERQURY=/usr/local/share/merqury 
+        merqury.sh {input.km_database} {params.out_dir}/tmp_hap1.fasta.gz {params.out_dir}/tmp_hap2.fasta.gz {params.prefix} 
+        rm tmp_hap1.fasta.gz 
+        rm tmp_hap2.fasta.gz 
         """
 
 # Identifies LTR retrotransposons
@@ -332,7 +331,6 @@ rule LTR_finder:
     shell:
         "ltr_finder -C {input} > {output}"
 
-# NOT TESTED
 # Calculates the LTR Assembly Index (LAI), a metric for assembly quality based on LTR retrotransposons
 rule LTR_retriever:
     input:
@@ -362,54 +360,6 @@ rule LTR_retriever:
         echo "Asm4pg -> Cleaning LTR_retriever tmp output files" &&
         rm tmp*
         '''
-
-# NOT TESTED
-# Rule to generate the html report
-rule generate_report:
-    input:
-        genomescope = rules.genomescope.output.plot,
-        genomescope_sum = rules.genomescope.output.summary,
-        genometools_on_raw_data = rules.genometools_on_raw_data.output,
-
-        genometools_hap1 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "{sample}_hap1_genometools_stats.txt"),
-        genometools_hap2 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "{sample}_hap2_genometools_stats.txt"),
-        
-        busco_hap1 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "busco", "busco_{sample}_hap1.txt"),
-        busco_hap2 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "busco", "busco_{sample}_hap2.txt"),
-
-        kplot_hap1 =os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "katplot", "{sample}_hap1.katplot.png"),
-        kplot_hap2 =os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "katplot", "{sample}_hap2.katplot.png"),
-
-        telomeres_hap1 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "telomeres", "{sample}_hap1_telomeres.txt"),
-        telomeres_hap2 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "telomeres", "{sample}_hap2_telomeres.txt"),
-        
-        LAI_hap1 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "LTR", "{sample}_hap1.out.LAI"),
-        LAI_hap2 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "LTR", "{sample}_hap2.out.LAI"),
-        
-        LRT_recap_hap1 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "LTR", "recap_{sample}_hap1.tbl"),
-        LRT_recap_hap2 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "LTR", "recap_{sample}_hap2.tbl"),
-
-        merqury_stats=rules.merqury.output.stats,
-        merqury_qv=rules.merqury.output.qv
-    output:
-        os.path.join(output_dir, "{sample}_results", "{sample}_assembly_report.html")
-    params:
-        sample = "{sample}",
-        mode = get_mode,
-        assembly_purge_force = get_purge_force,
-        run_purge_dups = get_purge_bool,
-        busco_lineage = get_busco_lin,
-        ploidy = get_ploidy,
-        kmer_size = get_kmer_size,
-        r1 = lambda wildcards: get_run(wildcards, run=1),
-        r2 = lambda wildcards: get_run(wildcards, run=2)
-    resources:
-        mem_mb=10000, 
-        time="10:00:00"
-    container:
-        f"{container_registry}/rmarkdown4.0.3"
-    script:
-        "../scripts/report.Rmd"
 
 # NOT TESTED
 # Rule to create scafold on assemblies
@@ -454,9 +404,61 @@ rule quast:
         ragtag_bool=get_ragtag_bool
     container:
         f"{container_registry}/staphb/quast:5.2.0"
+    threads: 20
+    resources:
+        mem_mb=100000,
+        time="10:00:00"
     shell:
         """
-        bash ./workflow/scripts/quast_call.sh {params.reference_genome} {params.purge_bool} {params.ragtag_bool} \
+        ./workflow/scripts/quast_call.sh {params.reference_genome} {params.purge_bool} {params.ragtag_bool} \
             {input.raw_hap1} {input.raw_hap2} {input.final_hap1} {input.final_hap2} \
-            {params.ragtag_hap1} {params.ragtag_hap2} {output.quast_output}
+            {params.ragtag_hap1} {params.ragtag_hap2} {output.quast_output} 
         """
+
+# NOT TESTED
+# Rule to generate the html report
+rule generate_report:
+    input:
+        genomescope = os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "genomescope", "linear_plot.png"),
+        genomescope_sum = rules.genomescope.output.summary,
+        genometools_on_raw_data = rules.genometools_on_raw_data.output,
+
+        genometools_hap1 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "{sample}_hap1_genometools_stats.txt"),
+        genometools_hap2 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "{sample}_hap2_genometools_stats.txt"),
+        
+        busco_hap1 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "busco", "busco_{sample}_hap1.txt"),
+        busco_hap2 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "busco", "busco_{sample}_hap2.txt"),
+
+        kplot_hap1 =os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "katplot", "{sample}_hap1.katplot.png"),
+        kplot_hap2 =os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "katplot", "{sample}_hap2.katplot.png"),
+
+        telomeres_hap1 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "telomeres", "{sample}_hap1_telomeres.txt"),
+        telomeres_hap2 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "telomeres", "{sample}_hap2_telomeres.txt"),
+        
+        LAI_hap1 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "LTR", "{sample}_hap1.out.LAI"),
+        LAI_hap2 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "LTR", "{sample}_hap2.out.LAI"),
+        
+        LRT_recap_hap1 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "LTR", "recap_{sample}_hap1.tbl"),
+        LRT_recap_hap2 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "LTR", "recap_{sample}_hap2.tbl"),
+
+        merqury_stats=rules.merqury.output.stats,
+        merqury_qv=rules.merqury.output.qv
+    output:
+        os.path.join(output_dir, "{sample}_results", "{sample}_assembly_report.html")
+    params:
+        sample = "{sample}",
+        mode = get_mode,
+        assembly_purge_force = get_purge_force,
+        run_purge_dups = get_purge_bool,
+        busco_lineage = get_busco_lin,
+        ploidy = get_ploidy,
+        kmer_size = get_kmer_size,
+        r1 = lambda wildcards: get_run(wildcards, run=1),
+        r2 = lambda wildcards: get_run(wildcards, run=2)
+    resources:
+        mem_mb=10000, 
+        time="10:00:00"
+    container:
+        f"{container_registry}/rmarkdown4.0.3"
+    script:
+        "./workflow/scripts/report.Rmd"
