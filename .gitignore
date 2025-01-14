@@ -24,3 +24,4 @@ results
 dag.dot
 .RepeatMaskerCache
 slurm_logs
+.quast
