@@ -1,49 +1,57 @@
-# Workflow output
+# Workflow Output
 
 ## Directories
-There are 4 directories for the data produced by the workflow:
-- `01_raw_assembly` which contains the direct output of Hifiasm
-- `02_final_assembly` which contains the assembled haplotypes that may have been purged of haplotigs and/or scafolded
-- `03_raw_qc` which contains quality metrics for the reads.
-- `04_assembly_qc` which contains quality metrics of the final assembly.
+- `01_raw_assembly`: Direct Hifiasm output
+- `02_final_assembly`: Processed haplotypes (purged/scaffolded)
+- `03_raw_qc`: Read quality metrics
+- `04_assembly_qc`: Final assembly quality metrics
 
-## Files 
+## Files
 ```bash
-results/    # Results folder containg all run
-└── {sample}_results
-    ├── 01_raw_assembly # Raw assembly folder with gfa and fasta files
-    │   ├── {sample}_hap1.gfa
-    │   ├── {sample}_hap2.gfa
-    │   ├── {sample}_hap1.fasta.gz
-    │   ├── {sample}_hap2.fasta.gz
-    │   └──{sample}_hifiasm_benchmark.txt
-    ├── 02_final_assembly # Final assembly driectory with fasta file
-    │   ├── hap1
-    │   │   ├── cutoffs
-    │   │   ├── ragtag_scafold # Driectory that contains scafolded haplotypes
-    │   │   │   └── recap.txt
-    │   │   └── {sample}_final_hap1.fasta.gz
-    │   └── hap2
-    │       └──...
-    ├── 03_raw_data_qc # Driectory that contains QC on the reads
-    │   ├── genomescope
-    │   │   └── ...
-    │   ├── jellyfish
-    │   │   └── ...
-    │   └── {sample}_genometools_stats.txt
-    └── 04_assembly_qc # Driectory with QC for the assembled haplotypes (one per haplotype)
-        ├── hap1
-        │   ├── busco
-        │   │   └── busco_{sample}_hap1.txt
-        │   ├── katplot
-        │   │   ├── ...
-        │   ├── LTR
-        │   │   ├── ...
-        │   ├── {sample}_hap1_genometools_stats.txt
-        │   └── telomeres
-        │       └── ...
-        ├── merqury
-        │   └── ...
-        └── meryl
-            └── ...
+results/
+└── run_results
+    ├── 01_raw_assembly
+    │   ├── raw_hap1.gfa                # Raw assembly graph for haplotype 1
+    │   ├── raw_hap2.gfa                # Raw assembly graph for haplotype 2
+    │   ├── hap1.fasta.gz               # Assembled sequence for haplotype 1
+    │   ├── hap2.fasta.gz               # Assembled sequence for haplotype 2
+    │   └── hifiasm_benchmark.txt       # Assembly performance metrics
+    ├── 02_final_assembly
+    │   ├── hap1
+    │   │   ├── cutoffs                 # Purge_dups coverage cutoffs
+    │   │   ├── ragtag_scafold
+    │   │   │   └── recap.txt          # Scaffolding summary
+    │   │   └── final_hap1.fasta.gz    # Final processed haplotype 1
+    │   └── hap2                        # Similar structure for haplotype 2
+    │   └── ...
+    ├── 03_raw_data_qc
+    │   ├── genomescope
+    │   │   ├── linear_plot.png        # K-mer frequency distribution
+    │   │   └── log_plot.png           # Log-scale k-mer distribution
+    │   ├── jellyfish
+    │   │   ├── run.histo              # K-mer count histogram
+    │   │   └── run.jf                 # K-mer count database
+    │   └── genometools_stats.txt      # Basic sequence statistics
+    ├── 04_assembly_qc
+    │ ├── hap1
+    │ │   ├── busco                    # Completeness assessment
+    │ │   │   └── busco_run1_hap1.txt
+    │ │   ├── katplot                  # K-mer frequency analysis
+    │ │   │   ├── run1_hap1.katplot.png
+    │ │   │   ├── run1_hap1-main.mx.spectra-cn.png
+    │ │   │   └── run1_hap1.stats
+    │ │   ├── LTR                      # Transposable element analysis
+    │ │   │   ├── recap_run1_hap1.tbl
+    │ │   │   ├── run1_hap1.out.LAI
+    │ │   │   └── run1_hap1.scn
+    │ │   ├── run1_hap1_genometools_stats.txt  # Assembly statistics
+    │ │   └── telomeres
+    │ │   └── run1_hap1_telomeres.txt  # Telomere identification results
+    │ ├── merqury                      # Assembly quality assessment
+    │ │   ├── run1_merqury.completeness.stats
+    │ │   ├── run1_merqury.only.hist
+    │ │   └──run1_merqury.qv
+    │ ├── quast                        # Assembly metrics and comparison
+    │ │ └── report.html
+    └── full_qc_report.html            # Complete quality control summary
 ```

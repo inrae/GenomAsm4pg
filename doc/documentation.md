@@ -1,17 +1,21 @@
-# <A HREF="https://forgemia.inra.fr/asm4pg/GenomAsm4pg"> asm4pg </A>
+# [asm4pg](https://forgemia.inra.fr/asm4pg/GenomAsm4pg)
 
 Asm4pg is an automatic and reproducible genome assembly workflow for pangenomic applications using PacBio HiFi data.
 
-doc: [Gitlab pages](https://asm4pg.pages.mia.inra.fr/genomasm4pg)
+Documentation: [GitLab Pages](https://asm4pg.pages.mia.inra.fr/genomasm4pg)
 
-## All options
-Asm4pg has many options with default values, if you wish to modify them, refer to the [Going-Further](doc/going_further.md) section.
+## All Options
+
+Asm4pg has many options with default values. To modify them, refer to the [Going Further](doc/going_further.md) section.
 
 ## Outputs
-If you want to now more about the outputed files of the workflow, refer to the [Outputs](doc/outputs.md) section.
 
-## Known errors
-You may run into [these errors](doc/known_errors.md)
+To learn more about the workflow's output files, refer to the [Outputs](doc/outputs.md) section.
 
-## Softwares
-[Softwares used in the workflow](doc/software_list.md)
+## Known Errors
+
+You may encounter [these errors](doc/known_errors.md).
+
+## Software
+
+Here is a list of [software used in the workflow](doc/software_list.md)
