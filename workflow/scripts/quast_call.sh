@@ -50,9 +50,9 @@ echo "Asm4pg -> Running QUAST..."
 eval $quast_cmd
 
 echo "Asm4pg -> Isolating QUAST output"
-cp $OUTPUT_DIR/combined_reference/basic_stats/cumulative_plot.pdf $OUTPUT_DIR cumulative_plot.pdf 
-cp $OUTPUT_DIR/combined_reference/basic_stats/CG_content_plot.pdf $OUTPUT_DIR CG_content_plot.pdf 
-cp $OUTPUT_DIR/combined_reference/basic_stats/Nx_plot.pdf $OUTPUT_DIR Nx_plot.pdf
+cp $OUTPUT_DIR/combined_reference/basic_stats/cumulative_plot.pdf $OUTPUT_DIR/cumulative_plot.pdf 
+cp $OUTPUT_DIR/combined_reference/basic_stats/CG_content_plot.pdf $OUTPUT_DIR/CG_content_plot.pdf 
+cp $OUTPUT_DIR/combined_reference/basic_stats/Nx_plot.pdf $OUTPUT_DIR/Nx_plot.pdf
 
 
 # Exit status check
