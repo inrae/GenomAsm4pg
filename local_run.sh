@@ -9,6 +9,7 @@
 
 # Written by Lucien Piat at INRAe
 # 07/01/25
+# Use this script to run asm4pg localy or on a single HPC node
 
 SNG_BIND=$(pwd)
 
@@ -20,7 +21,7 @@ run_snakemake() {
             snakemake --use-singularity --singularity-args "-B $SNG_BIND" -j $(nproc) -n 
             ;;
         dag)
-            snakemake --use-singularity --singularity-args "-B $SNG_BIND" -j $(nproc) --rulegraph > dag.dot
+            snakemake --use-singularity --singularity-args "-B $SNG_BIND" -j $(nproc) --dag > dag.dot
             if [ $? -eq 0 ]; then
                 echo "Asm4pg -> DAG has been successfully generated as dag.dot"
             else
@@ -28,12 +29,24 @@ run_snakemake() {
                 exit 1
             fi
             ;;
+        rulegraph)
+            snakemake --use-singularity --singularity-args "-B $SNG_BIND" -j $(nproc) --rulegraph > rulegraph.dot
+            if [ $? -eq 0 ]; then
+                echo "Asm4pg -> Rulegraph has been successfully generated as rulegraph.dot"
+            else
+                echo "Asm4pg -> Error: Failed to generate Rulegraph."
+                exit 1
+            fi
+            ;;
+        unlock)
+            snakemake --use-singularity --singularity-args "-B $SNG_BIND" -j $(nproc) --unlock
+            ;;
         run)
             snakemake --use-singularity --singularity-args "-B $SNG_BIND" -j $(nproc) #--unlock
             ;;
         *)
             echo "Invalid option: $option"
-            echo "Usage: $0 [dry|dag|run]"
+            echo "Usage: $0 [dry|run|dag|rulegraph|unlock]"
             exit 1
             ;;
     esac
@@ -48,11 +61,15 @@ run_snakemake() {
 }
 
 # Verify arguments
-if [ $# -ne 1 ]; then
-    echo "Usage: $0 [dry|dag|run]"
+if [ $# -ne 1 ] || [ "$1" == "help" ]; then
+    echo "Use this script to run asm4pg localy or on a single HPC node"
+    echo ""
+    echo "Usage: $0 [dry|run|dag|rulegraph|unlock]"
     echo "    dry - run the specified Snakefile in dry-run mode"
-    echo "    dag - generate DAG for the specified Snakefile"
     echo "    run - run the specified Snakefile normally"
+    echo "    dag - generate the directed acyclic graph for the specified Snakefile"
+    echo "    rulegraph - generate the rulegraph for the specified Snakefile"
+    echo "    unlock - Unlock the directory if snakemake crashed"
     exit 1
 fi
 
