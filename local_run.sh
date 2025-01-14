@@ -8,8 +8,8 @@
 #SBATCH -e slurm_logs/err_job_%j.err
 
 # Written by Lucien Piat at INRAe
-# 07/01/25
 # Use this script to run asm4pg localy or on a single HPC node
+# 07/01/25
 
 SNG_BIND=$(pwd)
 

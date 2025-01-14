@@ -1,5 +1,8 @@
 from snakemake.io import expand
+
+# Written by Lucien Piat at INRAe
 # Used to retrive the parameters for rules
+# 07/01/25
 
 # Fetch the purge level for hifiasm
 def get_purge_force(wildcards) -> str:

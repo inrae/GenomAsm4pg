@@ -6,6 +6,10 @@
 #SBATCH -J asm4pg
 #SBATCH --mem=10G
 
+# Written by Lucien Piat at INRAe
+# Use this script to run asm4pg on a HPC
+# 07/01/25
+
 # Verify arguments
 if [ $# -ne 1 ] || [ "$1" == "help" ]; then
     echo "Use this script to run asm4pg localy or on a single HPC node"
