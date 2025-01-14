@@ -23,9 +23,7 @@ This workflow uses [Snakemake](https://snakemake.readthedocs.io/en/stable/) to q
 ```
 
 ## Requirement
-Miniforge, Singularity/Apptainer, Snakemake
-
-
+Miniforge (Snakemake), Singularity/Apptainer
 ## How to Use
 ### 1. Set up
 Clone the Git repository
@@ -37,6 +35,7 @@ git clone https://forgemia.inra.fr/asm4pg/GenomAsm4pg.git && cd GenomAsm4pg
 - Edit the `masterconfig` file in the `.config/` directory with your sample information. 
 
 ### 3. Run the workflow 
+
 #### <ins>A. On a HPC</ins>
 - Edit `job.sh` with your email and add path to the needed modules (`Singularity/Apptainer`, `Miniforge`)
 - Provide the environement you created in `job.sh`, under `source activate wf_env`, you can create it like this : 
