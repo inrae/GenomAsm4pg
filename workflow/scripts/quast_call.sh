@@ -15,6 +15,7 @@ FINAL_HAP2="$7"
 RAGTAG_HAP1="$8"
 RAGTAG_HAP2="$9"
 OUTPUT_DIR="${10}"
+RESULT_DIR="$11"
 
 # Create the list of genomes to run quast on
 echo "Asm4pg -> Preparing genome list for QUAST analysis..."
@@ -51,10 +52,9 @@ eval $quast_cmd
 
 echo "Asm4pg -> Isolating QUAST output"
 cp $OUTPUT_DIR/combined_reference/basic_stats/cumulative_plot.pdf $OUTPUT_DIR/cumulative_plot.pdf 
-cp $OUTPUT_DIR/combined_reference/basic_stats/CG_content_plot.pdf $OUTPUT_DIR/CG_content_plot.pdf 
+cp $OUTPUT_DIR/combined_reference/basic_stats/GC_content_plot.pdf $OUTPUT_DIR/GC_content_plot.pdf 
 cp $OUTPUT_DIR/combined_reference/basic_stats/Nx_plot.pdf $OUTPUT_DIR/Nx_plot.pdf
-
-
+cp $OUTPUT_DIR/combined_reference/basic_stats/cumulative_plot.pdf $RESULT_DIR/cumulative_plot.pdf 
 # Exit status check
 if [ $? -eq 0 ]; then
     echo "Asm4pg -> QUAST completed successfully."
