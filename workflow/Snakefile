@@ -10,9 +10,9 @@ import os
 import yaml
 
 container_registry = config.get("container_registry", "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg")
-output_dir = config.get("output_dir", "results/")
+output_dir = os.path.join(config.get("output_dir_pdw", os.getcwd()), config.get("output_dir", "results/"))
 
-assembly_qc_folder = os.path.join(output_dir, "{sample}_results", "04_assembly_qc")
+
 
 rule all:
     input:
@@ -416,35 +416,35 @@ rule quast:
             {params.ragtag_hap1} {params.ragtag_hap2} {output.quast_output} {params.results_dir}
         """
 
-pwd = config.get("output_dir_pdw", os.getcwd())
+
 # NOT TESTED
 # Rule to generate the html report
 rule generate_report:
     input:
-        genomescope = os.path.join(pwd, output_dir, "{sample}_results", "03_raw_data_qc", "genomescope", "linear_plot.png"),
-        genomescope_sum = os.path.join(pwd, output_dir, "{sample}_results", "03_raw_data_qc", "genomescope", "summary.txt"),
-        genometools_on_raw_data = os.path.join(pwd, output_dir, "{sample}_results", "03_raw_data_qc", "{sample}_genometools_stats.txt"),
+        genomescope = os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "genomescope", "linear_plot.png"),
+        genomescope_sum = os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "genomescope", "summary.txt"),
+        genometools_on_raw_data = os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "{sample}_genometools_stats.txt"),
 
-        genometools_hap1 = os.path.join(pwd, output_dir, "{sample}_results", "04_assembly_qc", "hap1", "{sample}_hap1_genometools_stats.txt"),
-        genometools_hap2 = os.path.join(pwd, output_dir, "{sample}_results", "04_assembly_qc", "hap2", "{sample}_hap2_genometools_stats.txt"),
+        genometools_hap1 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "{sample}_hap1_genometools_stats.txt"),
+        genometools_hap2 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "{sample}_hap2_genometools_stats.txt"),
         
-        busco_hap1 = os.path.join(pwd, output_dir, "{sample}_results", "04_assembly_qc", "hap1", "busco", "busco_{sample}_hap1.txt"),
-        busco_hap2 = os.path.join(pwd, output_dir, "{sample}_results", "04_assembly_qc", "hap2", "busco", "busco_{sample}_hap2.txt"),
+        busco_hap1 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "busco", "busco_{sample}_hap1.txt"),
+        busco_hap2 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "busco", "busco_{sample}_hap2.txt"),
 
-        kplot_hap1 =os.path.join(pwd, output_dir, "{sample}_results", "04_assembly_qc", "hap1", "katplot", "{sample}_hap1.katplot.png"),
-        kplot_hap2 =os.path.join(pwd, output_dir, "{sample}_results", "04_assembly_qc", "hap2", "katplot", "{sample}_hap2.katplot.png"),
+        kplot_hap1 =os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "katplot", "{sample}_hap1.katplot.png"),
+        kplot_hap2 =os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "katplot", "{sample}_hap2.katplot.png"),
 
-        telomeres_hap1 = os.path.join(pwd, output_dir, "{sample}_results", "04_assembly_qc", "hap1", "telomeres", "{sample}_hap1_telomeres.txt"),
-        telomeres_hap2 = os.path.join(pwd, output_dir, "{sample}_results", "04_assembly_qc", "hap2", "telomeres", "{sample}_hap2_telomeres.txt"),
+        telomeres_hap1 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "telomeres", "{sample}_hap1_telomeres.txt"),
+        telomeres_hap2 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "telomeres", "{sample}_hap2_telomeres.txt"),
         
-        LAI_hap1 = os.path.join(pwd, output_dir, "{sample}_results", "04_assembly_qc", "hap1", "LTR", "{sample}_hap1.out.LAI"),
-        LAI_hap2 = os.path.join(pwd, output_dir, "{sample}_results", "04_assembly_qc", "hap2", "LTR", "{sample}_hap2.out.LAI"),
+        LAI_hap1 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "LTR", "{sample}_hap1.out.LAI"),
+        LAI_hap2 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "LTR", "{sample}_hap2.out.LAI"),
         
-        LRT_recap_hap1 = os.path.join(pwd, output_dir, "{sample}_results", "04_assembly_qc", "hap1", "LTR", "recap_{sample}_hap1.tbl"),
-        LRT_recap_hap2 = os.path.join(pwd, output_dir, "{sample}_results", "04_assembly_qc", "hap2", "LTR", "recap_{sample}_hap2.tbl"),
+        LRT_recap_hap1 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "LTR", "recap_{sample}_hap1.tbl"),
+        LRT_recap_hap2 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "LTR", "recap_{sample}_hap2.tbl"),
 
-        merqury_stats=os.path.join(pwd, output_dir, "{sample}_results", "04_assembly_qc", "merqury", "{sample}_merqury.completeness.stats"),
-        merqury_qv=os.path.join(pwd, output_dir, "{sample}_results", "04_assembly_qc", "merqury", "{sample}_merqury.qv"),
+        merqury_stats=os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "merqury", "{sample}_merqury.completeness.stats"),
+        merqury_qv=os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "merqury", "{sample}_merqury.qv"),
     output:
         os.path.join(output_dir, "{sample}_results", "{sample}_assembly_report.html")
     params:
