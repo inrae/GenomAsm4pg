@@ -12,30 +12,35 @@ HAP_IN=$5
 HAP_OUT=$6
 RECAP=$7
 
-# Echo parameters into the recap file
-echo "RAGTAG: $RAGTAG" > $RECAP
-echo "DIRR: $DIRR" >> $RECAP
-echo "THREADS: $THREADS" >> $RECAP
-echo "REF: $REF" >> $RECAP
-echo "HAP_IN: $HAP_IN" >> $RECAP
-echo "HAP_OUT: $HAP_OUT" >> $RECAP
+# Initialize recap content
+RECAP_CONTENT="RAGTAG: $RAGTAG
+DIRR: $DIRR
+THREADS: $THREADS
+REF: $REF
+HAP_IN: $HAP_IN
+HAP_OUT: $HAP_OUT
+"
 
 if [[ "$RAGTAG" == "True" || "$RAGTAG" == "true" ]]; then
     echo "Asm4pg -> Running ragtag"
-    echo "Asm4pg -> Ragtag execution started" >> $RECAP
-    mkdir -p $DIRR
+    RECAP_CONTENT+="Asm4pg -> Ragtag execution started\n"
+    mkdir -p "$DIRR"
 
-    if ragtag.py scaffold -o $DIRR -t $THREADS $REF $HAP_IN; then
-        gzip $DIRR/ragtag.scaffold.fasta
-        mv $DIRR/ragtag.scaffold.fasta.gz $HAP_OUT
-        echo "Asm4pg -> Ragtag execution completed" >> $RECAP
-        echo "Output file: $HAP_OUT" >> $RECAP
+    if ragtag.py scaffold -o "$DIRR" -t "$THREADS" "$REF" "$HAP_IN"; then
+        gzip "$DIRR/ragtag.scaffold.fasta"
+        mv "$DIRR/ragtag.scaffold.fasta.gz" "$HAP_OUT"
+        RECAP_CONTENT+="Asm4pg -> Ragtag execution completed\n"
+        RECAP_CONTENT+="Output file: $HAP_OUT\n"
     else
-        echo "Asm4pg -> Ragtag execution failed" >> $RECAP
+        RECAP_CONTENT+="Asm4pg -> Ragtag execution failed\n"
+        echo -e "$RECAP_CONTENT" > "$RECAP"
         exit 1
     fi
 else
     echo "Asm4pg -> Ragtag option is off"
-    echo "Asm4pg -> Ragtag option is off" >> $RECAP
-    mkdir -p $DIRR
+    RECAP_CONTENT+="Asm4pg -> Ragtag option is off\n"
+    mkdir -p "$DIRR"
 fi
+
+# Write recap content to file at the end
+echo -e "$RECAP_CONTENT" > "$RECAP"
