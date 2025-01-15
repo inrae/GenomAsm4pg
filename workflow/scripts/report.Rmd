@@ -19,19 +19,20 @@ output:
 
 ----
 
-# `r snakemake@params[["sample"]]`
+# Global Asm4pg assembly report for:  `r snakemake@params[["sample"]]`
+## Asm4pg Parameters
 * Hifiasm mode : `r snakemake@params[["mode"]]`
-* Hifiasm purge mode : `r snakemake@params[["assembly_purge_force"]]` 
-* Purge conducted: `r if (snakemake@params[["run_purge_dups"]]) { "Yes" } else { "No" }`
-* Busco lineage: `r snakemake@params[["busco_lineage"]]`
-* Genome ploidy: `r snakemake@params[["ploidy"]]`
-* Kmers size: `r snakemake@params[["kmer_size"]]`
-
 * If hi-c or trio mode : 
   * parent1/r1 `r snakemake@params[["r1"]]`
   * parent2/r2 `r snakemake@params[["r2"]]`
 
-----
+* Hifiasm purge force : `r snakemake@params[["assembly_purge_force"]]` 
+* Purge_dups executed: `r if (snakemake@params[["purge_dups_bool"]]) { "Yes" } else { "No" }`
+* Genome scafolded: `r if (snakemake@params[["ragtag_bool"]]) { "Yes" } else { "No" }`
+
+* Busco lineage: `r snakemake@params[["busco_lineage"]]`
+* Genome ploidy: `r snakemake@params[["ploidy"]]`
+* Kmers size: `r snakemake@params[["kmer_size"]]`
 
 ## Raw data QC
 ![](`r snakemake@input[["genomescope"]]`)
@@ -42,7 +43,7 @@ cat(readLines(snakemake@input[["genometools_on_raw_data"]]), sep = '\n')
 ```
 
 
-## Assembly QC - Hifiasm
+## QC on final assembly
 ### Assembly statistics
 #### Hap 1
 ```{r comment='', echo=FALSE}
@@ -71,7 +72,7 @@ Error rate
 cat(readLines(snakemake@input[["merqury_qv"]]), sep = '\n')
 ```
 
-### BUSCO
+### BUSCO score
 #### Hap 1
 ```{r comment='', echo=FALSE}
 cat(readLines(snakemake@input[["busco_hap1"]]), sep = '\n')
@@ -83,7 +84,6 @@ cat(readLines(snakemake@input[["busco_hap2"]]), sep = '\n')
 
 ### Telomeres
 Telomeres present in assembly
-
 #### Hap 1
 ```{r comment='', echo=FALSE}
 cat(readLines(snakemake@input[["telomeres_hap1"]]), sep = '\n')
@@ -93,7 +93,7 @@ cat(readLines(snakemake@input[["telomeres_hap1"]]), sep = '\n')
 cat(readLines(snakemake@input[["telomeres_hap2"]]), sep = '\n')
 ```
 
-### LTR Assembly Index (LAI) 
+### Transposable element analysis
 #### Hap 1
 LTR recap
 ```{r comment='', echo=FALSE}
