@@ -1,18 +1,15 @@
 # Config file
 
+# Add the assembly runs you want to do under samples. 
+# Here is an example of mininmal configuration. Refer to the documentation for all options
+
 samples:
   run1:
     fasta_gz: small_example.fasta.gz
 
-
-container_registry: "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg"
+# You can modify the output path if you need to
 output_dir: "results/"
+output_dir_pdw: /mnt/cbib/pangenoak_trials/GenomAsm4pg/
 
-#  run2:
-#    fasta_gz: small_example.fasta.gz
-#    assembly_purge_force: 2
-#    mode: default
-#    run_purge_dups: True
-#    busco_lineage: eudicots_odb10
-#    ploidy: 2
-#    kmer_size: 21
+# This container registry will be used to download singularity images
+container_registry: "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg"
