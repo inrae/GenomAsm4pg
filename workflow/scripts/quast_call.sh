@@ -1,5 +1,5 @@
 #!/bin/bash
-# Script to dynamically run quast on produced genomes, with verbose output
+# Script to dynamically run quast on produced genomes, with focus on basic stat plots in PNG format
 # Author: Lucien PIAT
 # For: Project Pangenoak
 # Date: January 6, 2025
@@ -34,7 +34,7 @@ fi
 
 # Build the quast command
 echo "Asm4pg -> Building the QUAST command..."
-quast_cmd="python /quast-5.2.0/metaquast.py --threads 20 --large "
+quast_cmd="python /quast-5.2.0/metaquast.py --threads 20 --large --no-html --no-check --plots-format png "
 if [ "$REFERENCE_GENOME" != "None" ]; then
     echo " - Reference genome specified: $REFERENCE_GENOME"
     quast_cmd+="--reference $REFERENCE_GENOME "
@@ -50,11 +50,13 @@ echo "$quast_cmd"
 echo "Asm4pg -> Running QUAST..."
 eval $quast_cmd
 
-echo "Asm4pg -> Isolating QUAST output"
-cp $OUTPUT_DIR/combined_reference/basic_stats/cumulative_plot.pdf $OUTPUT_DIR/cumulative_plot.pdf 
-cp $OUTPUT_DIR/combined_reference/basic_stats/GC_content_plot.pdf $OUTPUT_DIR/GC_content_plot.pdf 
-cp $OUTPUT_DIR/combined_reference/basic_stats/Nx_plot.pdf $OUTPUT_DIR/Nx_plot.pdf
-cp $OUTPUT_DIR/combined_reference/basic_stats/cumulative_plot.pdf $RESULT_DIR/cumulative_plot.pdf 
+# Isolating desired outputs
+echo "Asm4pg -> Isolating QUAST basic stat plots..."
+mkdir -p "$RESULT_DIR"
+cp "$OUTPUT_DIR/combined_reference/basic_stats/cumulative_plot.png" "$RESULT_DIR/cumulative_plot.png"
+cp "$OUTPUT_DIR/combined_reference/basic_stats/GC_content_plot.png" "$RESULT_DIR/GC_content_plot.png"
+cp "$OUTPUT_DIR/combined_reference/basic_stats/Nx_plot.png" "$RESULT_DIR/Nx_plot.png"
+
 # Exit status check
 if [ $? -eq 0 ]; then
     echo "Asm4pg -> QUAST completed successfully."
