@@ -4,8 +4,32 @@
 # Here is an example of mininmal configuration. Refer to the documentation for all options
 
 samples:
-  run1:
+  run2:
     fasta_gz: small_example.fasta.gz
+    mode: default
+    run_purge_dups: True
+    assembly_purge_force: 2
+    busco_lineage: eudicots_odb10
+    reference_genome: small_ref.fasta.gz
+    run_ragtag: True
+#  run3:
+#    fasta_gz: small_example.fasta.gz
+#    mode: hi-c
+#    r1: small_example.fasta.gz
+#    r2: small_example.fasta.gz
+#  run4:
+#    fasta_gz: small_example.fasta.gz
+#    mode: hi-c
+#    r1: small_example.fasta.gz
+#    r2: small_example.fasta.gz
+#    run_ragtag: True
+#    run_purge_dups: True
+#    reference_genome: small_ref.fasta.gz
+#  run1:
+#    fasta_gz: small_example.fasta.gz
+#    mode: default
+#    run_purge_dups: False
+
 
 # You can modify the output path if you need to
 output_dir: "results/"
