@@ -6,4 +6,4 @@ keep-going: True
 
 default-resources:
   #slurm_account: add if needed on your hpc
-  runtime: 80:80:80
+  runtime: 4800
