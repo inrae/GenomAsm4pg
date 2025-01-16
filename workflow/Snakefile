@@ -162,15 +162,15 @@ use rule genometools_on_raw_data as genometools_on_assembly with:
     priority: 0
 
 # BUSCO stats on assembly
-rule busco:
+rule busco_hap1:
     input:
-        rules.unpigz_to_fasta.output
+        hap = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap1","{sample}_final_hap1.fasta")
     output:
-        os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "busco", "busco_{sample}_hap{n}.txt")
+        os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "busco", "busco_{sample}_hap1.txt")
     params:
-        prefix = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "busco"),
+        prefix = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "busco"),
         lineage=get_busco_lin, 
-        sample="{sample}_hap{n}"
+        sample="{sample}_hap1"
     threads: 20
     resources:
         mem_mb=100000,
@@ -179,11 +179,22 @@ rule busco:
         f"{container_registry}/busco:5.7.1"
     shell:
         """
-        busco -f -i {input} -l {params.lineage} --out_path {params.prefix} -o {params.sample} -m genome -c {threads} && 
+        busco -f -i {input.hap} -l {params.lineage} --out_path {params.prefix} -o {params.sample} -m genome -c {threads} && 
         echo "Aasm4pg -> cleaning busco output files" && 
         mv {params.prefix}/{params.sample}/short_summary.specific.{params.lineage}.{params.sample}.txt {output} && 
         rm -rf {params.prefix}/{params.sample}
         """
+
+use rule busco_hap1 as busco_hap2 with:
+    input:
+        hap = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap2","{sample}_final_hap2.fasta"),
+        other = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "busco", "busco_{sample}_hap1.txt")
+    output:
+        os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "busco", "busco_{sample}_hap2.txt")
+    params:
+        prefix = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "busco"),
+        lineage=get_busco_lin, 
+        sample="{sample}_hap2"
 
 # Estimate telomeric region content
 rule find_telomeres:
@@ -269,7 +280,8 @@ rule meryl:
     input:
         lambda wildcards: config["samples"][wildcards.sample]["fasta_gz"]
     output:
-        temp(directory(os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "meryl", "{sample}_reads-db.meryl")))
+        db = temp(directory(os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "meryl", "{sample}_reads-db.meryl"))),
+        output_dir = temp(directory(os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "meryl")))
     params:
         km_size = get_kmer_size
     threads: 20
@@ -279,7 +291,7 @@ rule meryl:
     container:
         f"{container_registry}/merqury1.3"
     shell:
-        "meryl k={params.km_size} threads={threads} count {input} output {output}"
+        "meryl k={params.km_size} threads={threads} count {input} output {output.db}"
 
 # Calculates metrics like QV and completeness, providing a quantitative assessment of the genome assembly.
 rule merqury:
