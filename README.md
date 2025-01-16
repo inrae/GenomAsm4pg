@@ -37,8 +37,8 @@ git clone https://forgemia.inra.fr/asm4pg/GenomAsm4pg.git && cd GenomAsm4pg
 ### 3. Run the workflow 
 
 #### <ins>A. On a HPC</ins>
-- Edit `job.sh` with your email and add path to the needed modules (`Singularity/Apptainer`, `Miniforge`)
-- Provide the environement you created in `job.sh`, under `source activate wf_env`, you can create it like this : 
+- Edit `job.sh` with path to the modules `Singularity/Apptainer`, `Miniforge`
+- Provide and environement with `Snakemake` and `snakemake-executor-plugin-slurmin` in `job.sh`, under `source activate wf_env`, you can create it like this : 
 ```bash
 conda create -n wf_env -c conda-forge -c bioconda snakemake=8.4.7 snakemake-executor-plugin-slurm
 ```  
