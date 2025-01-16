@@ -12,8 +12,6 @@ import yaml
 container_registry = config.get("container_registry", "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg")
 output_dir = os.path.join(config.get("output_dir_pdw", os.getcwd()), config.get("output_dir", "results/"))
 
-
-
 rule all:
     input:
         # Required final assemblies and report
@@ -73,7 +71,7 @@ rule pigz_gfa_to_fasta:
     threads: 4
     resources:
         mem_mb=25000,
-        time="10:00:00"
+        time="80:00:00"
     container:
         f"{container_registry}/pigz"
     shell:
@@ -115,7 +113,7 @@ rule unpigz_to_fasta:
     threads: 4
     resources:
         mem_mb=25000,
-        time="10:00:00"
+        time="80:00:00"
     shell:
         "unpigz -k -p 1 {input}"
 
@@ -128,10 +126,9 @@ rule cutoffs_graph:
         graph = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap{n}","cutoffs_graph_hap{n}.png")
     params:
         out_dir = os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}")
-    threads: 1
     resources:
         mem_mb=10000,
-        time="01:00:00"
+        time="80:00:00"
     container:
         f"{container_registry}/matplotlib0.11.5"
     shell:
@@ -146,7 +143,7 @@ rule genometools_on_raw_data:
     priority: 1
     resources:
         mem_mb=100000,
-        time="10:00:00"
+        time="80:00:00"
     threads: 4
     container:
         f"{container_registry}/genometools1.5.9"
@@ -174,7 +171,7 @@ rule busco_hap1:
     threads: 20
     resources:
         mem_mb=100000,
-        time="10:00:00"
+        time="80:00:00"
     container:
         f"{container_registry}/busco:5.7.1"
     shell:
@@ -205,7 +202,7 @@ rule find_telomeres:
     threads: 4
     resources:
         mem_mb=40000,
-        time="10:00:00"
+        time="80:00:00"
     container:
         f"{container_registry}/biopython1.75"
     shell:
@@ -222,8 +219,8 @@ rule jellyfish:
         km_size = get_kmer_size
     threads: 10
     resources:
-        mem_mb=8000,
-        time="10:00:00"
+        mem_mb=80000,
+        time="80:00:00"
     container:
         f"{container_registry}/jellyfish2.3.0"
     shell:
@@ -247,7 +244,7 @@ rule genomescope:
         out_dir = os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "genomescope"),
     resources:
         mem_mb=40000,
-        time="10:00:00"
+        time="80:00:00"
     container:
         f"{container_registry}/genomescope2.0"
     shell:
@@ -266,7 +263,7 @@ rule kat:
     threads: 4
     resources:
         mem_mb=40000,
-        time="10:00:00"
+        time="80:00:00"
     container: 
         f"{container_registry}/kat2.4.1"
     shell:
@@ -287,7 +284,7 @@ rule meryl:
     threads: 20
     resources:
         mem_mb=60000, 
-        time="10:00:00"
+        time="80:00:00"
     container:
         f"{container_registry}/merqury1.3"
     shell:
@@ -308,7 +305,7 @@ rule merqury:
     threads: 20
     resources:
         mem_mb=60000, 
-        time="10:00:00"
+        time="80:00:00"
     container:
         f"{container_registry}/merqury1.3"
     shell:
@@ -333,7 +330,7 @@ rule LTR_finder:
         os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "LTR", "{sample}_hap{n}.scn")
     resources:
         mem_mb=60000, 
-        time="50:00:00"
+        time="80:00:00"
     container:
         f"{container_registry}/ltr_finder:latest"
     shell:
@@ -384,7 +381,7 @@ rule scafolding:
     threads: 4
     resources:
         mem_mb = 80000,
-        time = "10:00:00"
+        time="80:00:00"
     container:
         f"{container_registry}/ragtag:2.0.1"
     shell:
@@ -465,7 +462,7 @@ rule generate_report:
         r2 = lambda wildcards: get_run(wildcards, run=2)
     resources:
         mem_mb=10000, 
-        time="10:00:00"
+        time="80:00:00"
     container:
         f"{container_registry}/rmarkdown4.0.3"
     script:
