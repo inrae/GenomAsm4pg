@@ -13,6 +13,7 @@ PREFIX=$4
 READS=$5
 DIRR=$6
 
+echo "Asm4pg -> Starting haplotigs handling"
 if [[ "$PURGE_DUPS" == "True" || "$PURGE_DUPS" == "true" ]]; then
 
     # Run purge_dups on both haplotypes
@@ -20,8 +21,10 @@ if [[ "$PURGE_DUPS" == "True" || "$PURGE_DUPS" == "true" ]]; then
     echo "Asm4pg -> Running purge_dups on haplotigs..."
 
     # Create calcutus stats for purge_dups
+    echo "Asm4pg -> Runing minimap2"
     minimap2 -xasm20 $HAP_IN $READS | gzip -c - > $DIRR/$PREFIX.paf.gz
     pbcstat $DIRR/$PREFIX.paf.gz -O $DIRR
+
     calcuts $DIRR/PB.stat > $DIRR/cutoffs 2> $DIRR/calcuts.log
 
     # Split assembly & self-self alignment
@@ -29,6 +32,7 @@ if [[ "$PURGE_DUPS" == "True" || "$PURGE_DUPS" == "true" ]]; then
     minimap2 -xasm5 -DP $DIRR/$PREFIX.split $DIRR/$PREFIX.split| gzip -c - > $DIRR/$PREFIX.split.self.paf.gz
 
     # Purge haplotigs & overlaps
+    echo "Asm4pg -> Starting purge_dups"
     purge_dups -2 -T $DIRR/cutoffs -c $DIRR/PB.base.cov $DIRR/$PREFIX.split.self.paf.gz > $DIRR/dups.bed 2> $DIRR/purge_dups.log
 
     # Get purged primary and haplotig sequences from draft assembly
@@ -36,10 +40,10 @@ if [[ "$PURGE_DUPS" == "True" || "$PURGE_DUPS" == "true" ]]; then
 
     rm $DIRR/dups.bed
     rm $DIRR/PB.base.cov
-    rm $DIRR/PB.cov
     rm $DIRR/*paf.gz
     rm $DIRR/*split*
-    mv $DIRR/$PREFIX.purged.fa $HAP_OUT
+    gzip $DIRR/$PREFIX.purged.fa $HAP_OUT
+    mv $DIRR/$PREFIX.purged.fa.gz $HAP_OUT
     rm $DIRR/$PREFIX.hap.fa
 
 else
@@ -51,4 +55,4 @@ else
     # Add an empty cutoffs file so snakemake can link the rules
     echo "No cutoffs, purge_dups is turned off" > $DIRR/cutoffs
 fi
-
+echo "Asm4pg -> Done with haplotigs handling"
