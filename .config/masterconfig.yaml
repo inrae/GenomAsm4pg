@@ -4,36 +4,27 @@
 # Here is an example of mininmal configuration. Refer to the documentation for all options
 
 samples:
-  run2:
+  run1:
     fasta_gz: small_example.fasta.gz
-    mode: default
-    run_purge_dups: True
-    assembly_purge_force: 2
-    busco_lineage: eudicots_odb10
-    reference_genome: small_ref.fasta.gz
-    run_ragtag: True
-#  run3:
-#    fasta_gz: small_example.fasta.gz
-#    mode: hi-c
-#    r1: small_example.fasta.gz
-#    r2: small_example.fasta.gz
-#  run4:
-#    fasta_gz: small_example.fasta.gz
-#    mode: hi-c
-#    r1: small_example.fasta.gz
-#    r2: small_example.fasta.gz
-#    run_ragtag: True
-#    run_purge_dups: True
-#    reference_genome: small_ref.fasta.gz
-#  run1:
-#    fasta_gz: small_example.fasta.gz
-#    mode: default
-#    run_purge_dups: False
 
 
 # You can modify the output path if you need to
 output_dir: "results/"
+# Path to your output dir
 output_dir_pdw: /mnt/cbib/pangenoak_trials/GenomAsm4pg/
 
 # This container registry will be used to download singularity images
 container_registry: "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg"
+
+# List of parameters :
+#   fasta_gz: Your reads (mandatory)
+#   mode: [default, hi-c, trio] (default: default)
+#   r1: The run1/parent1 read file
+#   r2: The run2/parent2 read file
+#   run_purge_dups: [True, False] (default: False)
+#   run_ragtag: [True, False] (default: False)
+#   reference_genome: 
+#   busco_lineage: (default: eukaryota_odb10)
+#   ploidy: (default: 2)
+#   assembly_purge_force: [1-3] (default: 3)
+#   kmer_size: (default: 21)
