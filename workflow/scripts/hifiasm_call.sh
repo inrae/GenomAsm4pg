@@ -42,11 +42,11 @@ case "$MODE" in
     trio)
         echo "Asm4pg -> Hifiasm called in trio mode..."
         echo "Asm4pg -> Generating yak file for parent 1 ($RUN_1)"
-        yak count -k31 -b37 -t16 -o ${PREFIX}/yak/parent1.yak ${RUN_1}
+        yak count -k31 -b37 -t16 -o ${PREFIX}_parent1.yak ${RUN_1}
         echo "Asm4pg -> Generating yak file for parent 1 ($RUN_2)"
-        yak count -k31 -b37 -t16 -o ${PREFIX}/yak/parent2.yak ${RUN_2}
+        yak count -k31 -b37 -t16 -o ${PREFIX}_parent2.yak ${RUN_2}
         echo "Asm4pg -> Running hifiasm in trio mode..."
-        hifiasm -o ${PREFIX} -t ${THREADS} -1 ${PREFIX}/yak/parent1.yak -2 ${PREFIX}/yak/parent2.yak ${INPUT}
+        hifiasm -o ${PREFIX} -t ${THREADS} -1 ${PREFIX}_parent1.yak -2 ${PREFIX}_parent2.yak ${INPUT}
         echo "Asm4pg -> Renaming hifiasm output files"
         mv ${PREFIX}.dip.hap1.p_ctg.gfa ${PREFIX}.bp.hap1.p_ctg.gfa 
         mv ${PREFIX}.dip.hap2.p_ctg.gfa ${PREFIX}.bp.hap2.p_ctg.gfa

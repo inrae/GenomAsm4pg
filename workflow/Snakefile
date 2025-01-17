@@ -46,11 +46,12 @@ rule hifiasm:
     benchmark:
         os.path.join(output_dir, "{sample}_results", "01_raw_assembly", "{sample}_hifiasm_benchmark.txt")
     threads: 20
+    priority: 2
     resources:
         mem_mb=250000,
         time="80:00:00"
     container:
-        f"{container_registry}/hifiasm:0.19.6"
+        f"{container_registry}/hifiasm-yak:latest"
     shell:
         """
         ./workflow/scripts/hifiasm_call.sh {params.mode} {params.purge_force} {threads} {input.reads} {params.run_1} {params.run_2} {params.prefix} &&

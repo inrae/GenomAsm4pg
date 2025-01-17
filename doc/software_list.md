@@ -5,7 +5,7 @@ Images are automatically pulled by Snakemake on first run and stored in the proj
 ## 01. Assembly
 
 Assembly:
-- [hifiasm](https://github.com/chhylp123/hifiasm) 0.19.6
+- [hifiasm](https://github.com/chhylp123/hifiasm) 0.24.0-r703
 - [YAK](https://github.com/lh3/yak) 0.1
 
 Haplotigs and Overlaps Purging:
