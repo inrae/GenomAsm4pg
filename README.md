@@ -59,6 +59,12 @@ sbatch job.sh run # Then
 ./local_run job.sh run # Then
 ```
 
+## Input Conversion
+Currently, asm4pg requires `fasta.gz` files. To convert your `fastq` or `bam` files to this format, you can use the following tools:
+```bash
+./workflow/scripts/input_conversion.sh -i <input_file> -o <output_file>
+```
+
 ## Using the full potential of the workflow :
 Asm4pg has many options. If you wish to modify the default values and know more about the workflow, please refer to the [documentation](doc/documentation.md)
 

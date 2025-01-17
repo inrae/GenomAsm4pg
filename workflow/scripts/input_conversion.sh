@@ -29,7 +29,7 @@ fi
 
 # Ensure necessary tools are installed
 if ! command -v samtools &> /dev/null || ! command -v seqtk &> /dev/null; then
-    echo "Error: 'samtools' and 'seqtk' are required but not installed."
+    echo "Error: 'samtools' and 'seqtk' are required but not installed/loaded."
     exit 1
 fi
 
