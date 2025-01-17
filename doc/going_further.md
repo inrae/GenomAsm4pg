@@ -12,7 +12,7 @@ Usage: `job.sh/local_run.sh [dry|run|dag|rulegraph|unlock]`
 
 ## 02. Workflow Options
 
-Inside the `./.config/marsterconfig.yaml` file, you can add more options.
+Inside the `./.config/masterconfig.yaml` file, you can add more options.
 Here are all the options and their default values:
 
 - `fasta_gz`: Your reads (mandatory)
@@ -25,10 +25,10 @@ Here are all the options and their default values:
 - `run_ragtag`: [True, False] If set to true, the workflow will run RagTag and produce a scaffold of the assemblies (default: False)
 - `reference_genome`: The reference genome used for QUAST and RagTag scaffolding
 
-⚠️ Advanced options (use only if you have read the tools' documentation; we strongly advise keeping default values):
+⚠️ Advanced options (use only if you have read the tools' documentation; we strongly recommend keeping default values):
 
 - `assembly_purge_force`: [1-3] The purge level of Hifiasm `-l` parameter, full description [here](https://hifiasm.readthedocs.io/en/latest/parameter-reference.html) (default: 3)
-- `kmer_size`: The sizes of the kmers used for QC steps (default: 21)
+- `kmer_size`: The size of the kmers used for QC steps (default: 21)
 
 ## 03. Example Configurations
 

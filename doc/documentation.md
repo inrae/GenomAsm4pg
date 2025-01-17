@@ -18,4 +18,4 @@ You may encounter [these errors](doc/known_errors.md).
 
 ## Software
 
-Here is a list of [software used in the workflow](doc/software_list.md)
+Here is a list of [software used in the workflow](doc/software_list.md).
