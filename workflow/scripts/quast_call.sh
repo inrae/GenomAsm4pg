@@ -26,7 +26,7 @@ fi
 
 # Build the quast command
 echo "Asm4pg -> Building the QUAST command..."
-quast_cmd="python /quast-5.2.0/metaquast.py --threads 20 --large --no-check --no-snps --no-icarus --plots-format png "
+quast_cmd="python /quast-5.2.0/metaquast.py --threads 20 --no-read-stats --large --no-snps --no-icarus --plots-format png "
 if [ "$REFERENCE_GENOME" != "None" ]; then
     echo " - Reference genome specified: $REFERENCE_GENOME"
     quast_cmd+="--reference $REFERENCE_GENOME "
