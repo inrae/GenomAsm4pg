@@ -44,7 +44,7 @@ rule hifiasm:
         raw_out_hap1 = os.path.join(output_dir, "{sample}_results", "01_raw_assembly","{sample}.bp.hap1.p_ctg.gfa"),
         raw_out_hap2 = os.path.join(output_dir, "{sample}_results", "01_raw_assembly","{sample}.bp.hap2.p_ctg.gfa")
     benchmark:
-        os.path.join(output_dir, "{sample}_results", "01_raw_assembly", "{sample}_hifiasm_benchmark.txt")
+        os.path.join(output_dir, "{sample}_results", "benchmark", "hifiasm_benchmark.txt")
     threads: 20
     priority: 2
     resources:
@@ -73,6 +73,7 @@ rule pigz_gfa_to_fasta:
     resources:
         mem_mb=25000,
         time="80:00:00"
+    benchmark:                                                                                                                  os.path.join(output_dir, "{sample}_results", "benchmark", "pigz_hap{n}_benchmark.txt")
     container:
         f"{container_registry}/pigz"
     shell:
@@ -93,6 +94,7 @@ rule haplotigs_handling:
         out_dir = os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}"),
         purge_dups_option = get_purge_bool
     threads: 20
+    benchmark:                                                                                                                  os.path.join(output_dir, "{sample}_results", "benchmark", "haplotigs_handling_hap{n}_benchmark.txt")
     resources:
         mem_mb=100000,
         time="80:00:00"
@@ -112,6 +114,7 @@ rule unpigz_to_fasta:
     container:
         f"{container_registry}/pigz"
     threads: 4
+    benchmark:                                                                                                                  os.path.join(output_dir, "{sample}_results", "benchmark", "unpigz_hap{n}_benchmark.txt")
     resources:
         mem_mb=25000,
         time="80:00:00"
@@ -127,6 +130,8 @@ rule cutoffs_graph:
         graph = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap{n}","cutoffs_graph_hap{n}.png")
     params:
         out_dir = os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}")
+    benchmark:
+        os.path.join(output_dir, "{sample}_results", "benchmark", "cutoffs_graph_hap{n}_benchmark.txt")
     resources:
         mem_mb=10000,
         time="80:00:00"
@@ -145,6 +150,8 @@ rule genometools_on_raw_data:
     resources:
         mem_mb=100000,
         time="80:00:00"
+    benchmark:
+        os.path.join(output_dir, "{sample}_results", "benchmark", "genometools_raw_benchmark.txt")
     threads: 4
     container:
         f"{container_registry}/genometools1.5.9"
@@ -157,6 +164,8 @@ use rule genometools_on_raw_data as genometools_on_assembly with:
         rules.haplotigs_handling.output.hap
     output:
         os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "{sample}_hap{n}_genometools_stats.txt")
+    benchmark:
+        os.path.join(output_dir, "{sample}_results", "benchmark", "genometools_hap{n}_benchmark.txt")
     priority: 0
 
 # BUSCO stats on assembly
@@ -170,6 +179,8 @@ rule busco_hap1:
         lineage=get_busco_lin, 
         sample="{sample}_hap1"
     threads: 20
+    benchmark:
+        os.path.join(output_dir, "{sample}_results", "benchmark", "busco_hap1_benchmark.txt")
     resources:
         mem_mb=100000,
         time="80:00:00"
@@ -189,6 +200,8 @@ use rule busco_hap1 as busco_hap2 with:
         other = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "busco", "busco_{sample}_hap1.txt")
     output:
         os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "busco", "busco_{sample}_hap2.txt")
+    benchmark:
+        os.path.join(output_dir, "{sample}_results", "benchmark", "busco_hap2_benchmark.txt")
     params:
         prefix = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "busco"),
         lineage=get_busco_lin, 
@@ -201,6 +214,8 @@ rule find_telomeres:
     output:
         os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "telomeres", "{sample}_hap{n}_telomeres.txt")
     threads: 4
+    benchmark:
+        os.path.join(output_dir, "{sample}_results", "benchmark", "find_telomeres_hap{n}_benchmark.txt")
     resources:
         mem_mb=40000,
         time="80:00:00"
@@ -219,6 +234,8 @@ rule jellyfish:
     params:
         km_size = get_kmer_size
     threads: 10
+    benchmark:
+        os.path.join(output_dir, "{sample}_results", "benchmark", "jellyfish_benchmark.txt")
     resources:
         mem_mb=80000,
         time="80:00:00"
@@ -246,6 +263,8 @@ rule genomescope:
     resources:
         mem_mb=40000,
         time="80:00:00"
+    benchmark:
+        os.path.join(output_dir, "{sample}_results", "benchmark", "genomescope_benchmark.txt")
     container:
         f"{container_registry}/genomescope2.0"
     shell:
@@ -262,6 +281,8 @@ rule kat:
         out_dir = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "katplot", "{sample}_hap{n}"),
         km_size = get_kmer_size
     threads: 4
+    benchmark:
+        os.path.join(output_dir, "{sample}_results", "benchmark", "kat_hap{n}_benchmark.txt")
     resources:
         mem_mb=40000,
         time="80:00:00"
@@ -283,6 +304,8 @@ rule meryl:
     params:
         km_size = get_kmer_size
     threads: 20
+    benchmark:
+        os.path.join(output_dir, "{sample}_results", "benchmark", "meryl_benchmark.txt")
     resources:
         mem_mb=60000, 
         time="80:00:00"
@@ -304,6 +327,8 @@ rule merqury:
         prefix = "{sample}_merqury",
         out_dir = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "merqury")
     threads: 20
+    benchmark:
+        os.path.join(output_dir, "{sample}_results", "benchmark", "merqury_benchmark.txt")
     resources:
         mem_mb=60000, 
         time="80:00:00"
@@ -332,6 +357,8 @@ rule LTR_finder:
     resources:
         mem_mb=60000, 
         time="80:00:00"
+    benchmark:
+        os.path.join(output_dir, "{sample}_results", "benchmark", "ltr_finder_hap{n}_benchmark.txt")
     container:
         f"{container_registry}/ltr_finder:latest"
     shell:
@@ -353,6 +380,8 @@ rule LTR_retriever:
     resources:
         mem_mb=250000, 
         time="50:00:00"
+    benchmark:
+        os.path.join(output_dir, "{sample}_results", "benchmark", "ltr_retriever_hap{n}_benchmark.txt")
     container:
         f"{container_registry}/ltr_retriever:3.0.1"
     shell:
@@ -383,6 +412,8 @@ rule scafolding:
     resources:
         mem_mb = 80000,
         time="80:00:00"
+    benchmark:
+        os.path.join(output_dir, "{sample}_results", "benchmark", "scafolding_hap{n}_benchmark.txt")
     container:
         f"{container_registry}/ragtag:2.0.1"
     shell:
@@ -409,6 +440,8 @@ rule quast:
     container:
         f"{container_registry}/staphb/quast:5.2.0"
     threads: 20
+    benchmark:
+        os.path.join(output_dir, "{sample}_results", "benchmark", "quast_benchmark.txt")
     resources:
         mem_mb=250000,
         time="80:00:00"
@@ -464,6 +497,8 @@ rule generate_report:
     resources:
         mem_mb=10000, 
         time="80:00:00"
+    benchmark:
+        os.path.join(output_dir, "{sample}_results", "benchmark", "generate_report_benchmark.txt")
     container:
         f"{container_registry}/rmarkdown4.0.3"
     script:
