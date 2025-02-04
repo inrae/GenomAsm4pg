@@ -19,149 +19,104 @@ output:
 
 ----
 
-# `r snakemake@params[["id"]]` - run: `r snakemake@params[["run"]]`
-* Run : `r snakemake@params[["run"]]`
+# Global Asm4pg assembly report for:  `r snakemake@params[["sample"]]`
+## Asm4pg Parameters
 * Hifiasm mode : `r snakemake@params[["mode"]]`
-* Hifiasm purge mode [0-3]: `r snakemake@params[["purge_force"]]` 
-* Purge conducted: `r if (snakemake@params[["purge"]]) { "Yes" } else { "No" }`
+* If hi-c or trio mode : 
+  * parent1/r1 `r snakemake@params[["r1"]]`
+  * parent2/r2 `r snakemake@params[["r2"]]`
 
-----
+* Hifiasm purge force : `r snakemake@params[["assembly_purge_force"]]` 
+* Purge_dups executed: `r if (snakemake@params[["purge_dups_bool"]]) { "Yes" } else { "No" }`
+* Genome scafolded: `r if (snakemake@params[["ragtag_bool"]]) { "Yes" } else { "No" }`
+
+* Busco lineage: `r snakemake@params[["busco_lineage"]]`
+* Genome ploidy: `r snakemake@params[["ploidy"]]`
+* Kmers size: `r snakemake@params[["kmer_size"]]`
 
 ## Raw data QC
 ![](`r snakemake@input[["genomescope"]]`)
 
 ### Reads statistics
 ```{r comment='', echo=FALSE}
-cat(readLines(snakemake@input[["gt_reads"]]), sep = '\n')
+cat(readLines(snakemake@input[["genometools_on_raw_data"]]), sep = '\n')
 ```
 
+## Global assembly QC
+QUAST Cumulative Plot
 
-## Assembly QC - Hifiasm
+![](`r snakemake@input[["cumulative_plot"]]`)
+
+QUAST Nx Plot
+
+![](`r snakemake@input[["Nx_plot"]]`)
+
+## QC on final assembly
 ### Assembly statistics
 #### Hap 1
 ```{r comment='', echo=FALSE}
-cat(readLines(snakemake@input[["gt_asm_1"]]), sep = '\n')
+cat(readLines(snakemake@input[["genometools_hap1"]]), sep = '\n')
 ```
 
 #### Hap 2
 ```{r comment='', echo=FALSE}
-cat(readLines(snakemake@input[["gt_asm_2"]]), sep = '\n')
+cat(readLines(snakemake@input[["genometools_hap2"]]), sep = '\n')
 ```
 
 ### K-mer profiles
 | Hap 1 | Hap 2 |
 |-------|-------|
-| ![](`r snakemake@input[["kplot_1"]]`) | ![](`r snakemake@input[["kplot_2"]]`) |
+| ![](`r snakemake@input[["kplot_hap1"]]`) | ![](`r snakemake@input[["kplot_hap2"]]`) |
 
 ### K-mer completeness and error rate
 Completeness
 
 ```{r comment='', echo=FALSE}
-cat(readLines(snakemake@input[["merq_comp"]]), sep = '\n')
+cat(readLines(snakemake@input[["merqury_stats"]]), sep = '\n')
 ```
 
 Error rate 
 ```{r comment='', echo=FALSE}
-cat(readLines(snakemake@input[["merq_err"]]), sep = '\n')
+cat(readLines(snakemake@input[["merqury_qv"]]), sep = '\n')
 ```
 
-### BUSCO
+### BUSCO score
 #### Hap 1
 ```{r comment='', echo=FALSE}
-cat(readLines(snakemake@input[["busco_1"]]), sep = '\n')
+cat(readLines(snakemake@input[["busco_hap1"]]), sep = '\n')
 ```
 #### Hap 2
 ```{r comment='', echo=FALSE}
-cat(readLines(snakemake@input[["busco_2"]]), sep = '\n')
+cat(readLines(snakemake@input[["busco_hap2"]]), sep = '\n')
 ```
 
 ### Telomeres
 Telomeres present in assembly
-
 #### Hap 1
 ```{r comment='', echo=FALSE}
-cat(readLines(snakemake@input[["tel_1"]]), sep = '\n')
+cat(readLines(snakemake@input[["telomeres_hap1"]]), sep = '\n')
 ```
 #### Hap 2
 ```{r comment='', echo=FALSE}
-cat(readLines(snakemake@input[["tel_2"]]), sep = '\n')
+cat(readLines(snakemake@input[["telomeres_hap2"]]), sep = '\n')
 ```
 
-### LTR Assembly Index (LAI) 
+### Transposable element analysis
 #### Hap 1
 LTR recap
 ```{r comment='', echo=FALSE}
-cat(head(readLines(snakemake@input[["LRT_recap_1"]]), 50), sep = '\n')
+cat(head(readLines(snakemake@input[["LRT_recap_hap1"]]), 50), sep = '\n')
 ```
 LAI
 ```{r comment='', echo=FALSE}
-cat(head(readLines(snakemake@input[["LAI_1"]]), 2), sep = '\n')
+cat(head(readLines(snakemake@input[["LAI_hap1"]]), 2), sep = '\n')
 ```
 #### Hap 2
 LTR recap
 ```{r comment='', echo=FALSE}
-cat(head(readLines(snakemake@input[["LRT_recap_2"]]), 50), sep = '\n')
+cat(head(readLines(snakemake@input[["LRT_recap_hap2"]]), 50), sep = '\n')
 ```
 LAI
 ```{r comment='', echo=FALSE}
-cat(head(readLines(snakemake@input[["LAI_2"]]), 2), sep = '\n')
-```
-
-`r if (snakemake@params[["purge"]]) { "## Assembly QC - After Purge_dups" }`
-`r if (snakemake@params[["purge"]]) { "### Assembly statistics" }`
-`r if (snakemake@params[["purge"]]) { "#### Hap 1" }`
-```{r comment='', echo=FALSE, eval=snakemake@params[["purge"]]}
-cat(readLines(snakemake@input[["P_gt_asm_1"]]), sep = '\n')
-```
-`r if (snakemake@params[["purge"]]) { "#### Hap 2" }`
-```{r comment='', echo=FALSE, eval=snakemake@params[["purge"]]}
-cat(readLines(snakemake@input[["P_gt_asm_2"]]), sep = '\n')
-```
-
-`r if (snakemake@params[["purge"]]) { "### K-mer completeness and error rate" }`
-`r if (snakemake@params[["purge"]]) { "Completeness" }`
-```{r comment='', echo=FALSE, eval=snakemake@params[["purge"]]}
-cat(readLines(snakemake@input[["P_merq_comp"]]), sep = '\n')
-```
-`r if (snakemake@params[["purge"]]) { "Error rate " }`
-```{r comment='', echo=FALSE, eval=snakemake@params[["purge"]]}
-cat(readLines(snakemake@input[["P_merq_err"]]), sep = '\n')
-```
-`r if (snakemake@params[["purge"]]) { "### BUSCO" }`
-`r if (snakemake@params[["purge"]]) { "#### Hap 1" }`
-```{r comment='', echo=FALSE, eval=snakemake@params[["purge"]]}
-cat(readLines(snakemake@input[["P_busco_1"]]), sep = '\n')
-```
-`r if (snakemake@params[["purge"]]) { "#### Hap 2" }`
-```{r comment='', echo=FALSE, eval=snakemake@params[["purge"]]}
-cat(readLines(snakemake@input[["P_busco_2"]]), sep = '\n')
-```
-`r if (snakemake@params[["purge"]]) { "### Telomeres" }`
-`r if (snakemake@params[["purge"]]) { "Telomeres present in assembly" }`
-`r if (snakemake@params[["purge"]]) { "#### Hap 1" }`
-```{r comment='', echo=FALSE, eval=snakemake@params[["purge"]]}
-cat(readLines(snakemake@input[["P_tel_1"]]), sep = '\n')
-```
-`r if (snakemake@params[["purge"]]) { "#### Hap 2" }`
-```{r comment='', echo=FALSE, eval=snakemake@params[["purge"]]}
-cat(readLines(snakemake@input[["P_tel_2"]]), sep = '\n')
-```
-`r if (snakemake@params[["purge"]]) { "### LTR Assembly Index (LAI) " }`
-`r if (snakemake@params[["purge"]]) { "#### Hap 1" }`
-`r if (snakemake@params[["purge"]]) { "LTR recap" }`
-```{r comment='', echo=FALSE, eval=snakemake@params[["purge"]]}
-cat(head(readLines(snakemake@input[["P_LRT_recap_1"]]), 50), sep = '\n')
-```
-`r if (snakemake@params[["purge"]]) { "LAI" }`
-```{r comment='', echo=FALSE, eval=snakemake@params[["purge"]]}
-cat(head(readLines(snakemake@input[["P_LAI_1"]]), 2), sep = '\n')
-```
-`r if (snakemake@params[["purge"]]) { "#### Hap 2" }`
-`r if (snakemake@params[["purge"]]) { "LTR recap" }`
-```{r comment='', echo=FALSE, eval=snakemake@params[["purge"]]}
-cat(head(readLines(snakemake@input[["P_LRT_recap_2"]]), 50), sep = '\n')
-```
-`r if (snakemake@params[["purge"]]) { "LAI" }`
-```{r comment='', echo=FALSE, eval=snakemake@params[["purge"]]}
-cat(head(readLines(snakemake@input[["P_LAI_2"]]), 2), sep = '\n')
+cat(head(readLines(snakemake@input[["LAI_hap2"]]), 2), sep = '\n')
 ```

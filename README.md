@@ -1,75 +1,80 @@
 # <A HREF="https://forgemia.inra.fr/asm4pg/GenomAsm4pg"> asm4pg </A>
-An automatic and reproducible genome assembly workflow for pangenomic applications using PacBio HiFi data.
+This is an automatic and reproducible genome assembly workflow for pangenomic applications using PacBio HiFi data.
 
 This workflow uses [Snakemake](https://snakemake.readthedocs.io/en/stable/) to quickly assemble genomes with a HTML report summarizing obtained assembly stats.
 
-A first script (```prejob.sh```) prepares the data until *fasta.gz* files are obtained. A second script (```job.sh```) runs the genome assembly and stats.
-
-doc: [Gitlab pages](https://asm4pg.pages.mia.inra.fr/GenomAsm4pg/)
-
-![workflow DAG](workflow/doc/fig/rule_dag.svg)
-
-## Table of contents
-# Summary
-
-* [Introduction](README.md)
-* [Documentation summary](workflow/documentation.md)
-    * [Requirements](workflow/documentation.md#asm4pg-requirements)
-    * [Tutorials](workflow/documentation.md#tutorials)
-        * [Quick start](workflow/doc/Quick-start.md)
-        * [Hi-C mode](workflow/doc/Assembly-Mode/Hi-C-tutorial.md)
-        * [Trio mode](workflow/doc/Assembly-Mode/Trio-tutorial.md)
-    * [Outputs](workflow/documentation.md#outputs)
-        * [Workflow output](workflow/doc/Outputs.md)
-    * [Optional data preparation](workflow/documentation.md#optional-data-preparation)
-        * [if your data is in a tarball archive](workflow/doc/Tar-data-preparation.md)
-    * [Going further](workflow/doc/Going-further.md)
-    * [Troubleshooting](workflow/documentation.md#known-errors)
-        * [known errors](workflow/doc/Known-errors.md)
-    * [Software Dependencies](workflow/documentation.md#programs)
-        * [Programs listing](workflow/doc/Programs.md)
-* [Gitlab pages using honkit](honkit.md)
+![workflow DAG](doc/dag.svg)
 
 ## Repo directory structure
 
 ```
 ├── README.md
 ├── job.sh
-├── prejob.sh
+├── local_run.sh
+├── doc
 ├── workflow
-│   ├── rules
 │   ├── scripts
-│   ├── pre-job_snakefiles
 |   └── Snakefile
 └──  .config
     ├── snakemake_profile
-    |  └── slurm
-    |       ├── cluster_config.yml
-    |       ├── config.yaml
-    |       ├── CookieCutter.py
-    |       ├── settings.json
-    |       ├── slurm_utils.py
-    |       ├── slurm-jobscript.sh
-    |       ├── slurm-status.py
-    |       └── slurm-submit.py
     └── masterconfig.yaml
 ```
 
 ## Requirements
-- snakemake >= 6.5.1
-- singularity
+Miniforge (Snakemake), Singularity/Apptainer
+## How to Use
+### 1. Set up
+Clone the Git repository
+```bash
+git clone https://forgemia.inra.fr/asm4pg/GenomAsm4pg.git && cd GenomAsm4pg
+```
+> All other tools will be run in Singularity/Apptainer images automatically downloaded by Snakemake. Total size of the images is ~5.5G
+### 2. Configure the pipeline
+- Edit the `masterconfig` file in the `.config/` directory with your sample information. 
 
-## How to run the workflow
-[wiki](https://forgemia.inra.fr/asm4pg/GenomAsm4pg/-/wikis/home)
+### 3. Run the workflow 
 
-## How to cite asm4pg? ##
+#### <ins>A. On a HPC</ins>
+- Edit `job.sh` with path to the modules `Singularity/Apptainer`, `Miniforge`
+- Provide and environment with `Snakemake` and `snakemake-executor-plugin-slurmin` in `job.sh`, under `source activate wf_env`, you can create it like this : 
+```bash
+conda create -n wf_env -c conda-forge -c bioconda snakemake=8.4.7 snakemake-executor-plugin-slurm
+```  
+> Use Miniforge with the conda-forge channel, see why [here](https://science-ouverte.inrae.fr/fr/offre-service/fiches-pratiques-et-recommandations/quelles-alternatives-aux-fonctionnalites-payantes-danaconda) (french)
+- Add the log directory for SLURM 
+```bash
+mkdir slurm_logs
+```
+- Run the workflow :
+```bash
+sbatch job.sh dry # Check for warnings
+sbatch job.sh run # Then
+```
+> **Nb 1:** If your account name can't be automatically determined, add it in the `.config/snakemake/profiles/slurm/config.yaml` file.
+#### <ins>B. Locally</ins>
+- Make sure you have Snakemake and Singularity/Apptainer installed
+- Run the workflow :
+```bash
+./local_run dry # Check for warnings
+./local_run job.sh run # Then
+```
+
+## Input Conversion
+Currently, asm4pg requires `fasta.gz` files. To convert your `fastq` or `bam` files to this format, you can use the following tools:
+```bash
+./workflow/scripts/input_conversion.sh -i <input_file> -o <output_file>
+```
+
+## Using the full potential of the workflow :
+Asm4pg has many options. If you wish to modify the default values and know more about the workflow, please refer to the [documentation](doc/documentation.md)
+
+## How to cite asm4pg?
 
 We are currently writing a publication about asm4pg. Meanwhile, if you use the pipeline, please cite it using the address of this repository. 
 
-## License ##
-
+## License
 The content of this repository is licensed under <A HREF="https://choosealicense.com/licenses/gpl-3.0/">(GNU GPLv3)</A> 
 
-## Contacts ##
-For any troubleshouting, issue or feature suggestion, please use the issue tab of this repository.
+## Contacts
+For any troubleshooting, issue or feature suggestion, please use the issue tab of this repository.
 For any other question or if you want to help in developing asm4pg, please contact Ludovic Duvaux at ludovic.duvaux@inrae.fr

@@ -1,0 +1,108 @@
+# Going Further
+
+## 01. Job.sh/local_run.sh Options
+
+Usage: `job.sh/local_run.sh [dry|run|dag|rulegraph|unlock]`
+
+- `dry` - Run the specified Snakefile in dry-run mode
+- `run` - Run the specified Snakefile normally
+- `dag` - Generate the directed acyclic graph for the specified Snakefile
+- `rulegraph` - Generate the rulegraph for the specified Snakefile
+- `unlock` - Unlock the directory if Snakemake crashed
+
+## 02. Workflow Options
+
+Inside the `./.config/masterconfig.yaml` file, you can add more options.
+Here are all the options and their default values:
+
+- `fasta_gz`: Your reads (mandatory)
+- `mode`: [default, hi-c, trio] The mode for Hifiasm assembly (default: default)
+- `r1`: If hi-c or trio mode, the run1/parent1 read file
+- `r2`: If hi-c or trio mode, the run2/parent2 read file
+- `run_purge_dups`: [True, False] If set to true, the workflow will run [purge_dups](https://github.com/dfguan/purge_dups) on the assembly (default: False)
+- `busco_lineage`: The BUSCO lineage of your organism listed [here](https://busco.ezlab.org/list_of_lineages.html) (default: eukaryota_odb10)
+- `ploidy`: The ploidy of the organism (default: 2)
+- `run_ragtag`: [True, False] If set to true, the workflow will run RagTag and produce a scaffold of the assemblies (default: False)
+- `reference_genome`: The reference genome used for QUAST and RagTag scaffolding
+
+⚠️ Advanced options (use only if you have read the tools' documentation; we strongly recommend keeping default values):
+
+- `assembly_purge_force`: [1-3] The purge level of Hifiasm `-l` parameter, full description [here](https://hifiasm.readthedocs.io/en/latest/parameter-reference.html) (default: 3)
+- `kmer_size`: The size of the kmers used for QC steps (default: 21)
+
+## 03. Example Configurations
+
+### Minimal Config
+
+This minimal configuration will conduct a de novo assembly with default values:
+```yaml
+samples:
+  example1:
+    fasta_gz: example.fasta.gz
+```
+
+### Simple Config
+
+This simple configuration will conduct a de novo assembly with tailored values. **We recommend using this type of configuration:**
+```yaml
+samples:
+  example1:
+    fasta_gz: example.fasta.gz
+    busco_lineage: eudicots_odb10
+    run_ragtag: True
+    reference_genome: ref.fasta.gz
+```
+
+### Hi-C Config
+This example shows how to use the workflow with Hi-C assembly mode which takes PacBio HiFi data and Hi-C data as input.
+```yaml
+samples:
+  example1:
+    fasta_gz: example.fasta.gz
+    mode: hi-c
+    r1: run1.fasta.gz
+    r2: run2.fasta.gz
+```
+
+### Trio Config
+This example shows how to use the workflow with trio assembly mode. The parental reads files can be Illumina or PacBio HiFi reads.
+```yaml
+samples:
+  example1:
+    fasta_gz: example.fasta.gz
+    mode: trio
+    r1: parent1.fasta.gz
+    r2: parent2.fasta.gz
+```
+
+### Advanced Config
+```yaml
+samples:
+  example1:
+    fasta_gz: example.fasta.gz
+    mode: hi-c
+    r1: run1.fasta.gz
+    r2: run2.fasta.gz
+    run_purge_dups: True
+    assembly_purge_force: 2
+    ploidy: 2
+    kmer_size: 21
+    busco_lineage: eudicots_odb10
+    run_ragtag: True
+    reference_genome: ref.fasta.gz
+```
+
+## 04. Run the Workflow on Multiple Datasets
+
+You can run the workflow on multiple datasets at the same time.
+```yaml
+samples:
+  dataset_1:
+    fasta_gz: example_1.fasta.gz
+    run_purge_dups: True
+  dataset_2:
+    fasta_gz: example_2.fasta.gz
+    run_purge_dups: False
+  dataset_n:
+    fasta_gz: example_n.fasta.gz
+```

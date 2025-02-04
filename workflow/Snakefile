@@ -1,132 +1,505 @@
+# Author: Lucien PIAT based on Sukanya Denni's work
+# For: Project Pangenoak
+# Date: January, 2025
+
 configfile: ".config/masterconfig.yaml"
+include: "scripts/parameter_retrieval.py"
 
-# Include all the scripts
-include: "scripts/from_config/hifiasm_mode.py"
-include: "scripts/from_config/parameters.py"
-include: "scripts/from_config/target_list.py"
-include: "scripts/path_helper.py"
 
-# Get paths to the WD
-if config["root"].startswith("."):
-    abs_root_path = get_abs_root_path()
-    res_path = get_res_path()
-else:
-    abs_root_path = config["root"]
-    res_path = abs_root_path + "/" + config["resdir"]
+import os
+import yaml
 
-# Include all the rules
-include: "rules/01_qc.smk"
-include: "rules/02_asm.smk"
-include: "rules/03_asm_qc.smk"
-include: "rules/03.5_asm_qc_merqury.smk"
-include: "rules/04_purge_dups.smk"
-include: "rules/05_purged_asm_qc.smk"
-include: "rules/05.5_purged_asm_qc_merqury.smk"
-include: "rules/06_sym_link_hap.smk"
-include: "rules/07_report.smk"
-include: "rules/00_runtime.smk"
+container_registry = config.get("container_registry", "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg")
+output_dir = os.path.join(config.get("output_dir_pdw", os.getcwd()), config.get("output_dir", "results/"))
 
-# Get the filenames of inputs
-IDS=config["IDS"]
-bamIDS=check_bam(IDS)
-fastqIDS=check_fastq(IDS)
-
-RUNID = run_id(config["IDS"])
-BID_RUN = run_BFid(bamIDS)
-FID_RUN = run_BFid(fastqIDS)
-
-# Create the list of desired outputs
-## For raw data
-longqc_output = expand(res_path + "/{Bid}/{run}/01_raw_data_QC/02_longQC", zip,
-    run=BID_RUN, Bid=bamIDS),
-fastqc_output =  expand(res_path + "/{Fid}/{run}/01_raw_data_QC/01_fastQC/{Fid}_fastqc.{ext}", zip,
-    run=FID_RUN, Fid=fastqIDS, ext=["html", "zip"])
-
-## Reports
-REP_ID = for_report(IDS)
-RUNID_REG = run_id(REP_ID)
-BUSCO_LIN = busco_lin(REP_ID)
-### We create additional lists for purge_dups applications
-PURGE_ID = for_purge(IDS)
-RUNID_PURGE = run_id(PURGE_ID)
-BUSCO_LIN_PURGE = busco_lin(PURGE_ID)
-
-purged_report_output = expand(res_path + "/{runid}/p_report_{id}.{lin}.html", zip,
-    runid=RUNID_PURGE, id=PURGE_ID, lin = BUSCO_LIN_PURGE )
-
-report_output = expand(res_path + "/{runid}/report_{id}.{lin}.html", zip,
-    runid=RUNID_REG, id=REP_ID, lin = BUSCO_LIN)
-
-### Same thing for trio
-REP_TRIO_ID = for_report(IDS, trio = True)
-RUNID_TRIO = run_id(REP_TRIO_ID)
-BUSCO_LIN_TRIO = busco_lin(REP_TRIO_ID)
-### We create additional lists for purge_dups applications
-PURGE_ID_TRIO = for_purge(IDS, trio = True)
-RUNID_PURGE_TRIO = run_id(PURGE_ID)
-BUSCO_LIN_TRIO_PURGE = busco_lin(PURGE_ID_TRIO)
-
-purged_report_trio_output = expand(res_path + "/{runid}/p_report_trio_{id}.{lin}.html", zip,
-    runid=RUNID_PURGE_TRIO, id=PURGE_ID_TRIO, lin = BUSCO_LIN_TRIO_PURGE)
-
-report_trio_output = expand(res_path + "/{runid}/report_trio_{id}.{lin}.html", zip,
-    runid=RUNID_TRIO, id=REP_TRIO_ID, lin = BUSCO_LIN_TRIO)
-
-# Add symbolic link to final assembly 
-symb_link1 = expand(res_path + "/{runid}/{id}_hap{n}.fa", zip,
-    runid=RUNID_PURGE, id=PURGE_ID, n=["1", "2"])
-symb_link2 = expand(res_path + "/{runid}/{id}_hap{n}.fa", zip,
-    runid=RUNID_PURGE_TRIO, id=PURGE_ID_TRIO, n=["1", "2"])
-## PURGE_DUPS CUTOFFS GRAPH
-cut_eval1 = expand(res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/00_assembly/{id}_hap{n}/cutoffs_graph_hap{n}.png", zip,
-    runid=RUNID_PURGE, id=PURGE_ID, n=["1", "2"])
-cut_eval2 = expand(res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/00_assembly/{id}_hap{n}/cutoffs_graph_hap{n}.png", zip,
-    runid=RUNID_PURGE_TRIO, id=PURGE_ID_TRIO, n=["1", "2"])
-
-## BUSCO
-busco_reg = expand(res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/busco/{id}_hap{n}/short_summary.specific.{lin}.{id}_hap{n}.txt", zip,
-    runid=RUNID_REG, id=REP_ID, n=["1", "2"], lin = BUSCO_LIN)
-
-busco_purged_reg = expand(res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/01_assembly_QC/busco/{id}_purged_hap{n}/short_summary.specific.{lin}.{id}_purged_hap{n}.txt", zip,
-    runid=RUNID_PURGE, id=PURGE_ID, n=["1", "2"], lin = BUSCO_LIN)
-
-busco_trio = expand(res_path + "/{runid}/02_genome_assembly/01_raw_assembly/01_assembly_QC/busco/{id}_hap{n}/short_summary.specific.{lin}.{id}_hap{n}.txt", zip,
-    runid=RUNID_TRIO, id=REP_TRIO_ID, n=["1", "2"], lin = BUSCO_LIN_TRIO)
-busco_purged_trio = expand(res_path + "/{runid}/02_genome_assembly/02_after_purge_dups_assembly/01_assembly_QC/busco/{id}_purged_hap{n}/short_summary.specific.{lin}.{id}_purged_hap{n}.txt", zip,
-    runid=RUNID_PURGE_TRIO, id=PURGE_ID_TRIO, n=["1", "2"], lin = BUSCO_LIN_TRIO)
-
-## RUNTIME
-time = expand(res_path + "/{runid}/runtime.{id}.{lin}.txt", zip,
-    runid = RUNID_REG, id=REP_ID, lin=BUSCO_LIN)
-time_trio = expand(res_path + "/{runid}/runtime_trio.{id}.{lin}.txt", zip,
-    runid = RUNID_TRIO, id=REP_TRIO_ID, lin=BUSCO_LIN_TRIO)
-time_purge = expand(res_path + "/{runid}/p_runtime.{id}.{lin}.txt", zip,
-    runid = RUNID_PURGE, id=PURGE_ID, lin=BUSCO_LIN)
-time_trio_purge = expand(res_path + "/{runid}/p_runtime_trio.{id}.{lin}.txt", zip,
-    runid = RUNID_PURGE_TRIO, id=PURGE_ID_TRIO, lin=BUSCO_LIN_TRIO)
-
-rule_all_input_list = [
-    longqc_output,
-    fastqc_output,
-    cut_eval1,
-    cut_eval2,
-    symb_link1,
-    symb_link2,
-    report_output,
-    report_trio_output,
-    busco_reg,
-    busco_purged_reg,
-    busco_trio,
-    busco_purged_trio,
-    time,
-    time_trio,
-    time_trio_purge,
-    time_purge,
-    purged_report_output,
-    purged_report_trio_output
-]
-
-#### target files
 rule all:
     input:
-        all_input = rule_all_input_list
+        # Required final assemblies and report
+        expand(
+            os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "{sample}_final_hap{n}.fasta.gz"),
+            sample=config["samples"].keys(), n=[1, 2]
+        ),
+        expand(
+            os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "ragtag_scafold", "recap.txt"),
+            sample=config["samples"].keys(), n=[1, 2]
+        ),
+        expand(
+            os.path.join(output_dir, "{sample}_results", "{sample}_assembly_report.html"),
+            sample=config["samples"].keys()
+        )
+
+# Genome assembly using hifiasm
+rule hifiasm:
+    input:
+        reads = lambda wildcards: config["samples"][wildcards.sample]["fasta_gz"]
+    output:
+        hap1 = os.path.join(output_dir, "{sample}_results", "01_raw_assembly","raw_{sample}_hap1.gfa"),
+        hap2 = os.path.join(output_dir, "{sample}_results", "01_raw_assembly","raw_{sample}_hap2.gfa")
+    params:
+        prefix = os.path.join(output_dir, "{sample}_results", "01_raw_assembly","{sample}"), 
+        mode = get_mode, 
+        run_1 = lambda wildcards: get_run(wildcards, run=1),
+        run_2 = lambda wildcards: get_run(wildcards, run=2),
+        purge_force = get_purge_force,
+        raw_out_hap1 = os.path.join(output_dir, "{sample}_results", "01_raw_assembly","{sample}.bp.hap1.p_ctg.gfa"),
+        raw_out_hap2 = os.path.join(output_dir, "{sample}_results", "01_raw_assembly","{sample}.bp.hap2.p_ctg.gfa")
+    benchmark:
+        os.path.join(output_dir, "{sample}_results", "benchmark", "hifiasm_benchmark.txt")
+    threads: 20
+    priority: 2
+    resources:
+        mem_mb=250000,
+        time="80:00:00"
+    container:
+        f"{container_registry}/hifiasm-yak:latest"
+    shell:
+        """
+        ./workflow/scripts/hifiasm_call.sh {params.mode} {params.purge_force} {threads} {input.reads} {params.run_1} {params.run_2} {params.prefix} &&
+        echo "Aasm4pg -> Cleaning hifiasm output files"
+        mv {params.raw_out_hap1} {output.hap1} &&
+        mv {params.raw_out_hap2} {output.hap2} &&
+        rm {params.prefix}*
+        """
+
+# Convert the gfa files of hifiasm to fasta
+TO_FA_CMD = r"""/^S/{print ">"$2;print $3}"""
+rule pigz_gfa_to_fasta:
+    input:
+        gfa = os.path.join(output_dir, "{sample}_results", "01_raw_assembly", "raw_{sample}_hap{n}.gfa"),
+        reads = lambda wildcards: config["samples"][wildcards.sample]["fasta_gz"]
+    output:
+        fasta = os.path.join(output_dir, "{sample}_results", "01_raw_assembly", "{sample}_hap{n}.fasta.gz")
+    threads: 4
+    resources:
+        mem_mb=25000,
+        time="80:00:00"
+    benchmark:                                                                                                                  os.path.join(output_dir, "{sample}_results", "benchmark", "pigz_hap{n}_benchmark.txt")
+    container:
+        f"{container_registry}/pigz"
+    shell:
+        """
+        awk {TO_FA_CMD:q} {input.gfa} | pigz -p {threads} > {output.fasta}
+        """
+
+# Potentialy purge the haplotigs using purge_dups
+rule haplotigs_handling:
+    input:
+        hap_fasta = os.path.join(output_dir, "{sample}_results", "01_raw_assembly","{sample}_hap{n}.fasta.gz"),
+        reads = lambda wildcards: config["samples"][wildcards.sample]["fasta_gz"]
+    output:
+        hap = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap{n}","{sample}_final_hap{n}.fasta.gz"),
+        cutoffs = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap{n}","cutoffs")
+    params:
+        prefix = "{sample}_hap{n}",
+        out_dir = os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}"),
+        purge_dups_option = get_purge_bool
+    threads: 20
+    benchmark:                                                                                                                  os.path.join(output_dir, "{sample}_results", "benchmark", "haplotigs_handling_hap{n}_benchmark.txt")
+    resources:
+        mem_mb=100000,
+        time="80:00:00"
+    container:
+        f"{container_registry}/purge_dups1.2.5"
+    shell:
+        """
+        ./workflow/scripts/haplotigs_handling.sh {params.purge_dups_option} {input.hap_fasta} {output.hap} {params.prefix} {input.reads} {params.out_dir}
+        """
+
+# Rule to unsip the haplotypes if needed for other rules
+rule unpigz_to_fasta:
+    input:
+        rules.haplotigs_handling.output.hap
+    output:
+        temp(os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap{n}","{sample}_final_hap{n}.fasta"))
+    container:
+        f"{container_registry}/pigz"
+    threads: 4
+    benchmark:                                                                                                                  os.path.join(output_dir, "{sample}_results", "benchmark", "unpigz_hap{n}_benchmark.txt")
+    resources:
+        mem_mb=25000,
+        time="80:00:00"
+    shell:
+        "unpigz -k -p 1 {input}"
+
+
+# Make purge_dups cutoffs graph
+rule cutoffs_graph:
+    input:
+        rules.haplotigs_handling.output.cutoffs
+    output:
+        graph = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap{n}","cutoffs_graph_hap{n}.png")
+    params:
+        out_dir = os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}")
+    benchmark:
+        os.path.join(output_dir, "{sample}_results", "benchmark", "cutoffs_graph_hap{n}_benchmark.txt")
+    resources:
+        mem_mb=10000,
+        time="80:00:00"
+    container:
+        f"{container_registry}/matplotlib0.11.5"
+    shell:
+        "python3 workflow/scripts/hist_plot.py -c {input} {params.out_dir}/PB.stat {output.graph}"
+
+# Produce basic stats for the reads files
+rule genometools_on_raw_data:
+    input:
+        lambda wildcards: config["samples"][wildcards.sample]["fasta_gz"]
+    output:
+        os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "{sample}_genometools_stats.txt")
+    priority: 1
+    resources:
+        mem_mb=100000,
+        time="80:00:00"
+    benchmark:
+        os.path.join(output_dir, "{sample}_results", "benchmark", "genometools_raw_benchmark.txt")
+    threads: 4
+    container:
+        f"{container_registry}/genometools1.5.9"
+    shell:
+        "gt seqstat {input} > {output}"
+
+# Produce basic stats for each haplotypes assembled
+use rule genometools_on_raw_data as genometools_on_assembly with:
+    input:
+        rules.haplotigs_handling.output.hap
+    output:
+        os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "{sample}_hap{n}_genometools_stats.txt")
+    benchmark:
+        os.path.join(output_dir, "{sample}_results", "benchmark", "genometools_hap{n}_benchmark.txt")
+    priority: 0
+
+# BUSCO stats on assembly
+rule busco_hap1:
+    input:
+        hap = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap1","{sample}_final_hap1.fasta")
+    output:
+        os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "busco", "busco_{sample}_hap1.txt")
+    params:
+        prefix = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "busco"),
+        lineage=get_busco_lin, 
+        sample="{sample}_hap1"
+    threads: 20
+    benchmark:
+        os.path.join(output_dir, "{sample}_results", "benchmark", "busco_hap1_benchmark.txt")
+    resources:
+        mem_mb=100000,
+        time="80:00:00"
+    container:
+        f"{container_registry}/busco:5.7.1"
+    shell:
+        """
+        busco -f -i {input.hap} -l {params.lineage} --out_path {params.prefix} -o {params.sample} -m genome -c {threads} && 
+        echo "Aasm4pg -> cleaning busco output files" && 
+        mv {params.prefix}/{params.sample}/short_summary.specific.{params.lineage}.{params.sample}.txt {output} && 
+        rm -rf {params.prefix}/{params.sample}
+        """
+
+use rule busco_hap1 as busco_hap2 with:
+    input:
+        hap = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap2","{sample}_final_hap2.fasta"),
+        other = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "busco", "busco_{sample}_hap1.txt")
+    output:
+        os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "busco", "busco_{sample}_hap2.txt")
+    benchmark:
+        os.path.join(output_dir, "{sample}_results", "benchmark", "busco_hap2_benchmark.txt")
+    params:
+        prefix = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "busco"),
+        lineage=get_busco_lin, 
+        sample="{sample}_hap2"
+
+# Estimate telomeric region content
+rule find_telomeres:
+    input:
+        rules.unpigz_to_fasta.output
+    output:
+        os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "telomeres", "{sample}_hap{n}_telomeres.txt")
+    threads: 4
+    benchmark:
+        os.path.join(output_dir, "{sample}_results", "benchmark", "find_telomeres_hap{n}_benchmark.txt")
+    resources:
+        mem_mb=40000,
+        time="80:00:00"
+    container:
+        f"{container_registry}/biopython1.75"
+    shell:
+        "python3 workflow/scripts/FindTelomeres.py {input} > {output}"
+
+# Count k-mers in the input reads and generate a histogram of k-mer frequencies.
+rule jellyfish:
+    input:
+        reads = lambda wildcards: config["samples"][wildcards.sample]["fasta_gz"]
+    output:
+        jf = temp(os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "jellyfish", "{sample}.jf")),
+        histo = os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "jellyfish", "{sample}.histo")
+    params:
+        km_size = get_kmer_size
+    threads: 10
+    benchmark:
+        os.path.join(output_dir, "{sample}_results", "benchmark", "jellyfish_benchmark.txt")
+    resources:
+        mem_mb=80000,
+        time="80:00:00"
+    container:
+        f"{container_registry}/jellyfish2.3.0"
+    shell:
+        """
+        echo "Aasm4pg -> starting jellyfish counts of kmers of size {params.km_size}" &&
+        jellyfish count -m {params.km_size} -s 100M -t {threads} -o {output.jf} -C <(zcat {input.reads}) && 
+        echo "Aasm4pg -> starting to compute jellyfish histogram" &&
+        jellyfish histo -h 1000000 -t {threads} {output.jf} > {output.histo} 
+        """
+
+# Analyze the k-mer histogram and estimate genome characteristics, including genome size, heterozygosity, and error rates. 
+rule genomescope:
+    input:
+        rules.jellyfish.output.histo
+    output:
+        plot = os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "genomescope", "linear_plot.png"),
+        summary = os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "genomescope", "summary.txt")
+    params:
+        ploidy = get_ploidy,
+        km_size = get_kmer_size,
+        out_dir = os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "genomescope"),
+    resources:
+        mem_mb=40000,
+        time="80:00:00"
+    benchmark:
+        os.path.join(output_dir, "{sample}_results", "benchmark", "genomescope_benchmark.txt")
+    container:
+        f"{container_registry}/genomescope2.0"
+    shell:
+        "genomescope.R -k {params.km_size} -i {input} -o {params.out_dir} -p {params.ploidy}"
+
+# Compare the k-mer content between the assembly and the raw reads.
+rule kat:
+    input:
+        hap = rules.haplotigs_handling.output.hap,
+        jellyfish = rules.jellyfish.output.jf
+    output:
+        os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "katplot", "{sample}_hap{n}.katplot.png")
+    params:
+        out_dir = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "katplot", "{sample}_hap{n}"),
+        km_size = get_kmer_size
+    threads: 4
+    benchmark:
+        os.path.join(output_dir, "{sample}_results", "benchmark", "kat_hap{n}_benchmark.txt")
+    resources:
+        mem_mb=40000,
+        time="80:00:00"
+    container: 
+        f"{container_registry}/kat2.4.1"
+    shell:
+        """
+        kat comp -o {params.out_dir} -t {threads} -m {params.km_size} --output_type png -v {input.jellyfish} {input.hap} && 
+        kat plot spectra-cn -x 200 -o {params.out_dir}.katplot.png {params.out_dir}-main.mx
+        """
+
+# Creates a k-mer database from the input reads 
+rule meryl:
+    input:
+        lambda wildcards: config["samples"][wildcards.sample]["fasta_gz"]
+    output:
+        db = temp(directory(os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "meryl", "{sample}_reads-db.meryl"))),
+        output_dir = temp(directory(os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "meryl")))
+    params:
+        km_size = get_kmer_size
+    threads: 20
+    benchmark:
+        os.path.join(output_dir, "{sample}_results", "benchmark", "meryl_benchmark.txt")
+    resources:
+        mem_mb=60000, 
+        time="80:00:00"
+    container:
+        f"{container_registry}/merqury1.3"
+    shell:
+        "meryl k={params.km_size} threads={threads} count {input} output {output.db}"
+
+# Calculates metrics like QV and completeness, providing a quantitative assessment of the genome assembly.
+rule merqury:
+    input:
+        km_database = rules.meryl.output,
+        hap1 = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap1","{sample}_final_hap1.fasta.gz"),
+        hap2 = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap2","{sample}_final_hap2.fasta.gz"),
+    output:
+        qv = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "merqury", "{sample}_merqury.qv"),
+        stats = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "merqury", "{sample}_merqury.completeness.stats")
+    params:
+        prefix = "{sample}_merqury",
+        out_dir = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "merqury")
+    threads: 20
+    benchmark:
+        os.path.join(output_dir, "{sample}_results", "benchmark", "merqury_benchmark.txt")
+    resources:
+        mem_mb=60000, 
+        time="80:00:00"
+    container:
+        f"{container_registry}/merqury1.3"
+    shell:
+        """
+        # Create temporary copies of haplotypes
+        cp {input.hap1} {params.out_dir}/tmp_hap1.fasta.gz
+        cp {input.hap2} {params.out_dir}/tmp_hap2.fasta.gz
+
+        # Run Merqury
+        cd {params.out_dir} 
+        export MERQURY=/usr/local/share/merqury 
+        merqury.sh {input.km_database} {params.out_dir}/tmp_hap1.fasta.gz {params.out_dir}/tmp_hap2.fasta.gz {params.prefix} 
+        rm tmp_hap1.fasta.gz 
+        rm tmp_hap2.fasta.gz 
+        """
+
+# Identifies LTR retrotransposons
+rule LTR_finder:
+    input:
+        rules.unpigz_to_fasta.output
+    output:
+        os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "LTR", "{sample}_hap{n}.scn")
+    resources:
+        mem_mb=60000, 
+        time="80:00:00"
+    benchmark:
+        os.path.join(output_dir, "{sample}_results", "benchmark", "ltr_finder_hap{n}_benchmark.txt")
+    container:
+        f"{container_registry}/ltr_finder:latest"
+    shell:
+        "ltr_finder -C {input} > {output}"
+
+# Calculates the LTR Assembly Index (LAI), a metric for assembly quality based on LTR retrotransposons
+rule LTR_retriever:
+    input:
+        scn = rules.LTR_finder.output,
+        hap = rules.unpigz_to_fasta.output
+    output:
+        lai = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "LTR", "{sample}_hap{n}.out.LAI"),
+        recap =  os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "LTR", "recap_{sample}_hap{n}.tbl")
+    params:
+        prefix="{sample}_hap{n}",
+        scn="{sample}_hap{n}.scn",
+        out_dir = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "LTR")
+    threads: 20
+    resources:
+        mem_mb=250000, 
+        time="50:00:00"
+    benchmark:
+        os.path.join(output_dir, "{sample}_results", "benchmark", "ltr_retriever_hap{n}_benchmark.txt")
+    container:
+        f"{container_registry}/ltr_retriever:3.0.1"
+    shell:
+        '''
+        export PATH="/opt/LTR_retriever:$PATH" && 
+        cp {input.hap} {params.out_dir}/tmp_hap.fasta && 
+        cd {params.out_dir} && 
+        LTR_retriever -threads {threads} -genome tmp_hap.fasta -infinder {params.scn} && 
+        mv tmp_hap.fasta.out.LAI {params.prefix}.out.LAI && 
+        mv tmp_hap.fasta.tbl recap_{params.prefix}.tbl && 
+        echo "Asm4pg -> Cleaning LTR_retriever tmp output files" &&
+        rm tmp*
+        '''
+
+# NOT TESTED
+# Rule to create scafold on assemblies
+rule scafolding:
+    input:
+        os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "{sample}_final_hap{n}.fasta")
+    output:
+        os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "ragtag_scafold", "recap.txt")
+    params:
+        out_file = os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "ragtag_scafold", "{sample}_scafold_hap{n}.fasta.gz"),
+        out_dir = os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "ragtag_scafold"),
+        reference_genome = get_reference,
+        ragtag_bool = get_ragtag_bool
+    threads: 4
+    resources:
+        mem_mb = 80000,
+        time="80:00:00"
+    benchmark:
+        os.path.join(output_dir, "{sample}_results", "benchmark", "scafolding_hap{n}_benchmark.txt")
+    container:
+        f"{container_registry}/ragtag:2.0.1"
+    shell:
+        """
+        ./workflow/scripts/ragtag_call.sh {params.ragtag_bool} {params.out_dir} {threads} {params.reference_genome} {input} {params.out_file} {output}
+        """
+
+# NOT TESTED
+# Rule to create a quast report assessing the quality of all assemblies
+rule quast:
+    input:
+        raw_hap1 = os.path.join(output_dir, "{sample}_results", "01_raw_assembly", "{sample}_hap1.fasta.gz"),
+        raw_hap2 = os.path.join(output_dir, "{sample}_results", "01_raw_assembly", "{sample}_hap2.fasta.gz"),
+        final_hap1 = os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap1", "{sample}_final_hap1.fasta.gz"),
+        final_hap2 = os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap2", "{sample}_final_hap2.fasta.gz"),
+    output:
+        cumulative_plot = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "quast", "combined_reference", "basic_stats", "cumulative_plot.png"),
+        Nx_plot = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "quast", "combined_reference", "basic_stats", "Nx_plot.png")
+    params:
+        reference_genome=get_reference,
+        purge_bool=get_purge_bool,
+        results_dir = output_dir,
+        quast_output = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "quast")
+    container:
+        f"{container_registry}/staphb/quast:5.2.0"
+    threads: 20
+    benchmark:
+        os.path.join(output_dir, "{sample}_results", "benchmark", "quast_benchmark.txt")
+    resources:
+        mem_mb=250000,
+        time="80:00:00"
+    shell:
+        """
+        ./workflow/scripts/quast_call.sh {params.reference_genome} {params.purge_bool} {input.raw_hap1} {input.raw_hap2} {input.final_hap1} {input.final_hap2} {params.quast_output} {params.results_dir}
+        """
+        
+# NOT TESTED
+# Rule to generate the html report
+rule generate_report:
+    input:
+        genomescope = os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "genomescope", "linear_plot.png"),
+        genomescope_sum = os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "genomescope", "summary.txt"),
+        genometools_on_raw_data = os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "{sample}_genometools_stats.txt"),
+
+        genometools_hap1 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "{sample}_hap1_genometools_stats.txt"),
+        genometools_hap2 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "{sample}_hap2_genometools_stats.txt"),
+        
+        busco_hap1 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "busco", "busco_{sample}_hap1.txt"),
+        busco_hap2 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "busco", "busco_{sample}_hap2.txt"),
+
+        kplot_hap1 =os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "katplot", "{sample}_hap1.katplot.png"),
+        kplot_hap2 =os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "katplot", "{sample}_hap2.katplot.png"),
+
+        telomeres_hap1 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "telomeres", "{sample}_hap1_telomeres.txt"),
+        telomeres_hap2 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "telomeres", "{sample}_hap2_telomeres.txt"),
+        
+        LAI_hap1 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "LTR", "{sample}_hap1.out.LAI"),
+        LAI_hap2 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "LTR", "{sample}_hap2.out.LAI"),
+        
+        LRT_recap_hap1 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "LTR", "recap_{sample}_hap1.tbl"),
+        LRT_recap_hap2 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "LTR", "recap_{sample}_hap2.tbl"),
+
+        merqury_stats=os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "merqury", "{sample}_merqury.completeness.stats"),
+        merqury_qv=os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "merqury", "{sample}_merqury.qv"),
+
+        cumulative_plot = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "quast", "combined_reference", "basic_stats", "cumulative_plot.png"),
+        Nx_plot = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "quast", "combined_reference", "basic_stats", "Nx_plot.png")
+    output:
+        os.path.join(output_dir, "{sample}_results", "{sample}_assembly_report.html")
+    params:
+        sample = "{sample}",
+        mode = get_mode,
+        assembly_purge_force = get_purge_force,
+        purge_dups_bool = get_purge_bool,
+        busco_lineage = get_busco_lin,
+        ploidy = get_ploidy,
+        kmer_size = get_kmer_size,
+        ragtag_bool = get_ragtag_bool,
+        r1 = lambda wildcards: get_run(wildcards, run=1),
+        r2 = lambda wildcards: get_run(wildcards, run=2)
+    resources:
+        mem_mb=10000, 
+        time="80:00:00"
+    benchmark:
+        os.path.join(output_dir, "{sample}_results", "benchmark", "generate_report_benchmark.txt")
+    container:
+        f"{container_registry}/rmarkdown4.0.3"
+    script:
+        "./scripts/report.Rmd"
