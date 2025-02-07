@@ -1,72 +1,78 @@
 #!/bin/bash
-################################ Slurm options #################################
-### prepare_calling_jobs
-#SBATCH -J smk_main
-### Max run time "hours:minutes:seconds"
-#SBATCH --time=120:00:00
-#SBATCH --ntasks=1 #nb of processes
-#SBATCH --cpus-per-task=1 # nb of cores for each process(1 process)
-#SBATCH --mem=10G # max of memory (-m) 
-### Requirements nodes/servers (default: 1)
-#SBATCH --nodes=1
-### Requirements cpu/core/task (default: 1)
-#SBATCH --ntasks-per-node=1
-#SBATCH -o slurm_logs/snakemake.%N.%j.out
-#SBATCH -e slurm_logs/snakemake.%N.%j.err
-#SBATCH --mail-type=END,FAIL
-#SBATCH --mail-user=sukanya.denni@univ-rouen.fr
-################################################################################
+#SBATCH --cpus-per-task=1
+#SBATCH -o slurm_logs/out_job_%j.out
+#SBATCH -e slurm_logs/err_job_%j.err
+#SBATCH --time=80:00:00
+#SBATCH -J asm4pg
+#SBATCH --mem=10G
 
-# Useful information to print
-echo '########################################'
-echo 'Date:' $(date --iso-8601=seconds)
-echo 'User:' $USER
-echo 'Host:' $HOSTNAME
-echo 'Job Name:' $SLURM_JOB_NAME
-echo 'Job ID:' $SLURM_JOB_ID
-echo 'Number of nodes assigned to job:' $SLURM_JOB_NUM_NODES
-echo 'Total number of cores for job (?):' $SLURM_NTASKS
-echo 'Number of requested cores per node:' $SLURM_NTASKS_PER_NODE
-echo 'Nodes assigned to job:' $SLURM_JOB_NODELIST
-echo 'Number of CPUs assigned for each task:' $SLURM_CPUS_PER_TASK
-echo 'Directory:' $(pwd)
-# Detail Information:
-echo 'scontrol show job:'
-scontrol show job $SLURM_JOB_ID
-echo '########################################'
+# Written by Lucien Piat at INRAe
+# Use this script to run asm4pg on a HPC
+# 07/01/25
 
-## get SNG_BIND abs path using python
-function SNG_BIND_ABS_PATH {
-    SNG_BIND="$(python3 - <<END
-import os
+# Verify arguments
+if [ $# -ne 1 ] || [ "$1" == "help" ]; then
+    echo "Use this script to run asm4pg localy or on a single HPC node"
+    echo ""
+    echo "Usage: $0 [dry|run|dag|rulegraph|unlock]"
+    echo "    dry - run the specified Snakefile in dry-run mode"
+    echo "    run - run the specified Snakefile normally"
+    echo "    dag - generate the directed acyclic graph for the specified Snakefile"
+    echo "    rulegraph - generate the rulegraph for the specified Snakefile"
+    echo "    unlock - Unlock the directory if snakemake crashed"
+    exit 1
+fi
 
-abs_path = os.getcwd()
-print(abs_path)
 
-END
-)"
-}
-SNG_BIND_ABS_PATH
-
-### variables
-CLUSTER_CONFIG=".config/snakemake_profile/slurm/cluster_config.yml"
-MAX_CORES=10
-PROFILE=".config/snakemake_profile/slurm"
-
-### Module Loading:
+# Update this with the path to your images
+echo 'Loading modules'
 module purge
-module load snakemake/6.5.1
+module load containers/Apptainer/1.2.5 
+module load devel/Miniconda/Miniconda3
+
+echo 'Activating environment'
+source activate wf_env
 
 echo 'Starting Snakemake workflow'
 
+run_snakemake() {
+    local option="$1"
 
-### Snakemake commands
+    case "$option" in
+        dry)
+            snakemake -c $(nproc) --dry-run
+            ;;
+        dag)
+            snakemake -c $(nproc) --dag > dag.dot
+            if [ $? -eq 0 ]; then
+                echo "Asm4pg -> DAG has been successfully generated as dag.dot"
+            else
+                echo "Asm4pg -> Error: Failed to generate DAG."
+                exit 1
+            fi
+            ;;
+        rulegraph)
+            snakemake -c $(nproc) --rulegraph > rulegraph.dot
+            if [ $? -eq 0 ]; then
+                echo "Asm4pg -> Rulegraph has been successfully generated as rulegraph.dot"
+            else
+                echo "Asm4pg -> Error: Failed to generate Rulegraph."
+                exit 1
+            fi
+            ;;
+        unlock)
+            snakemake --workflow-profile ./.config/snakemake/profiles/slurm --unlock
+            ;;
+        run)
+            snakemake --workflow-profile ./.config/snakemake/profiles/slurm 
+            ;;
+        *)
+            echo "Invalid option: $option"
+            echo "Usage: $0 [dry|run|dag|rulegraph|unlock]"
+            exit 1
+            ;;
+    esac
+}
 
-if [ "$1" = "dry" ]
-then
-    # dry run
-    snakemake --profile $PROFILE -j $MAX_CORES --use-singularity --singularity-args "-B $SNG_BIND" --cluster-config $CLUSTER_CONFIG -n -r
-else
-    # run
-    snakemake --profile $PROFILE -j $MAX_CORES --use-singularity --singularity-args "-B $SNG_BIND" --cluster-config $CLUSTER_CONFIG
-fi
+# Execute the function with the provided option
+run_snakemake "$1"

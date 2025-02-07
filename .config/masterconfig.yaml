@@ -1,43 +1,34 @@
-# absolute path to your desired output path
-root: .
+# Config file
 
-####################### optional prejob - data preparation #######################
-# path to tar data
-data: /path
-# list of tar names
-get_all_tar_filename: False
-tarIDS: "tar_filename"
+# Add the assembly runs you want to do under samples. 
+# Here is an example of mininmal configuration. Refer to the documentation for all options
 
-####################### job - workflow #######################
-# number of threads used by pigz
-pigz_threads: 4
+samples:
+  run1:
+    fasta_gz: small_example.fasta.gz
 
-### CONFIG
+# FULL path to your output dir (mandatory)
+output_dir_pdw: /home/lpiat/work/GenomAsm4pg/
 
 
+# ----
 
-####################### workflow output directories #######################
-# results directory
-resdir: workflow_results
+container_registry: "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg"
 
-### PREJOB
-# extracted input data
-rawdir: 00_input_data
-bamdir: 00_input_data/bam_files
-fastxdir: 00_input_data/fastx_files
+# You can modify the output path if you need to
+output_dir: "results/"
 
-### JOB
-# QC
-qcdir: 01_raw_data_QC
-fqc: 01_fastQC
-lqc: 02_longQC
-gentools: 03_genometools
-kmer: 04_kmer
+# List of parameters :
+#   fasta_gz: Your reads (mandatory)
+#   mode: [default, hi-c, trio] (default: default)
+#   r1: The run1/parent1 read file
+#   r2: The run2/parent2 read file
+#   run_purge_dups: [True, False] (default: False)
+#   run_ragtag: [True, False] (default: False)
+#   reference_genome: Assembled fasta.gz genome
+#   busco_lineage: (default: eukaryota_odb10)
 
-# assembly
-assembdir: 02_genome_assembly
-asm_raw: 01_raw_assembly
-asm_purged: 02_after_purge_dups_assembly
-asm_conta: 03_uncontaminated_assembly
-asm: 00_assembly
-asm_qc: 01_assembly_QC
+# Advanced parameters (we advise keeping default vaules)
+#   ploidy: (default: 2)
+#   assembly_purge_force: [1-3] (default: 3)
+#   kmer_size: (default: 21)

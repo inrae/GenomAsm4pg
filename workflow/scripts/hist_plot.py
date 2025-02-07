@@ -66,18 +66,28 @@ def mk_plot(hists, cutoffs, ttle, xm, xM, ym, yM, out_fl):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='read depth histogram plot')
 
-    parser.add_argument('-c', '--cutoffs', type=str, action="store", dest = "con", help ='read depth cutoffs')
-    parser.add_argument('-y', '--ymin', type=int, action="store", dest = "ymin", help ='set ymin')
-    parser.add_argument('-x', '--xmin', type=int, action = "store", dest = "xmin", help = 'set xmin')
-    parser.add_argument('-Y', '--ymax', type=int, action="store", dest = "ymax", help ='set ymax')
-    parser.add_argument('-X', '--xmax', type=int, action = "store", dest = "xmax", help = 'set xmax')
-    parser.add_argument('-t', '--title', type = str, action = "store", dest = "title", help = 'figure title [NULL]', default="")
-    parser.add_argument('-d', '--delim', type = str, action = "store", dest = "delim", help = 'delimiter', default="\t")
+    parser.add_argument('-c', '--cutoffs', type=str, action="store", dest="con", help='read depth cutoffs')
+    parser.add_argument('-y', '--ymin', type=int, action="store", dest="ymin", help='set ymin')
+    parser.add_argument('-x', '--xmin', type=int, action="store", dest="xmin", help='set xmin')
+    parser.add_argument('-Y', '--ymax', type=int, action="store", dest="ymax", help='set ymax')
+    parser.add_argument('-X', '--xmax', type=int, action="store", dest="xmax", help='set xmax')
+    parser.add_argument('-t', '--title', type=str, action="store", dest="title", help='figure title [NULL]', default="")
+    parser.add_argument('-d', '--delim', type=str, action="store", dest="delim", help='delimiter', default="\t")
     parser.add_argument('-v', '--version', action='version', version='hist_plot 0.0.0')
-    parser.add_argument('stat_fn', type=str, action="store", help = "stat file")
-    parser.add_argument('out_fn', type=str, action="store", help = "output file")
+    parser.add_argument('stat_fn', type=str, action="store", help="stat file")
+    parser.add_argument('out_fn', type=str, action="store", help="output file")
+    
     opts = parser.parse_args()
-    hists = col_hist(opts.stat_fn, opts.delim)
-    cutoffs = get_cutoffs(opts.con)
-    mk_plot(hists, cutoffs, opts.title, opts.xmin, opts.xmax, opts.ymin, opts.ymax, opts.out_fn) 
+
+    # Try to do the grah and exit with an empty image if you cant construct it
+    try:
+        hists = col_hist(opts.stat_fn, opts.delim)
+        cutoffs = get_cutoffs(opts.con)
+        mk_plot(hists, cutoffs, opts.title, opts.xmin, opts.xmax, opts.ymin, opts.ymax, opts.out_fn)
+    except Exception as e:
+        plt.figure(figsize=(8, 6))
+        plt.title("No cutoffs found")
+        plt.axis('off')
+        plt.savefig(opts.out_fn, dpi=300)
+
 
