@@ -5,7 +5,6 @@
 configfile: ".config/masterconfig.yaml"
 include: "scripts/parameter_retrieval.py"
 
-
 import os
 import yaml
 
@@ -18,13 +17,18 @@ rule all:
         expand(
             os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "{sample}_final_hap{n}.fasta.gz"),
             sample=config["samples"].keys(), n=[1, 2]
-        ),
+        )
+        ,
         expand(
             os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "ragtag_scafold", "recap.txt"),
             sample=config["samples"].keys(), n=[1, 2]
         ),
         expand(
             os.path.join(output_dir, "{sample}_results", "{sample}_assembly_report.html"),
+            sample=config["samples"].keys()
+        ),
+        expand(
+            os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "quast", "combined_reference", "basic_stats"),
             sample=config["samples"].keys()
         )
 
@@ -51,34 +55,39 @@ rule hifiasm:
         mem_mb=250000,
         time="80:00:00"
     container:
-        f"{container_registry}/hifiasm-yak:latest"
+        f"{container_registry}/hifiasm-box:latest"
     shell:
         """
-        ./workflow/scripts/hifiasm_call.sh {params.mode} {params.purge_force} {threads} {input.reads} {params.run_1} {params.run_2} {params.prefix} &&
-        echo "Aasm4pg -> Cleaning hifiasm output files"
-        mv {params.raw_out_hap1} {output.hap1} &&
-        mv {params.raw_out_hap2} {output.hap2} &&
-        rm {params.prefix}*
+        ./workflow/scripts/hifiasm_call.sh {params.mode} {params.purge_force} {threads} {input.reads} {params.run_1} {params.run_2} {params.prefix} {output.hap1} {output.hap2}
         """
 
-# Convert the gfa files of hifiasm to fasta
+# Convert the GFA files of hifiasm to FASTA
 TO_FA_CMD = r"""/^S/{print ">"$2;print $3}"""
+
 rule pigz_gfa_to_fasta:
     input:
         gfa = os.path.join(output_dir, "{sample}_results", "01_raw_assembly", "raw_{sample}_hap{n}.gfa"),
         reads = lambda wildcards: config["samples"][wildcards.sample]["fasta_gz"]
     output:
         fasta = os.path.join(output_dir, "{sample}_results", "01_raw_assembly", "{sample}_hap{n}.fasta.gz")
+    params:
+        mode = get_mode,
+        hic_scaffold = os.path.join(output_dir, "{sample}_results", "01_raw_assembly", "{sample}_hap{n}_scaffolds_final.fa")
     threads: 4
     resources:
         mem_mb=25000,
         time="80:00:00"
-    benchmark:                                                                                                                  os.path.join(output_dir, "{sample}_results", "benchmark", "pigz_hap{n}_benchmark.txt")
+    benchmark:                                                                                                                  
+        os.path.join(output_dir, "{sample}_results", "benchmark", "pigz_hap{n}_benchmark.txt")
     container:
         f"{container_registry}/pigz"
     shell:
         """
-        awk {TO_FA_CMD:q} {input.gfa} | pigz -p {threads} > {output.fasta}
+        if [[ "{params.mode}" == "hi-c" ]]; then
+            pigz -p {threads} -c {params.hic_scaffold} > {output.fasta}
+        else
+            awk {TO_FA_CMD:q} {input.gfa} | pigz -p {threads} > {output.fasta}
+        fi
         """
 
 # Potentialy purge the haplotigs using purge_dups
@@ -477,10 +486,7 @@ rule generate_report:
         LRT_recap_hap2 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "LTR", "recap_{sample}_hap2.tbl"),
 
         merqury_stats=os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "merqury", "{sample}_merqury.completeness.stats"),
-        merqury_qv=os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "merqury", "{sample}_merqury.qv"),
-
-        cumulative_plot = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "quast", "combined_reference", "basic_stats", "cumulative_plot.png"),
-        Nx_plot = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "quast", "combined_reference", "basic_stats", "Nx_plot.png")
+        merqury_qv=os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "merqury", "{sample}_merqury.qv")
     output:
         os.path.join(output_dir, "{sample}_results", "{sample}_assembly_report.html")
     params:
@@ -493,7 +499,9 @@ rule generate_report:
         kmer_size = get_kmer_size,
         ragtag_bool = get_ragtag_bool,
         r1 = lambda wildcards: get_run(wildcards, run=1),
-        r2 = lambda wildcards: get_run(wildcards, run=2)
+        r2 = lambda wildcards: get_run(wildcards, run=2),
+        cumulative_plot = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "quast", "combined_reference", "basic_stats", "cumulative_plot.png"),
+        Nx_plot = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "quast", "combined_reference", "basic_stats", "Nx_plot.png")
     resources:
         mem_mb=10000, 
         time="80:00:00"
