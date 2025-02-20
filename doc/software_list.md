@@ -7,6 +7,10 @@ Images are automatically pulled by Snakemake on first run and stored in the proj
 Assembly:
 - [hifiasm](https://github.com/chhylp123/hifiasm) 0.24.0-r703
 - [YAK](https://github.com/lh3/yak) 0.1
+- [fastp](https://github.com/OpenGene/fastp) 0.24.0
+- [YaHS](https://github.com/c-zhou/yahs) 1.2.2
+- [Samtools](https://github.com/samtools/samtools) 1.18
+- [bwa] (https://github.com/lh3/bwa)
 
 Haplotigs and Overlaps Purging:
 - [purge_dups](https://github.com/dfguan/purge_dups) 1.2.5

@@ -1,9 +1,5 @@
 # Troubleshooting
 
-## BUSCO Rule Failures
-
-During the first run, multiple simultaneous BUSCO lineage downloads may cause job conflicts. Simply rerun the workflow after completion to resolve this issue.
-
 ## Snakemake Locked Directory
 
 If the workflow rerun fails after job cancellation:
@@ -22,3 +18,11 @@ module load Singularity
 source activate wf_env
 sbatch ./local_run.sh dry
 ```
+
+## QUAST Running Indefinitely
+
+Sometimes, QUAST can take an exceptionally long time to complete. This is often due to Minimap2 struggling to align certain regions of the genome, which can slow down the process significantly.
+
+Even if QUAST fails or gets stuck, the assemblies should still be produced successfully. You can proceed with downstream analyses without waiting indefinitely for QUAST to finish.
+
+If QUAST is still running or has failed, you can check preliminary results in the directory "results/{sample}_results/04_assembly_qc/quast/combined_reference/basic_stats"

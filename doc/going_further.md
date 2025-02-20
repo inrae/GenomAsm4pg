@@ -60,9 +60,10 @@ samples:
   example1:
     fasta_gz: example.fasta.gz
     mode: hi-c
-    r1: run1.fasta.gz
-    r2: run2.fasta.gz
+    r1: run1.fastq.gz
+    r2: run2.fastq.gz
 ```
+In R1 and R2 you can add fastq.gz of fasta.gz files. If they are of type fastq, a quality controll will occur before the assembly using `fastp -q 20 -l 50` YAHS
 
 ### Trio Config
 This example shows how to use the workflow with trio assembly mode. The parental reads files can be Illumina or PacBio HiFi reads.
