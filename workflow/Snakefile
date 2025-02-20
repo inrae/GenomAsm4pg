@@ -27,10 +27,10 @@ rule all:
             os.path.join(output_dir, "{sample}_results", "{sample}_assembly_report.html"),
             sample=config["samples"].keys()
         ),
-        expand(
-            os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "quast", "combined_reference", "basic_stats"),
+        directory(expand(
+            os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "quast"),
             sample=config["samples"].keys()
-        )
+        ))
 
 # Genome assembly using hifiasm
 rule hifiasm:
@@ -430,7 +430,6 @@ rule scafolding:
         ./workflow/scripts/ragtag_call.sh {params.ragtag_bool} {params.out_dir} {threads} {params.reference_genome} {input} {params.out_file} {output}
         """
 
-# NOT TESTED
 # Rule to create a quast report assessing the quality of all assemblies
 rule quast:
     input:
@@ -439,8 +438,7 @@ rule quast:
         final_hap1 = os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap1", "{sample}_final_hap1.fasta.gz"),
         final_hap2 = os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap2", "{sample}_final_hap2.fasta.gz"),
     output:
-        cumulative_plot = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "quast", "combined_reference", "basic_stats", "cumulative_plot.png"),
-        Nx_plot = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "quast", "combined_reference", "basic_stats", "Nx_plot.png")
+        directory(os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "quast"))
     params:
         reference_genome=get_reference,
         purge_bool=get_purge_bool,
@@ -459,7 +457,6 @@ rule quast:
         ./workflow/scripts/quast_call.sh {params.reference_genome} {params.purge_bool} {input.raw_hap1} {input.raw_hap2} {input.final_hap1} {input.final_hap2} {params.quast_output} {params.results_dir}
         """
         
-# NOT TESTED
 # Rule to generate the html report
 rule generate_report:
     input:

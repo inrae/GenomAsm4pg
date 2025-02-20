@@ -43,7 +43,7 @@ run_snakemake() {
             snakemake -c $(nproc) --dry-run
             ;;
         dag)
-            snakemake -c $(nproc) --dag > dag.dot
+            snakemake -c $(nproc) --dag > dag.dot 
             if [ $? -eq 0 ]; then
                 echo "Asm4pg -> DAG has been successfully generated as dag.dot"
             else
@@ -52,7 +52,7 @@ run_snakemake() {
             fi
             ;;
         rulegraph)
-            snakemake -c $(nproc) --rulegraph > rulegraph.dot
+            snakemake -c $(nproc) --rulegraph > rulegraph.dot 
             if [ $? -eq 0 ]; then
                 echo "Asm4pg -> Rulegraph has been successfully generated as rulegraph.dot"
             else
@@ -61,10 +61,10 @@ run_snakemake() {
             fi
             ;;
         unlock)
-            snakemake --workflow-profile ./.config/snakemake/profiles/slurm --unlock
+            snakemake --workflow-profile ./.config/snakemake/profiles/slurm --unlock 
             ;;
         run)
-            snakemake --workflow-profile ./.config/snakemake/profiles/slurm 
+            snakemake --workflow-profile ./.config/snakemake/profiles/slurm --keep-incomplete
             ;;
         *)
             echo "Invalid option: $option"
