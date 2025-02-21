@@ -74,17 +74,18 @@ case "$MODE" in
         echo "Asm4pg -> Aligning Hi-C reads to contigs"
         bwa mem -5SP -t ${THREADS} ${PREFIX}.hap1.p_ctg.fasta ${RUN_1} ${RUN_2} | samtools view -Sb - | samtools sort -@ ${THREADS} -o ${PREFIX}_hap1_hic_aligned.bam
         bwa mem -5SP -t ${THREADS} ${PREFIX}.hap2.p_ctg.fasta ${RUN_1} ${RUN_2} | samtools view -Sb - | samtools sort -@ ${THREADS} -o ${PREFIX}_hap2_hic_aligned.bam
-
+        rm ${RUN_1}
+        rm ${RUN_2}
         echo "Asm4pg -> Indexing BAM files with samtools"
         samtools index ${PREFIX}_hap1_hic_aligned.bam
         samtools index ${PREFIX}_hap2_hic_aligned.bam
-
         # Step 4: Run YAHS for scaffolding
         echo "Asm4pg -> Running YAHS for scaffolding"
         yahs ${PREFIX}.hap1.p_ctg.fasta ${PREFIX}_hap1_hic_aligned.bam -o ${PREFIX}_hap1
         yahs ${PREFIX}.hap2.p_ctg.fasta ${PREFIX}_hap2_hic_aligned.bam -o ${PREFIX}_hap2
         echo "Asm4pg -> YAHS scaffolding completed."
-
+        rm ${PREFIX}_hap1_hic_aligned.bam
+        rm ${PREFIX}_hap2_hic_aligned.bam
         echo "Asm4pg -> Cleaning assembly output files"
         mv ${PREFIX}.hap1.p_ctg.gfa ${OUT1}
         mv ${PREFIX}.hap2.p_ctg.gfa ${OUT2}
