@@ -32,10 +32,28 @@ rule all:
             sample=config["samples"].keys()
         ))
 
+rule input_conversion:
+    input: 
+        lambda wildcards: config["samples"][wildcards.sample]["reads"]
+    output:
+        temp(os.path.join(output_dir, "{sample}_results", "00_converted_input","reads_{sample}_fasta.gz"))
+    benchmark:
+        os.path.join(output_dir, "{sample}_results", "benchmark", "input_conversion_benchmark.txt")
+    threads: 20
+    resources:
+        mem_mb=250000,
+        time="80:00:00"
+    container:
+        f"{container_registry}/samtools-pigz:latest"
+    shell:
+        """
+        ./workflow/scripts/input_conversion.sh {input} {output} {threads}
+        """
+  
 # Genome assembly using hifiasm
 rule hifiasm:
     input:
-        reads = lambda wildcards: config["samples"][wildcards.sample]["fasta_gz"]
+        reads = rules.input_conversion.output
     output:
         hap1 = os.path.join(output_dir, "{sample}_results", "01_raw_assembly","raw_{sample}_hap1.gfa"),
         hap2 = os.path.join(output_dir, "{sample}_results", "01_raw_assembly","raw_{sample}_hap2.gfa")
@@ -67,7 +85,6 @@ TO_FA_CMD = r"""/^S/{print ">"$2;print $3}"""
 rule pigz_gfa_to_fasta:
     input:
         gfa = os.path.join(output_dir, "{sample}_results", "01_raw_assembly", "raw_{sample}_hap{n}.gfa"),
-        reads = lambda wildcards: config["samples"][wildcards.sample]["fasta_gz"]
     output:
         fasta = os.path.join(output_dir, "{sample}_results", "01_raw_assembly", "{sample}_hap{n}.fasta.gz")
     params:
@@ -80,7 +97,7 @@ rule pigz_gfa_to_fasta:
     benchmark:                                                                                                                  
         os.path.join(output_dir, "{sample}_results", "benchmark", "pigz_hap{n}_benchmark.txt")
     container:
-        f"{container_registry}/pigz"
+        f"{container_registry}/samtools-pigz:latest"
     shell:
         """
         if [[ "{params.mode}" == "hi-c" ]]; then
@@ -95,7 +112,7 @@ rule pigz_gfa_to_fasta:
 rule haplotigs_handling:
     input:
         hap_fasta = os.path.join(output_dir, "{sample}_results", "01_raw_assembly","{sample}_hap{n}.fasta.gz"),
-        reads = lambda wildcards: config["samples"][wildcards.sample]["fasta_gz"]
+        reads = rules.input_conversion.output
     output:
         hap = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap{n}","{sample}_final_hap{n}.fasta.gz"),
         cutoffs = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap{n}","cutoffs")
@@ -122,7 +139,7 @@ rule unpigz_to_fasta:
     output:
         temp(os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap{n}","{sample}_final_hap{n}.fasta"))
     container:
-        f"{container_registry}/pigz"
+        f"{container_registry}/samtools-pigz:latest"
     threads: 4
     benchmark:                                                                                                                  os.path.join(output_dir, "{sample}_results", "benchmark", "unpigz_hap{n}_benchmark.txt")
     resources:
@@ -153,7 +170,7 @@ rule cutoffs_graph:
 # Produce basic stats for the reads files
 rule genometools_on_raw_data:
     input:
-        lambda wildcards: config["samples"][wildcards.sample]["fasta_gz"]
+        rules.input_conversion.output
     output:
         os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "{sample}_genometools_stats.txt")
     priority: 1
@@ -237,7 +254,7 @@ rule find_telomeres:
 # Count k-mers in the input reads and generate a histogram of k-mer frequencies.
 rule jellyfish:
     input:
-        reads = lambda wildcards: config["samples"][wildcards.sample]["fasta_gz"]
+        reads = rules.input_conversion.output
     output:
         jf = temp(os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "jellyfish", "{sample}.jf")),
         histo = os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "jellyfish", "{sample}.histo")
@@ -307,7 +324,7 @@ rule kat:
 # Creates a k-mer database from the input reads 
 rule meryl:
     input:
-        lambda wildcards: config["samples"][wildcards.sample]["fasta_gz"]
+        rules.input_conversion.output
     output:
         db = temp(directory(os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "meryl", "{sample}_reads-db.meryl"))),
         output_dir = temp(directory(os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "meryl")))
