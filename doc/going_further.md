@@ -24,6 +24,7 @@ Here are all the options and their default values:
 - `ploidy`: The ploidy of the organism (default: 2)
 - `run_ragtag`: [True, False] If set to true, the workflow will run RagTag and produce a scaffold of the assemblies (default: False)
 - `reference_genome`: The reference genome used for QUAST and RagTag scaffolding
+- `run_quast`: [True, False] If set to true, the workflow will run Quast and porduce global assembly statistics.
 
 ⚠️ Advanced options (use only if you have read the tools' documentation; we strongly recommend keeping default values):
 
