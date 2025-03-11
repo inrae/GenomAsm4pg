@@ -83,3 +83,12 @@ def get_ragtag_bool(wildcards) -> bool:
         print(f'Asm4pg -> "run_ragtag" unspecified for {wildcards.sample}, using "False" by default', file=sys.stderr)
         return False
     return ragtag_bool
+
+# Fetch whether to run QUAST
+def get_quast_bool(wildcards) -> bool:
+    try:
+        quast_bool = config["samples"][wildcards.sample]["run_quast"]
+    except KeyError:
+        print(f'Asm4pg -> "run_quast" unspecified for {wildcards.sample}, using "False" by default', file=sys.stderr)
+        return False
+    return quast_bool
