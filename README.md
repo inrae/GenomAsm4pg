@@ -38,9 +38,14 @@ Clone the Git repository
 ```bash
 git clone https://forgemia.inra.fr/asm4pg/GenomAsm4pg.git && cd GenomAsm4pg
 ```
-> All other tools will be run in `Singularity/Apptainer` docker images are automatically downloaded and converted by `Snakemake`. Total size of the images is ~6G
 ### 2. Configure the pipeline
 - Edit the `masterconfig` file in the `.config/` directory with your sample information. 
+```bash
+nano .config/masterconfig.yaml
+```
+- Here you can add the path to your read file (fasta.gz, fasta, fastq.gz, fastq, or bam)
+- Update the path to the output directory parent directory
+- We advise keeping the default [options](doc/going_further.md) for the first run.
 
 ### 3. Run the workflow 
 
@@ -62,19 +67,14 @@ sbatch job.sh run # Then
 ```
 > **Nb 1:** If your account name can't be automatically determined, add it in the `.config/snakemake/profiles/slurm/config.yaml` file.
 #### <ins>B. Locally (or single node HPC)</ins>
-- Make sure you have Snakemake and Singularity/Apptainer installed
+- Make sure you have Snakemake and Singularity/Apptainer installed 
 - Run the workflow :
 ```bash
 ./local_run dry # Check for warnings
-./local_run job.sh run # Then
+./local_run run # Then
 ```
+> You can also use the environement provided above
 
-## 🔄 Input Conversion
-Currently, asm4pg requires `fasta.gz` files. To convert your `fastq` or `bam` files to this format, you can use the following tools:
-```bash
-./workflow/scripts/input_conversion.sh -i <input_file> -o <output_file>
-```
-> **Nb :** Uncomment line 13 and 14 if you are on a HPC and update with your paths
 ## 🔧 Using the full potential of the workflow :
 Asm4pg has many options. If you wish to modify the default values and know more about the workflow, please refer to the [documentation](doc/documentation.md)
 

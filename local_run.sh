@@ -1,15 +1,17 @@
 #!/bin/bash
-
 ## TMP config to run on the CBIB
 #SBATCH --job-name=asm4pg
 #SBATCH --ntasks=25
-#SBATCH --mem=300G
+#SBATCH --mem=250G
 #SBATCH -o slurm_logs/out_job_%j.out
 #SBATCH -e slurm_logs/err_job_%j.err
 
-# Written by Lucien Piat at INRAe
-# Use this script to run asm4pg localy or on a single HPC node
-# 07/01/25
+## Written by Lucien Piat at INRAe
+## Use this script to run asm4pg localy or on a single HPC node
+## 07/01/25
+
+#conda activate wf_env
+#module load snakemake/7.8.5
 
 SNG_BIND=$(pwd)
 
