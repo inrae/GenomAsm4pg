@@ -42,16 +42,6 @@ output:
 cat(readLines(snakemake@input[["genometools_on_raw_data"]]), sep = '\n')
 ```
 
-## Global assembly QC
-
-if (file.exists(snakemake@params[["cumulative_plot"]])) {
-  ![](`r snakemake@params[["cumulative_plot"]]`)
-}
-
-if (file.exists(snakemake@params[["Nx_plot"]])) {
-  ![](`r snakemake@params[["Nx_plot"]]`)
-}
-
 ## QC on final assembly
 ### Assembly statistics
 #### Hap 1
