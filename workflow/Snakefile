@@ -84,6 +84,7 @@ rule pigz_gfa_to_fasta:
     shell:
         """
         if [[ "{params.mode}" == "hi-c" ]]; then
+            echo "Asm4pg -> Compressing the scafold"
             pigz -p {threads} -c {params.hic_scaffold} > {output.fasta}
         else
             awk {TO_FA_CMD:q} {input.gfa} | pigz -p {threads} > {output.fasta}
@@ -431,7 +432,7 @@ rule scafolding:
         """
 
 # Rule to create a quast report assessing the quality of all assemblies
-rule quast:
+rule quast_call:
     input:
         raw_hap1 = os.path.join(output_dir, "{sample}_results", "01_raw_assembly", "{sample}_hap1.fasta.gz"),
         raw_hap2 = os.path.join(output_dir, "{sample}_results", "01_raw_assembly", "{sample}_hap2.fasta.gz"),
@@ -440,6 +441,7 @@ rule quast:
     output:
         directory(os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "quast"))
     params:
+        quast_bool=get_quast_bool,
         reference_genome=get_reference,
         purge_bool=get_purge_bool,
         results_dir = output_dir,
@@ -454,9 +456,14 @@ rule quast:
         time="80:00:00"
     shell:
         """
-        ./workflow/scripts/quast_call.sh {params.reference_genome} {params.purge_bool} {input.raw_hap1} {input.raw_hap2} {input.final_hap1} {input.final_hap2} {params.quast_output} {params.results_dir}
+        if {params.quast_bool}; then
+            ./workflow/scripts/quast_call.sh {params.reference_genome} {params.purge_bool} {input.raw_hap1} {input.raw_hap2} {input.final_hap1} {input.final_hap2} {params.quast_output} {params.results_dir}
+        else
+            mkdir -p {params.quast_output}
+            echo "Quast turned off" > {params.quast_output}/quast.txt
+        fi
         """
-        
+
 # Rule to generate the html report
 rule generate_report:
     input:
@@ -496,9 +503,7 @@ rule generate_report:
         kmer_size = get_kmer_size,
         ragtag_bool = get_ragtag_bool,
         r1 = lambda wildcards: get_run(wildcards, run=1),
-        r2 = lambda wildcards: get_run(wildcards, run=2),
-        cumulative_plot = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "quast", "combined_reference", "basic_stats", "cumulative_plot.png"),
-        Nx_plot = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "quast", "combined_reference", "basic_stats", "Nx_plot.png")
+        r2 = lambda wildcards: get_run(wildcards, run=2)
     resources:
         mem_mb=10000, 
         time="80:00:00"
