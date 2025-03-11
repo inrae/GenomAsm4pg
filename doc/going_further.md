@@ -15,9 +15,9 @@ Usage: `job.sh/local_run.sh [dry|run|dag|rulegraph|unlock]`
 Inside the `./.config/masterconfig.yaml` file, you can add more options.
 Here are all the options and their default values:
 
-- `fasta_gz`: Your reads (mandatory)
+- `reads`: Your reads (mandatory) (fasta.gz, fasta, fastq.gz, fastq, or bam)
 - `mode`: [default, hi-c, trio] The mode for Hifiasm assembly (default: default)
-- `r1`: If hi-c or trio mode, the run1/parent1 read file
+- `r1`: If hi-c or trio mode, the run1/parent1 read file (fasta.gz, fastq.gz)
 - `r2`: If hi-c or trio mode, the run2/parent2 read file
 - `run_purge_dups`: [True, False] If set to true, the workflow will run [purge_dups](https://github.com/dfguan/purge_dups) on the assembly (default: False)
 - `busco_lineage`: The BUSCO lineage of your organism listed [here](https://busco.ezlab.org/list_of_lineages.html) (default: eukaryota_odb10)
@@ -39,7 +39,7 @@ This minimal configuration will conduct a de novo assembly with default values:
 ```yaml
 samples:
   example1:
-    fasta_gz: example.fasta.gz
+    reads: example.fasta.gz
 ```
 
 ### Simple Config
@@ -48,7 +48,7 @@ This simple configuration will conduct a de novo assembly with tailored values. 
 ```yaml
 samples:
   example1:
-    fasta_gz: example.fasta.gz
+    reads: example.fasta.gz
     busco_lineage: eudicots_odb10
     run_ragtag: True
     reference_genome: ref.fasta.gz
@@ -59,7 +59,7 @@ This example shows how to use the workflow with Hi-C assembly mode which takes P
 ```yaml
 samples:
   example1:
-    fasta_gz: example.fasta.gz
+    reads: example.fasta.gz
     mode: hi-c
     r1: run1.fastq.gz
     r2: run2.fastq.gz
@@ -71,7 +71,7 @@ This example shows how to use the workflow with trio assembly mode. The parental
 ```yaml
 samples:
   example1:
-    fasta_gz: example.fasta.gz
+    reads: example.fasta.gz
     mode: trio
     r1: parent1.fasta.gz
     r2: parent2.fasta.gz
@@ -81,7 +81,7 @@ samples:
 ```yaml
 samples:
   example1:
-    fasta_gz: example.fasta.gz
+    reads: example.fasta.gz
     mode: hi-c
     r1: run1.fasta.gz
     r2: run2.fasta.gz
@@ -100,11 +100,11 @@ You can run the workflow on multiple datasets at the same time.
 ```yaml
 samples:
   dataset_1:
-    fasta_gz: example_1.fasta.gz
+    reads: example_1.fasta.gz
     run_purge_dups: True
   dataset_2:
-    fasta_gz: example_2.fasta.gz
+    reads: example_2.fasta.gz
     run_purge_dups: False
   dataset_n:
-    fasta_gz: example_n.fasta.gz
+    reads: example_n.fasta.gz
 ```

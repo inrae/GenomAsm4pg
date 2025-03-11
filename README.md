@@ -43,7 +43,7 @@ git clone https://forgemia.inra.fr/asm4pg/GenomAsm4pg.git && cd GenomAsm4pg
 ```bash
 nano .config/masterconfig.yaml
 ```
-- Here you can add the path to your read file (fasta.gz, fasta, fastq.gz, fastq, or bam)
+- Here you can add the path to your reads file (fasta.gz, fasta, fastq.gz, fastq, or bam)
 - Update the path to the output directory parent directory
 - We advise keeping the default [options](doc/going_further.md) for the first run.
 
