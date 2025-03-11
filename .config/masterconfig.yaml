@@ -4,12 +4,11 @@
 # Here is an example of mininmal configuration. Refer to the documentation for all options
 
 samples:
-  run1:
-    fasta_gz: small_example.fasta.gz
+  run_ladybug : #Example basic run 
+    reads: ladybug_test.bam 
 
 # FULL path to your output dir (mandatory)
 output_dir_pdw: /home/lpiat/work/GenomAsm4pg/
-
 
 # ----
 
@@ -27,6 +26,7 @@ output_dir: "results/"
 #   run_ragtag: [True, False] (default: False)
 #   reference_genome: Assembled fasta.gz genome
 #   busco_lineage: (default: eukaryota_odb10)
+#   run_quast: [True, False] (default: False)
 
 # Advanced parameters (we advise keeping default vaules)
 #   ploidy: (default: 2)
