@@ -1,0 +1,51 @@
+# asm4pg hifiasm box  
+# Created by Lucien Piat for the Pangenoak project  
+# If you wish to update hifiasm, use this recipe and include other assembly tools 
+
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    git \
+    zlib1g-dev \
+    libbz2-dev \
+    liblzma-dev \
+    wget \
+    curl \
+    cmake \
+    libboost-all-dev \
+    bwa \
+    samtools \
+    pigz \
+    python3 \
+    python3-pip \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install hifiasm
+RUN git clone --depth 1 https://github.com/chhylp123/hifiasm.git /opt/hifiasm && \
+    cd /opt/hifiasm && \
+    make && \
+    ln -s /opt/hifiasm/hifiasm /usr/local/bin/hifiasm
+
+# Install yak
+RUN git clone --depth 1 https://github.com/lh3/yak.git /opt/yak && \
+    cd /opt/yak && \
+    make && \
+    ln -s /opt/yak/yak /usr/local/bin/yak
+
+# Install fastp
+RUN wget http://opengene.org/fastp/fastp && \
+    chmod +x fastp && \
+    mv fastp /usr/local/bin/
+
+# Install YAHS
+RUN git clone --depth 1 https://github.com/c-zhou/yahs.git /opt/yahs && \
+    cd /opt/yahs && \
+    make && \
+    ln -s /opt/yahs/yahs /usr/local/bin/yahs
+
+# Set PATH
+ENV PATH="/usr/local/bin:${PATH}"
