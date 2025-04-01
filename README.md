@@ -72,7 +72,7 @@ Asm4pg has many options. If you wish to modify the default values and know more 
 
 Waiting for the publication, you can cite asm4pg as follow: 
 
-Denni S\*, Piat L\*, Tran J, Wu C, Duvaux L. Asm4pg: a workflow for efficient long-read genome assembly for pangenomics. (In preparation) https://forgemia.inra.fr/asm4pg/GenomAsm4pg
+Denni S\*, Piat L\*, Tran J, Wu C, Duvaux L. Asm4pg: a workflow for efficient long-read genome assembly for pangenomics (In prep.). https://forgemia.inra.fr/asm4pg/GenomAsm4pg
 
 \* This authors contributed equally to this work.
 
