@@ -70,7 +70,11 @@ Asm4pg has many options. If you wish to modify the default values and know more 
 
 ## How to cite asm4pg?
 
-We are currently writing a publication about asm4pg. Meanwhile, if you use the pipeline, please cite it using the address of this repository. 
+Waiting for the publication, you can cite asm4pg as follow: 
+
+Denni S\*, Piat L\*, Tran J, Wu C, Duvaux L. Asm4pg: a workflow for efficient long-read genome assembly for pangenomics. (In preparation) https://forgemia.inra.fr/asm4pg/GenomAsm4pg
+\* This authors contributed equally to this work.
+
 
 ## License
 The content of this repository is licensed under <A HREF="https://choosealicense.com/licenses/gpl-3.0/">(GNU GPLv3)</A> 
