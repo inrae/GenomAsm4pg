@@ -2,7 +2,10 @@
 # Script to dynamically handle haplotigs with the correct command based on the mode
 # Author: Lucien PIAT
 # For: Project Pangenoak
-# Date: January 6, 2025
+# Date: April 3, 2025
+
+set -e  # Exit immediately if a command fails
+trap 'echo "Error encountered. Exiting." >&2' ERR
 
 # Usage: ./haplotigs_handling.sh purge_dups_option hap1_fasta hap2_fasta hap1_output hap2_output
 
@@ -13,46 +16,49 @@ PREFIX=$4
 READS=$5
 DIRR=$6
 
-echo "Asm4pg -> Starting haplotigs handling"
-if [[ "$PURGE_DUPS" == "True" || "$PURGE_DUPS" == "true" ]]; then
+cleanup_temp_files() {
+    echo "Asm4pg -> Cleaning temporary files..."
+    rm -f "$DIRR/dups.bed" "$DIRR/PB.cov.wig" "$DIRR/dups.bed" "$DIRR/calcuts.log" "$DIRR/purge_dups.log" "$DIRR/"*.paf.gz "$DIRR/"*split* "$DIRR/$PREFIX.purged.fa"
+}
 
-    # Run purge_dups on both haplotypes
-
+run_purge_dups() {
     echo "Asm4pg -> Running purge_dups on haplotigs..."
 
-    # Create calcutus stats for purge_dups
-    echo "Asm4pg -> Runing minimap2"
-    minimap2 -xasm20 $HAP_IN $READS | gzip -c - > $DIRR/$PREFIX.paf.gz
-    pbcstat $DIRR/$PREFIX.paf.gz -O $DIRR
+    echo "Asm4pg -> Running minimap2..."
+    minimap2 -x asm20 "$HAP_IN" "$READS" | gzip -c - > "$DIRR/$PREFIX.paf.gz"
 
-    calcuts $DIRR/PB.stat > $DIRR/cutoffs 2> $DIRR/calcuts.log
+    echo "Asm4pg -> Running pbcstat..."
+    pbcstat "$DIRR/$PREFIX.paf.gz" -O "$DIRR"
 
-    # Split assembly & self-self alignment
-    split_fa $HAP_IN > $DIRR/$PREFIX.split
-    minimap2 -xasm5 -DP $DIRR/$PREFIX.split $DIRR/$PREFIX.split| gzip -c - > $DIRR/$PREFIX.split.self.paf.gz
+    echo "Asm4pg -> Running calcuts..."
+    calcuts "$DIRR/PB.stat" > "$DIRR/cutoffs" 2> "$DIRR/calcuts.log"
 
-    # Purge haplotigs & overlaps
-    echo "Asm4pg -> Starting purge_dups"
-    purge_dups -2 -T $DIRR/cutoffs -c $DIRR/PB.base.cov $DIRR/$PREFIX.split.self.paf.gz > $DIRR/dups.bed 2> $DIRR/purge_dups.log
+    echo "Asm4pg -> Splitting assembly..."
+    split_fa "$HAP_IN" > "$DIRR/$PREFIX.split"
 
-    # Get purged primary and haplotig sequences from draft assembly
-    get_seqs -e $DIRR/dups.bed $HAP_IN -p $DIRR/$PREFIX
+    echo "Asm4pg -> Running minimap2 self-alignment..."
+    minimap2 -x asm5 -DP "$DIRR/$PREFIX.split" "$DIRR/$PREFIX.split" | gzip -c - > "$DIRR/$PREFIX.split.self.paf.gz"
 
-    rm $DIRR/dups.bed
-    rm $DIRR/PB.base.cov
-    rm $DIRR/*paf.gz
-    rm $DIRR/*split*
-    gzip $DIRR/$PREFIX.purged.fa $HAP_OUT
-    mv $DIRR/$PREFIX.purged.fa.gz $HAP_OUT
-    rm $DIRR/$PREFIX.hap.fa
+    echo "Asm4pg -> Purging haplotigs and overlaps..."
+    purge_dups -2 -T "$DIRR/cutoffs" -c "$DIRR/PB.base.cov" "$DIRR/$PREFIX.split.self.paf.gz" > "$DIRR/dups.bed" 2> "$DIRR/purge_dups.log"
 
+    echo "Asm4pg -> Extracting purged sequences..."
+    get_seqs -e "$DIRR/dups.bed" "$HAP_IN" -p "$DIRR/$PREFIX"
+
+    echo "Asm4pg -> Compressing and moving output..."
+    gzip -c "$DIRR/$PREFIX.purged.fa" > "$HAP_OUT"
+
+    cleanup_temp_files
+}
+
+echo "Asm4pg -> Starting haplotigs handling"
+if [[ "$PURGE_DUPS" =~ ^(true|True|yes|Yes)$ ]]; then
+    run_purge_dups
 else
-    # If purge_dups is false, create symbolic links to the output location
+    echo "Asm4pg -> Purge option is false. Creating symbolic link..."
+    ln -sf "$(realpath "$HAP_IN")" "$HAP_OUT"
 
-    echo "Asm4pg -> Purge option is false. Leaving the assembly untouched"
-    cp $HAP_IN $HAP_OUT #TODO find why ln is not working here
-
-    # Add an empty cutoffs file so snakemake can link the rules
-    echo "No cutoffs, purge_dups is turned off" > $DIRR/cutoffs
+    echo "Asm4pg -> Creating empty cutoffs file..."
+    echo "No cutoffs, purge_dups is turned off" > "$DIRR/cutoffs"
 fi
 echo "Asm4pg -> Done with haplotigs handling"
