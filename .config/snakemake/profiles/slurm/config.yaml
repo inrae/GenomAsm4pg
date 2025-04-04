@@ -7,3 +7,6 @@ keep-going: True
 default-resources:
   #slurm_account: add if needed on your hpc
   runtime: 4800
+  time: 80:00:00
+  mem_mb: 25000
+  threads: 1

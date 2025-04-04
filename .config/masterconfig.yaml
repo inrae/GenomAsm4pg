@@ -4,18 +4,21 @@
 # Here is an example of mininmal configuration. Refer to the documentation for all options
 
 samples:
-  run_ladybug : #Example basic run 
-    reads: ladybug_test.bam 
+  test_run :
+    reads: ladybug_test.bam
+    run_purge_dups: True
 
 # FULL path to your output dir (mandatory)
 output_dir_pdw: /home/lpiat/work/GenomAsm4pg/
 
 # ----
 
+# Container to pull the images from
 container_registry: "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg"
-
 # You can modify the output path if you need to
 output_dir: "results/"
+
+# ----
 
 # List of parameters :
 #   fasta_gz: Your reads (mandatory)
@@ -29,6 +32,5 @@ output_dir: "results/"
 #   run_quast: [True, False] (default: False)
 
 # Advanced parameters (we advise keeping default vaules)
-#   ploidy: (default: 2)
 #   assembly_purge_force: [1-3] (default: 3)
 #   kmer_size: (default: 21)
