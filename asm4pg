@@ -26,18 +26,18 @@ fi
 echo "Welcome to Asm4pg! Make sure .config/masterconfig.yaml is correctly edited for this run."
 
 # Update this with the path to your images
-echo 'Asm4pg -> Loading modules'
+echo '🔹 Asm4pg -> Loading modules'
 module purge
 module load containers/Apptainer/1.2.5      #On Genotoul
 module load devel/Miniconda/Miniconda3      #On Genotoul
 
 #module load snakemake/7.8.5                #On CBIB
 
-echo 'Asm4pg -> Activating environment'
+echo '🔹 Asm4pg -> Activating environment'
 source activate wf_env
 #conda activate wf_env                      #On CBIB
 
-echo 'Asm4pg -> Starting Snakemake workflow'
+echo '🔹 Asm4pg -> Starting Snakemake workflow'
 
 run_snakemake() {
     local option="$1"
@@ -49,23 +49,29 @@ run_snakemake() {
         dag)
             snakemake -c $(nproc) --dag > dag.dot 
             if [ $? -eq 0 ]; then
-                echo "Asm4pg -> DAG has been successfully generated as dag.dot"
+                echo "✅ Asm4pg -> DAG has been successfully generated as dag.dot"
             else
-                echo "Asm4pg -> Error: Failed to generate DAG."
+                echo "❌ Asm4pg -> Error: Failed to generate DAG."
                 exit 1
             fi
             ;;
         rulegraph)
             snakemake -c $(nproc) --rulegraph > rulegraph.dot 
             if [ $? -eq 0 ]; then
-                echo "Asm4pg -> Rulegraph has been successfully generated as rulegraph.dot"
+                echo "✅ Asm4pg -> Rulegraph has been successfully generated as rulegraph.dot"
             else
-                echo "Asm4pg -> Error: Failed to generate Rulegraph."
+                echo "❌ Asm4pg -> Error: Failed to generate Rulegraph."
                 exit 1
             fi
             ;;
         unlock)
-            snakemake -c $(nproc) --unlock 
+            snakemake -c $(nproc) --unlock
+            if [ $? -eq 0 ]; then
+                echo "✅ Asm4pg -> Unlocked"
+            else
+                echo "❌ Asm4pg -> Error: Failed to Unlocked"
+                exit 1
+            fi
             ;;
         run)
             snakemake --workflow-profile ./.config/snakemake/profiles/slurm --keep-incomplete
@@ -76,7 +82,7 @@ run_snakemake() {
             ;;
         *)
             echo "Invalid option: $option"
-            echo "Usage: $0 [dry|run|local-run|dag|rulegraph|unlock]"
+            echo "Usage: asm4pg [dry|run|local-run|dag|rulegraph|unlock]"
             exit 1
             ;;
     esac
