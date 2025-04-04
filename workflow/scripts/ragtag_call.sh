@@ -22,7 +22,7 @@ HAP_OUT: $HAP_OUT
 "
 
 if [[ "$RAGTAG" == "True" || "$RAGTAG" == "true" ]]; then
-    echo "Asm4pg -> Running ragtag"
+    echo "🔹 Asm4pg -> Running ragtag"
     RECAP_CONTENT+="Asm4pg -> Ragtag execution started\n"
     mkdir -p "$DIRR"
 
@@ -37,7 +37,7 @@ if [[ "$RAGTAG" == "True" || "$RAGTAG" == "true" ]]; then
         exit 1
     fi
 else
-    echo "Asm4pg -> Ragtag option is off"
+    echo "✅ Asm4pg -> Ragtag option is off"
     RECAP_CONTENT+="Asm4pg -> Ragtag option is off\n"
     mkdir -p "$DIRR"
 fi
