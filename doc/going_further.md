@@ -2,13 +2,14 @@
 
 ## 01. Job.sh/local_run.sh Options
 
-Usage: `job.sh/local_run.sh [dry|run|dag|rulegraph|unlock]`
+Usage: `asm4pg [dry|run|local-run|dag|rulegraph|unlock]`
 
-- `dry` - Run the specified Snakefile in dry-run mode
-- `run` - Run the specified Snakefile normally
-- `dag` - Generate the directed acyclic graph for the specified Snakefile
-- `rulegraph` - Generate the rulegraph for the specified Snakefile
-- `unlock` - Unlock the directory if Snakemake crashed
+- `dry` - run in dry-run mode
+- `run` - run the workflow with SLURM
+- `local-run` - run the workflow localy (on a single node)
+- `dag` - generate the directed acyclic graph for the workflow
+- `rulegraph` - generate the rulegraph for the workflow
+- `unlock` - unlock the directory if Snakemake crashed
 
 ## 02. Workflow Options
 
@@ -21,7 +22,6 @@ Here are all the options and their default values:
 - `r2`: If hi-c or trio mode, the run2/parent2 read file
 - `run_purge_dups`: [True, False] If set to true, the workflow will run [purge_dups](https://github.com/dfguan/purge_dups) on the assembly (default: False)
 - `busco_lineage`: The BUSCO lineage of your organism listed [here](https://busco.ezlab.org/list_of_lineages.html) (default: eukaryota_odb10)
-- `ploidy`: The ploidy of the organism (default: 2)
 - `run_ragtag`: [True, False] If set to true, the workflow will run RagTag and produce a scaffold of the assemblies (default: False)
 - `reference_genome`: The reference genome used for QUAST and RagTag scaffolding
 - `run_quast`: [True, False] If set to true, the workflow will run Quast and porduce global assembly statistics.

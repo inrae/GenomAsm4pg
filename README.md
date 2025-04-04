@@ -8,8 +8,6 @@ This workflow leverages **[Snakemake](https://snakemake.readthedocs.io/en/stable
 
 ## 📂 Repository Structure  
 
-
-
 ```
 ├── README.md
 ├── job.sh
@@ -25,7 +23,7 @@ This workflow leverages **[Snakemake](https://snakemake.readthedocs.io/en/stable
 
 ## ✅ Requirements  
 
-- **Miniforge (or Snakemake 8.4.7 localy)**
+- **Miniforge (or Snakemake>=8.4.7 localy)**
 - **Singularity/Apptainer** (for containerized execution)  
 
 > **Note:** All external tools are automatically managed by Snakemake and will be downloaded as Singularity/Apptainer images (~6GB total).  
@@ -50,8 +48,8 @@ nano .config/masterconfig.yaml
 ### 3. Run the workflow 
 
 #### <ins>A. On a HPC (SLURM)</ins>
-- Update job.sh with the correct paths to Singularity/Apptainer and Miniforge.
-- Provide and environment with `Snakemake` and `snakemake-executor-plugin-slurm` in `job.sh`, under `source activate wf_env`, you can create it like this : 
+- Update `asm4pg` file with the correct paths to Singularity/Apptainer and Miniforge.
+- Provide and environment with `Snakemake` and `snakemake-executor-plugin-slurm` in `asm4pg` file, under `source activate wf_env`, you can create it like this : 
 ```bash
 conda create -n wf_env -c conda-forge -c bioconda snakemake=8.4.7 snakemake-executor-plugin-slurm
 ```  
@@ -62,19 +60,21 @@ mkdir slurm_logs
 ```
 - Run the workflow :
 ```bash
-sbatch job.sh dry # Check for warnings
-sbatch job.sh run # Then
+sbatch asm4pg dry # Check for warnings
+sbatch asm4pg run # Then
 ```
 > **Nb 1:** If your account name can't be automatically determined, add it in the `.config/snakemake/profiles/slurm/config.yaml` file.
-#### <ins>B. Locally (or single node HPC)</ins>
-- Make sure you have Snakemake and Singularity/Apptainer installed 
-- Run the workflow :
-```bash
-./local_run dry # Check for warnings
-./local_run run # Then
-```
-> You can also use the environement provided above
 
+## Other runing options
+```
+asm4pg [dry|run|local-run|dag|rulegraph|unlock]
+    dry - run in dry-run mode
+    run - run the workflow with SLURM
+    local-run - run the workflow localy (on a single node)
+    dag - generate the directed acyclic graph for the workflow
+    rulegraph - generate the rulegraph for the workflow
+    unlock - Unlock the directory if snakemake crashed
+```
 ## 🔧 Using the full potential of the workflow :
 Asm4pg has many options. If you wish to modify the default values and know more about the workflow, please refer to the [documentation](doc/documentation.md)
 
