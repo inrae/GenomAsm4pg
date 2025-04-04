@@ -15,19 +15,20 @@ if [[ -z "$INPUT_FILE" || -z "$OUTPUT_FILE" || -z "$THREADS" ]]; then
     exit 1
 fi
 
-# Get file extension
-EXTENSION="${INPUT_FILE##*.}"
-EXTENSION_LOWER=$(echo "$EXTENSION" | tr '[:upper:]' '[:lower:]')  # Handle case-insensitive extensions
+# Get file extension after the first dot
+EXTENSION="${INPUT_FILE#*.}"  # Remove everything before the first dot
+EXTENSION="${EXTENSION,,}"     # Convert to lowercase
 
 echo "🔹 Asm4pg -> Checking input file type: $INPUT_FILE"
 
-case "$EXTENSION_LOWER" in
-    fasta.gz|fa.gz)
+# Handle different file extensions
+case "$EXTENSION" in
+    fa.gz|fasta.gz)
         echo "🔹 Asm4pg -> No conversion needed for .fasta.gz or .fa.gz, copying"
         cp "$INPUT_FILE" "$OUTPUT_FILE"
         ;;
 
-    fastq.gz|fq.gz)
+    fq.gz|fastq.gz)
         echo "🔹 Asm4pg -> Converting FastQ to Fasta (gzipped)"
         zcat "$INPUT_FILE" | awk 'NR%4==1{sub(":.*", "", $0); print ">" substr($0,2)} NR%4==2{print}' | pigz -p "$THREADS" > "$OUTPUT_FILE"
         ;;
