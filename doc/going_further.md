@@ -26,7 +26,7 @@ Here are all the options and their default values:
 - `reference_genome`: The reference genome used for QUAST and RagTag scaffolding
 - `run_quast`: [True, False] If set to true, the workflow will run Quast and porduce global assembly statistics.
 
-⚠️ Advanced options (use only if you have read the tools' documentation; we strongly recommend keeping default values):
+⚠️ Advanced options (use only if you have read the tools' documentation; we recommend keeping default values):
 
 - `assembly_purge_force`: [1-3] The purge level of Hifiasm `-l` parameter, full description [here](https://hifiasm.readthedocs.io/en/latest/parameter-reference.html) (default: 3)
 - `kmer_size`: The size of the kmers used for QC steps (default: 21)
@@ -87,7 +87,6 @@ samples:
     r2: run2.fasta.gz
     run_purge_dups: True
     assembly_purge_force: 2
-    ploidy: 2
     kmer_size: 21
     busco_lineage: eudicots_odb10
     run_ragtag: True
