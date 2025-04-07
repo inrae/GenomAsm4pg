@@ -78,16 +78,19 @@ if __name__ == "__main__":
     parser.add_argument('out_fn', type=str, action="store", help="output file")
     
     opts = parser.parse_args()
-
+    print("🔹 Asm4pg -> Starting to create cutoffs graph")
     # Try to do the grah and exit with an empty image if you cant construct it
     try:
         hists = col_hist(opts.stat_fn, opts.delim)
         cutoffs = get_cutoffs(opts.con)
         mk_plot(hists, cutoffs, opts.title, opts.xmin, opts.xmax, opts.ymin, opts.ymax, opts.out_fn)
+        print("✅ Asm4pg -> Saved graph")
     except Exception as e:
+        print("🔹 Asm4pg -> No cutoffs found, purge dups must be off")
         plt.figure(figsize=(8, 6))
         plt.title("No cutoffs found")
         plt.axis('off')
         plt.savefig(opts.out_fn, dpi=300)
+        print("✅🔹 Asm4pg -> Saved empty graph")
 
 
