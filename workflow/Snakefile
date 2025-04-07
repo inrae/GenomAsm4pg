@@ -105,15 +105,13 @@ rule pigz_gfa_to_fasta:
     threads: 4
     container:
         f"{container_registry}/samtools-pigz:latest"
-    log:
-        os.path.join(output_dir, "{sample}_results", "logs", "pigz_gfa_to_fasta_hap{n}.log")
     shell:
         """
         if [[ "{params.mode}" == "hi-c" ]]; then
-            echo "🔹 Asm4pg -> Compressing the scafold" > {log} 2>&1
-            pigz -p {threads} -c {params.hic_scaffold} > {output.fasta} >> {log} 2>&1
+            echo "🔹 Asm4pg -> Compressing the scafold"
+            pigz -p {threads} -c {params.hic_scaffold} > {output.fasta}
         else
-            awk {TO_FA_CMD:q} {input.gfa} | pigz -p {threads} > {output.fasta} >> {log} 2>&1
+            awk {TO_FA_CMD:q} {input.gfa} | pigz -p {threads} > {output.fasta}
         fi
         """
 
