@@ -10,8 +10,7 @@ This workflow leverages **[Snakemake](https://snakemake.readthedocs.io/en/stable
 
 ```
 ├── README.md
-├── job.sh
-├── local_run.sh
+├── asm4pg  (the workflow)
 ├── doc
 ├── workflow
 │   ├── scripts
@@ -32,10 +31,22 @@ This workflow leverages **[Snakemake](https://snakemake.readthedocs.io/en/stable
 
 ## 🚀 How to Use  
 ### 1. Set up
+
 Clone the Git repository
 ```bash
-git clone https://forgemia.inra.fr/asm4pg/GenomAsm4pg.git && cd GenomAsm4pg
+git clone https://forgemia.inra.fr/asm4pg/GenomAsm4pg.git && cd GenomAsm4pg && mkdir slurm_logs
 ```
+
+
+
+- Create an environement for snakemake : 
+```bash
+conda env create -n wf_env -f .config/wf_env.yaml
+```  
+> Use Miniforge with the conda-forge channel, see why [here](https://science-ouverte.inrae.fr/fr/offre-service/fiches-pratiques-et-recommandations/quelles-alternatives-aux-fonctionnalites-payantes-danaconda) (french)
+
+- Update `asm4pg` file with the correct paths to **Singularity/Apptainer** modules lines 45-46
+
 ### 2. Configure the pipeline
 - Edit the `masterconfig` file in the `.config/` directory with your sample information. 
 ```bash
@@ -48,16 +59,7 @@ nano .config/masterconfig.yaml
 ### 3. Run the workflow 
 
 #### <ins>A. On a HPC (SLURM)</ins>
-- Update `asm4pg` file with the correct paths to Singularity/Apptainer and Miniforge.
-- Provide and environment with `Snakemake` and `snakemake-executor-plugin-slurm` in `asm4pg` file, under `source activate wf_env`, you can create it like this : 
-```bash
-conda create -n wf_env -c conda-forge -c bioconda snakemake=8.4.7 snakemake-executor-plugin-slurm
-```  
-> Use Miniforge with the conda-forge channel, see why [here](https://science-ouverte.inrae.fr/fr/offre-service/fiches-pratiques-et-recommandations/quelles-alternatives-aux-fonctionnalites-payantes-danaconda) (french)
-- Add the log directory for SLURM 
-```bash
-mkdir slurm_logs
-```
+
 - Run the workflow :
 ```bash
 sbatch asm4pg dry # Check for warnings
