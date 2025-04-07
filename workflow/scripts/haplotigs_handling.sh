@@ -55,8 +55,8 @@ echo "🔹 Asm4pg -> Starting haplotigs handling"
 if [[ "$PURGE_DUPS" =~ ^(true|True|yes|Yes)$ ]]; then
     run_purge_dups
 else
-    echo "🔹 Asm4pg -> Purge option is false. Creating symbolic link..."
-    ln -sf "$(realpath "$HAP_IN")" "$HAP_OUT"
+    echo "🔹 Asm4pg -> Purge option is false"
+    cp  $HAP_IN $HAP_OUT
 
     echo "✅ Asm4pg -> Creating empty cutoffs file..."
     echo "No cutoffs, purge_dups is turned off" > "$DIRR/cutoffs"
