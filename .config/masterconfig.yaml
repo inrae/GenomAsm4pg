@@ -4,9 +4,9 @@
 # Here is an example of mininmal configuration. Refer to the documentation for all options
 
 samples:
-  test_run :
-    reads: ladybug_test.bam
-    run_purge_dups: True
+  test_fa :
+    reads: test_fa.fa.gz
+    busco_lineage: insecta_odb10
 
 # FULL path to your output dir (mandatory)
 output_dir_pdw: /home/lpiat/work/GenomAsm4pg/
