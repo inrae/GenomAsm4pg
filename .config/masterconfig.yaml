@@ -4,8 +4,8 @@
 # Here is an example of mininmal configuration. Refer to the documentation for all options
 
 samples:
-  test_fa :
-    reads: test_fa.fa.gz
+  insect_example_assembly_01 :
+    reads: ladybug_long_reads.bam
     busco_lineage: insecta_odb10
 
 # FULL path to your output dir (mandatory)
