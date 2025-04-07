@@ -25,6 +25,10 @@ rule all:
             os.path.join(output_dir, "{sample}_results", "{sample}_assembly_report.html"),
             sample=config["samples"].keys()
         ),
+        expand(
+            os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap{n}","cutoffs_graph_hap{n}.png"),
+            sample=config["samples"].keys(), n=[1, 2]
+        ),
         directory(expand(
             os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "quast"),
             sample=config["samples"].keys()
@@ -181,9 +185,13 @@ rule genometools_on_raw_data:
     priority: 1
     container:
         f"{container_registry}/genometools1.5.9"
+    log:
+        os.path.join(output_dir, "{sample}_results", "logs", "genometools_on_raw_data.log")
     shell:
         """
-        gt seqstat {input} > {output}
+        echo "🔹 Aasm4pg -> starting genometools on {input}" > {log} 2>&1 
+        gt seqstat {input} > {output} 2> {log} 2>>&1 &&
+        echo "✅ Asm4pg -> genometools completed successfully >> {log} 2>&1
         """
 
 # Produce basic stats for each haplotypes assembled
@@ -192,6 +200,8 @@ use rule genometools_on_raw_data as genometools_on_assembly with:
         rules.haplotigs_handling.output.hap
     output:
         os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "{sample}_hap{n}_genometools_stats.txt")
+    log:
+        os.path.join(output_dir, "{sample}_results", "logs", "genometools_on_assembly_hap{n}.log")
     priority: 0
 
 # BUSCO stats haplotype 1
@@ -250,7 +260,7 @@ rule find_telomeres:
     log:
         os.path.join(output_dir, "{sample}_results", "logs", "find_telomeres_hap{n}.log")
     shell:
-        "python3 workflow/scripts/FindTelomeres.py {input} > {output} > {log} 2>&1 "
+        "python3 workflow/scripts/FindTelomeres.py {input} > {output} 2> {log} 2>&1 "
 
 # Count k-mers in the input reads and generate a histogram of k-mer frequencies.
 rule jellyfish:
@@ -272,10 +282,10 @@ rule jellyfish:
         f"{container_registry}/jellyfish2.3.0"
     shell:
         """
-        echo "🔹 Aasm4pg -> starting jellyfish counts of kmers of size {params.km_size}" > {log} 2>&1 
-        jellyfish count -m {params.km_size} -s 100M -t {threads} -o {output.jf} -C <(zcat {input.reads}) >> {log} 2>&1 
-        echo "🔹 Aasm4pg -> starting to compute jellyfish histogram" >> {log} 2>&1 
-        jellyfish histo -h 1000000 -t {threads} {output.jf} > {output.histo} >> {log} 2>&1 
+        echo "🔹 Asm4pg -> starting jellyfish counts of kmers of size {params.km_size}" >> {log} 2>&1
+        jellyfish count -m {params.km_size} -s 100M -t {threads} -o {output.jf} -C <(zcat {input.reads}) >> {log} 2>&1
+        echo "🔹 Asm4pg -> starting to compute jellyfish histogram" >> {log} 2>&1
+        jellyfish histo -h 1000000 -t {threads} {output.jf} > {output.histo} 2>> {log}
         """
 
 # Analyze the k-mer histogram and estimate genome characteristics, including genome size, heterozygosity, and error rates. 
@@ -368,15 +378,15 @@ rule merqury:
     shell:
         """
         # Create temporary copies of haplotypes
-        cp {input.hap1} {params.out_dir}/tmp_hap1.fasta.gz
-        cp {input.hap2} {params.out_dir}/tmp_hap2.fasta.gz
+        cp {input.hap1} {params.out_dir}/tmp_hap1.fasta.gz > {log} 2>&1 
+        cp {input.hap2} {params.out_dir}/tmp_hap2.fasta.gz >> {log} 2>&1 
 
         # Run Merqury
-        cd {params.out_dir} 
+        cd {params.out_dir} >> {log} 2>&1 
         export MERQURY=/usr/local/share/merqury 
-        merqury.sh {input.km_database} {params.out_dir}/tmp_hap1.fasta.gz {params.out_dir}/tmp_hap2.fasta.gz {params.prefix} > {log} 2>&1 
-        rm tmp_hap1.fasta.gz 
-        rm tmp_hap2.fasta.gz 
+        merqury.sh {input.km_database} {params.out_dir}/tmp_hap1.fasta.gz {params.out_dir}/tmp_hap2.fasta.gz {params.prefix} >> {log} 2>&1 
+        rm tmp_hap1.fasta.gz >> {log} 2>&1 
+        rm tmp_hap2.fasta.gz >> {log} 2>&1 
         """
 
 # Identifies LTR retrotransposons
@@ -419,10 +429,10 @@ rule LTR_retriever:
         f"{container_registry}/ltr_retriever:3.0.1"
     shell:
         '''
-        export PATH="/opt/LTR_retriever:$PATH" && 
-        cp {input.hap} {params.out_dir}/tmp_hap.fasta && 
-        cd {params.out_dir} && 
-        LTR_retriever -threads {threads} -genome tmp_hap.fasta -infinder {params.scn} > {log} 2>&1 
+        export PATH="/opt/LTR_retriever:$PATH" 
+        cp {input.hap} {params.out_dir}/tmp_hap.fasta > {log} 2>&1 
+        cd {params.out_dir} >> {log} 2>&1 
+        LTR_retriever -threads {threads} -genome tmp_hap.fasta -infinder {params.scn} >> {log} 2>&1 
         mv tmp_hap.fasta.out.LAI {params.prefix}.out.LAI >> {log} 2>&1 
         mv tmp_hap.fasta.tbl recap_{params.prefix}.tbl >> {log} 2>&1 
         echo "🔹 Asm4pg -> Cleaning LTR_retriever tmp output files" >> {log} 2>&1 
@@ -491,7 +501,7 @@ rule quast_call:
             ./workflow/scripts/quast_call.sh {params.reference_genome} {params.purge_bool} {input.raw_hap1} {input.raw_hap2} {input.final_hap1} {input.final_hap2} {params.quast_output} {params.results_dir} > {log} 2>&1 
         else
             mkdir -p {params.quast_output}
-            echo "Quast turned off" > {params.quast_output}/quast.txt
+            echo "Quast turned off" > {params.quast_output}/quast.txt 2> {log} 2>&1 
         fi
         """
 
