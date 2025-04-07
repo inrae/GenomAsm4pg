@@ -4,32 +4,42 @@
 
 This workflow leverages **[Snakemake](https://snakemake.readthedocs.io/en/stable/)** for efficient genome assembly and generates an **HTML report** summarizing key assembly statistics.  
 
+**Asm4pg** can assamble in :
+- **HiFi mode (default)**  
+  Performs primary genome assembly using high-fidelity long reads.
+
+- **Hi-C mode**  
+  Uses Hi-C data to scaffold the assembled contigs into chromosome-scale scaffolds.
+
+- **Trio mode**  
+  Uses parental short reads to partition long reads by haplotype before assembly.
+
 ![Workflow DAG](doc/dag.svg)  
 
 ## 📂 Repository Structure  
 
-```
+```bash
 ├── README.md
-├── asm4pg  (the workflow)
+├── asm4pg  # <- The running script
 ├── doc
 ├── workflow
 │   ├── scripts
 |   └── Snakefile
 └──  .config
     ├── snakemake_profile
-    └── masterconfig.yaml
+    └── masterconfig.yaml # <- Your configuration
 ```
 
 ## ✅ Requirements  
 
-- **Miniforge (or Snakemake>=8.4.7 localy)**
+- **Miniforge/conda (for Snakemake>=8.4.7 and the SLURM plugin)**
 - **Singularity/Apptainer** (for containerized execution)  
 
-> **Note:** All external tools are automatically managed by Snakemake and will be downloaded as Singularity/Apptainer images (~6GB total).  
+> **Note:** All external [tools](doc/software_list.md) are automatically managed by Snakemake and will be downloaded as Singularity/Apptainer images (~6GB total).  
 
 ---
 
-## 🚀 How to Use  
+## 🚀 How to Use (quick guide)
 ### 1. Set up
 
 Clone the Git repository
@@ -37,28 +47,28 @@ Clone the Git repository
 git clone https://forgemia.inra.fr/asm4pg/GenomAsm4pg.git && cd GenomAsm4pg && mkdir slurm_logs
 ```
 
-
-
-- Create an environement for snakemake : 
+- Create an environement for snakemake (from using the provided envfile): 
 ```bash
 conda env create -n wf_env -f .config/wf_env.yaml
 ```  
 > Use Miniforge with the conda-forge channel, see why [here](https://science-ouverte.inrae.fr/fr/offre-service/fiches-pratiques-et-recommandations/quelles-alternatives-aux-fonctionnalites-payantes-danaconda) (french)
 
-- Update `asm4pg` file with the correct paths to **Singularity/Apptainer** modules lines 45-46
+- Update the `asm4pg` file with the correct paths to **Singularity/Apptainer** modules lines 45-46
+```bash
+nano asm4pg
+```
+> You can configure this file for multiple servers using the case statement (see the example for genotoul HPC line 33)
 
-### 2. Configure the pipeline
+### 2. Configure the pipeline for your data
 - Edit the `masterconfig` file in the `.config/` directory with your sample information. 
 ```bash
 nano .config/masterconfig.yaml
 ```
-- Here you can add the path to your reads file (fasta.gz, fasta, fastq.gz, fastq, or bam)
+- Here you can add the path to your long reads file (fasta.gz, fasta, fastq.gz, fastq, or bam)
 - Update the path to the output directory parent directory
 - We advise keeping the default [options](doc/going_further.md) for the first run.
 
 ### 3. Run the workflow 
-
-#### <ins>A. On a HPC (SLURM)</ins>
 
 - Run the workflow :
 ```bash
