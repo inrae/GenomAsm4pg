@@ -25,26 +25,34 @@ if [ $# -ne 1 ] || [ "$1" == "help" ]; then
 fi
 echo "Welcome to Asm4pg! Make sure .config/masterconfig.yaml is correctly edited for this run."
 
-# Update this with the path to your images
-echo '🔹 Asm4pg -> Loading modules'
-module purge
-module load containers/Apptainer/1.2.5      #On Genotoul
-module load devel/Miniconda/Miniconda3      #On Genotoul
+#######################
+# Update line 44 and 45
+#######################
+echo '🔹 Asm4pg -> Activating execution environment'
+case "${SLURM_SUBMIT_HOST:-$(hostname)}" in
+    **geno**)
+        module purge
+        module load containers/Apptainer/1.2.5     
+        source activate wf_env                     
+        ;;
+    **bb8**)
+        conda activate wf_env 
+        ;;
+    *)
+        echo '🔹 Asm4pg -> Unkown host, dont forget to modify line 44 and 45 with the right modules and environement'
+        module purge
+        module load containers/Apptainer/1.2.5 
+        source activate wf_env 
 
-#module load snakemake/7.8.5                #On CBIB
-
-echo '🔹 Asm4pg -> Activating environment'
-source activate wf_env
-#conda activate wf_env                      #On CBIB
-
-echo '🔹 Asm4pg -> Starting Snakemake workflow'
+        ;;
+esac
 
 run_snakemake() {
     local option="$1"
-
+    echo '🔹 Asm4pg -> Starting Snakemake workflow'
     case "$option" in
         dry)
-            snakemake -c $(nproc) --dry-run
+            snakemake -c $(nproc) --dry-run --rerun-incomplete
             ;;
         dag)
             snakemake -c $(nproc) --dag > dag.dot 
@@ -74,7 +82,7 @@ run_snakemake() {
             fi
             ;;
         run)
-            snakemake --workflow-profile ./.config/snakemake/profiles/slurm --keep-incomplete
+            snakemake --workflow-profile ./.config/snakemake/profiles/slurm --rerun-incomplete
             ;;
         local-run)
             SNG_BIND=$(pwd)
@@ -88,5 +96,4 @@ run_snakemake() {
     esac
 }
 
-# Execute the function with the provided option
 run_snakemake "$1"
