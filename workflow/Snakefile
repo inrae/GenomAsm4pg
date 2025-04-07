@@ -187,9 +187,13 @@ rule genometools_on_raw_data:
         os.path.join(output_dir, "{sample}_results", "logs", "genometools_on_raw_data.log")
     shell:
         """
-        echo "🔹 Aasm4pg -> starting genometools on {input}" > {log} 2>&1 
-        gt seqstat {input} > {output} 2> {log} 2>>&1 &&
-        echo "✅ Asm4pg -> genometools completed successfully >> {log} 2>&1
+        echo "🔹 Asm4pg -> starting genometools on {input}" > {log} 2>&1
+        gt seqstat {input} > {output} 2>> {log}
+        if [ ! -s {output} ]; then
+            echo "⚠️  Asm4pg -> Warning: genometools output file is empty!" >> {log}
+        else
+            echo "✅ Asm4pg -> genometools completed successfully" >> {log}
+        fi
         """
 
 # Produce basic stats for each haplotypes assembled
@@ -402,7 +406,7 @@ rule LTR_finder:
     container:
         f"{container_registry}/ltr_finder:latest"
     shell:
-        "ltr_finder -C {input} > {output} > {log} 2>&1 "
+        "ltr_finder -C {input} > {output} 2> {log} 2>&1 "
 
 # Calculates the LTR Assembly Index (LAI), a metric for assembly quality based on LTR retrotransposons
 rule LTR_retriever:
