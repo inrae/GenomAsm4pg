@@ -47,7 +47,7 @@ Clone the Git repository
 git clone https://forgemia.inra.fr/asm4pg/GenomAsm4pg.git && cd GenomAsm4pg && mkdir slurm_logs
 ```
 
-- Create an environement for snakemake (from using the provided envfile): 
+- Create an environement for snakemake (from the provided envfile): 
 ```bash
 conda env create -n wf_env -f .config/wf_env.yaml
 ```  
