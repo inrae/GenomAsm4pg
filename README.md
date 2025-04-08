@@ -68,6 +68,16 @@ nano .config/masterconfig.yaml
 - Update the path to the output directory parent directory
 - We advise keeping the default [options](doc/going_further.md) for the first run.
 
+Example config : 
+```yaml
+samples:       
+  example1:              # <- First indent = Name of the assembly
+    reads: example-1.fasta.gz    # <- Second indent = All options
+    busco_lineage: insecta_odb10
+  example2: 
+    reads: example-2.fasta.gz
+    busco_lineage: eudicots_odb10 # Options only affect current assembly
+```
 ### 3. Run the workflow 
 
 - Run the workflow :
@@ -75,7 +85,7 @@ nano .config/masterconfig.yaml
 sbatch asm4pg dry # Check for warnings
 sbatch asm4pg run # Then
 ```
-> **Nb 1:** If your account name can't be automatically determined, add it in the `.config/snakemake/profiles/slurm/config.yaml` file.
+> **Nb :** If your account name can't be automatically determined, add it in the `.config/snakemake/profiles/slurm/config.yaml` file.
 
 ## Other runing options
 ```
