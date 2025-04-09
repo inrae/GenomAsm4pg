@@ -2,6 +2,9 @@
 
 Images are automatically pulled by Snakemake on first run and stored in the project's container registry. Note that you can modify the container registry in the `./config/masterconfig.yaml` file to add your own instead.
 
+## DAG of the workflow
+![Workflow flowchart](dag.svg)  
+
 ## List of tools embeded in the workflow
 
 - [hifiasm](https://github.com/chhylp123/hifiasm) 0.24.0-r703 https://doi.org/10.1038/s41592-020-01056-5 
