@@ -1,74 +1,107 @@
-# <A HREF="https://forgemia.inra.fr/asm4pg/GenomAsm4pg"> asm4pg </A>
-This is an automatic and reproducible genome assembly workflow for pangenomic applications using PacBio HiFi data.
+# [Asm4pg](https://forgemia.inra.fr/asm4pg/GenomAsm4pg)  
 
-This workflow uses [Snakemake](https://snakemake.readthedocs.io/en/stable/) to quickly assemble genomes with a HTML report summarizing obtained assembly stats.
+**Asm4pg** is an **automatic and reproducible genome assembly workflow** designed for **pangenomic applications** using **PacBio HiFi data**.  
 
-![workflow DAG](doc/dag.svg)
+This workflow leverages **[Snakemake](https://snakemake.readthedocs.io/en/stable/)** for efficient genome assembly and generates an **HTML report** summarizing key assembly statistics.  
 
-## Repo directory structure
+**Asm4pg** can assamble in :
+- **HiFi mode (default)**  
+  Performs primary genome assembly using high-fidelity long reads.
 
-```
+- **Hi-C mode**  
+  Uses Hi-C data to scaffold the assembled contigs into chromosome-scale scaffolds.
+
+- **Trio mode**  
+  Uses parental short reads to partition long reads by haplotype before assembly.
+
+&nbsp;
+![Workflow flowchart](doc/asm4pg_flowchart_bg.svg)  
+[Animated version](https://asm4pg-animated-7dc863.pages.mia.inra.fr/) 
+## 📂 Repository Structure  
+
+```bash
 ├── README.md
-├── job.sh
-├── local_run.sh
+├── asm4pg  # <- The running script
 ├── doc
 ├── workflow
 │   ├── scripts
 |   └── Snakefile
 └──  .config
     ├── snakemake_profile
-    └── masterconfig.yaml
+    └── masterconfig.yaml # <- Your configuration
 ```
 
-## Requirements
-Miniforge (Snakemake), Singularity/Apptainer
-## How to Use
+## ✅ Requirements  
+
+- **Miniforge/conda (for Snakemake>=8.4.7 and the SLURM plugin)**
+- **Singularity/Apptainer** (for containerized execution)  
+
+> **Note:** All external [tools](doc/software_list.md) are automatically managed by Snakemake and will be downloaded as Singularity/Apptainer images (~6GB total).  
+
+---
+
+## 🚀 How to Use (quick guide)
 ### 1. Set up
+
 Clone the Git repository
 ```bash
-git clone https://forgemia.inra.fr/asm4pg/GenomAsm4pg.git && cd GenomAsm4pg
+git clone https://forgemia.inra.fr/asm4pg/GenomAsm4pg.git && cd GenomAsm4pg && mkdir slurm_logs
 ```
-> All other tools will be run in Singularity/Apptainer images automatically downloaded by Snakemake. Total size of the images is ~5.5G
-### 2. Configure the pipeline
-- Edit the `masterconfig` file in the `.config/` directory with your sample information. 
 
-### 3. Run the workflow 
-
-#### <ins>A. On a HPC</ins>
-- Edit `job.sh` with path to the modules `Singularity/Apptainer`, `Miniforge`
-- Provide and environment with `Snakemake` and `snakemake-executor-plugin-slurmin` in `job.sh`, under `source activate wf_env`, you can create it like this : 
+- Create an environement for snakemake (from the provided envfile): 
 ```bash
-conda create -n wf_env -c conda-forge -c bioconda snakemake=8.4.7 snakemake-executor-plugin-slurm
+conda env create -n wf_env -f .config/wf_env.yaml
 ```  
 > Use Miniforge with the conda-forge channel, see why [here](https://science-ouverte.inrae.fr/fr/offre-service/fiches-pratiques-et-recommandations/quelles-alternatives-aux-fonctionnalites-payantes-danaconda) (french)
-- Add the log directory for SLURM 
+
+- Update the `asm4pg` file with the correct paths to **Singularity/Apptainer** modules lines 45-46
 ```bash
-mkdir slurm_logs
+nano asm4pg
 ```
+> You can configure this file for multiple servers using the case statement (see the example for genotoul HPC line 33)
+
+### 2. Configure the pipeline for your data
+- Edit the `masterconfig` file in the `.config/` directory with your sample information. 
+```bash
+nano .config/masterconfig.yaml
+```
+- Here you can add the path to your long reads file (fasta.gz, fasta, fastq.gz, fastq, or bam)
+- Update the path to the output directory parent directory
+- We advise keeping the default [options](doc/going_further.md) for the first run.
+
+Example config : 
+```yaml
+samples:       
+  example1:              # <- First indent = Name of the assembly
+    reads: example-1.fasta.gz    # <- Second indent = All options
+    busco_lineage: insecta_odb10
+  example2: 
+    reads: example-2.fasta.gz
+    busco_lineage: eudicots_odb10 # Options only affect current assembly
+```
+### 3. Run the workflow 
+
 - Run the workflow :
 ```bash
-sbatch job.sh dry # Check for warnings
-sbatch job.sh run # Then
+sbatch asm4pg dry # Check for warnings
+sbatch asm4pg run # Then
 ```
-> **Nb 1:** If your account name can't be automatically determined, add it in the `.config/snakemake/profiles/slurm/config.yaml` file.
-#### <ins>B. Locally</ins>
-- Make sure you have Snakemake and Singularity/Apptainer installed
-- Run the workflow :
-```bash
-./local_run dry # Check for warnings
-./local_run job.sh run # Then
-```
+> **Nb :** If your account name can't be automatically determined, add it in the `.config/snakemake/profiles/slurm/config.yaml` file.
 
-## Input Conversion
-Currently, asm4pg requires `fasta.gz` files. To convert your `fastq` or `bam` files to this format, you can use the following tools:
-```bash
-./workflow/scripts/input_conversion.sh -i <input_file> -o <output_file>
+## ⚙️ Other runing options
 ```
-
-## Using the full potential of the workflow :
+asm4pg [dry|run|local-run|dag|rulegraph|unlock]
+    dry - run in dry-run mode
+    run - run the workflow with SLURM
+    local-run - run the workflow localy (on a single node)
+    dag - generate the directed acyclic graph for the workflow
+    rulegraph - generate the rulegraph for the workflow
+    unlock - Unlock the directory if snakemake crashed
+```
+## 🔧 Using the full potential of the workflow :
 Asm4pg has many options. If you wish to modify the default values and know more about the workflow, please refer to the [documentation](doc/documentation.md)
 
-## How to cite asm4pg?
+## 📜 How to cite asm4pg?
 
 Waiting for the publication, you can cite asm4pg as follow: 
 
@@ -80,6 +113,6 @@ Denni S\*, Piat L\*, Bouallegue S, Tran J, Smith K, Wu C, Klopp C, Bui QT, Duvau
 ## License
 The content of this repository is licensed under <A HREF="https://choosealicense.com/licenses/gpl-3.0/">(GNU GPLv3)</A> 
 
-## Contacts
+## ✉️ Contacts
 For any troubleshooting, issue or feature suggestion, please use the issue tab of this repository.
 For any other question or if you want to help in developing asm4pg, please contact Ludovic Duvaux at ludovic.duvaux@inrae.fr

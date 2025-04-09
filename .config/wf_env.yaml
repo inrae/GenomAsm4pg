@@ -1,0 +1,7 @@
+name: wf_env
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - snakemake=8.4.7
+  - snakemake-executor-plugin-slurm

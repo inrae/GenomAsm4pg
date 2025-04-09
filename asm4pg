@@ -1,0 +1,99 @@
+#!/bin/bash
+#SBATCH --cpus-per-task=5
+#SBATCH -o slurm_logs/out_job_%j.out
+#SBATCH -e slurm_logs/err_job_%j.err
+#SBATCH --time=80:00:00
+#SBATCH -J asm4pg
+#SBATCH --mem=10G
+#SBATCH --ntasks=1
+
+# Written by Lucien Piat at INRAe
+# Use this script to run asm4pg on a HPC
+
+# Verify arguments
+if [ $# -ne 1 ] || [ "$1" == "help" ]; then
+    echo "Use this script to run asm4pg"
+    echo ""
+    echo "Usage: asm4pg [dry|run|local-run|dag|rulegraph|unlock]"
+    echo "    dry - run in dry-run mode"
+    echo "    run - run the workflow with SLURM"
+    echo "    local-run - run the workflow localy (on a single node)"
+    echo "    dag - generate the directed acyclic graph for the workflow"
+    echo "    rulegraph - generate the rulegraph for the workflow"
+    echo "    unlock - Unlock the directory if snakemake crashed"
+    exit 1
+fi
+echo "Welcome to Asm4pg! Make sure .config/masterconfig.yaml is correctly edited for this run."
+
+#######################
+# Update line 44 and 45
+#######################
+echo '🔹 Asm4pg -> Activating execution environment'
+case "${SLURM_SUBMIT_HOST:-$(hostname)}" in
+    **geno**)
+        module purge
+        module load containers/Apptainer/1.2.5     
+        source activate wf_env                     
+        ;;
+    **bb8**)
+        conda activate wf_env 
+        ;;
+    *)
+        echo '🔹 Asm4pg -> Unkown host, dont forget to modify line 44 and 45 with the right modules and environement'
+        module purge
+        module load containers/Apptainer/1.2.5 
+        source activate wf_env 
+
+        ;;
+esac
+
+run_snakemake() {
+    local option="$1"
+    echo '🔹 Asm4pg -> Starting Snakemake workflow'
+    case "$option" in
+        dry)
+            snakemake -c $(nproc) --dry-run --rerun-incomplete
+            ;;
+        dag)
+            snakemake -c $(nproc) --dag > dag.dot 
+            if [ $? -eq 0 ]; then
+                echo "✅ Asm4pg -> DAG has been successfully generated as dag.dot"
+            else
+                echo "❌ Asm4pg -> Error: Failed to generate DAG."
+                exit 1
+            fi
+            ;;
+        rulegraph)
+            snakemake -c $(nproc) --rulegraph > rulegraph.dot 
+            if [ $? -eq 0 ]; then
+                echo "✅ Asm4pg -> Rulegraph has been successfully generated as rulegraph.dot"
+            else
+                echo "❌ Asm4pg -> Error: Failed to generate Rulegraph."
+                exit 1
+            fi
+            ;;
+        unlock)
+            snakemake -c $(nproc) --unlock
+            if [ $? -eq 0 ]; then
+                echo "✅ Asm4pg -> Unlocked"
+            else
+                echo "❌ Asm4pg -> Error: Failed to Unlocked"
+                exit 1
+            fi
+            ;;
+        run)
+            snakemake --workflow-profile ./.config/snakemake/profiles/slurm --rerun-incomplete
+            ;;
+        local-run)
+            SNG_BIND=$(pwd)
+            snakemake --use-singularity --singularity-args "-B $SNG_BIND" -j $(nproc)
+            ;;
+        *)
+            echo "Invalid option: $option"
+            echo "Usage: asm4pg [dry|run|local-run|dag|rulegraph|unlock]"
+            exit 1
+            ;;
+    esac
+}
+
+run_snakemake "$1"

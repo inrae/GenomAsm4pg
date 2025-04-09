@@ -1,57 +1,57 @@
 #!/bin/bash
-# Script to convert BAM or FASTQ files to FASTA.gz
+
 # Author: Lucien PIAT
 # Date: January 13, 2025
 
-#!/bin/bash
+set -e  # Exit on error
 
-# Function to display usage
-usage() {
-    echo "Usage: $0 -i <input_file> -o <output_file>"
-    echo "Supported input formats: .bam, .fastq, .fastq.gz"
-    echo "Output will be a compressed FASTA (.fasta.gz) file."
-    exit 1
-}
+INPUT_FILE="$1"
+OUTPUT_FILE="$2"
+THREADS="$3"
 
-# Parse arguments
-while getopts ":i:o:" opt; do
-    case $opt in
-        i) input_file="$OPTARG" ;;
-        o) output_file="$OPTARG" ;;
-        *) usage ;;
-    esac
-done
-
-# Check if input and output files are provided
-if [ -z "$input_file" ] || [ -z "$output_file" ]; then
-    usage
-fi
-
-# Ensure necessary tools are installed
-if ! command -v samtools &> /dev/null || ! command -v seqtk &> /dev/null; then
-    echo "Error: 'samtools' and 'seqtk' are required but not installed/loaded."
+# Check if required arguments are provided
+if [[ -z "$INPUT_FILE" || -z "$OUTPUT_FILE" || -z "$THREADS" ]]; then
+    echo "Usage: $0 <input_file> <output_file> <threads>"
     exit 1
 fi
 
-# Determine the input file type and convert
-case "$input_file" in
-    *.bam)
-        echo "Processing BAM file..."
-        samtools fasta "$input_file" | gzip > "$output_file"
+# Get file extension after the first dot
+EXTENSION="${INPUT_FILE#*.}"  # Remove everything before the first dot
+EXTENSION="${EXTENSION,,}"     # Convert to lowercase
+
+echo "🔹 Asm4pg -> Checking input file type: $INPUT_FILE"
+
+# Handle different file extensions
+case "$EXTENSION" in
+    fa.gz|fasta.gz)
+        echo "🔹 Asm4pg -> No conversion needed for .fasta.gz or .fa.gz, copying"
+        cp "$INPUT_FILE" "$OUTPUT_FILE"
         ;;
-    *.fastq)
-        echo "Processing FASTQ file..."
-        seqtk seq -A "$input_file" | gzip > "$output_file"
+
+    fq.gz|fastq.gz)
+        echo "🔹 Asm4pg -> Converting FastQ to Fasta (gzipped)"
+        zcat "$INPUT_FILE" | awk 'NR%4==1{sub(":.*", "", $0); print ">" substr($0,2)} NR%4==2{print}' | pigz -p "$THREADS" > "$OUTPUT_FILE"
         ;;
-    *.fastq.gz)
-        echo "Processing compressed FASTQ file..."
-        seqtk seq -A <(gzip -dc "$input_file") | gzip > "$output_file"
+
+    fasta|fa)
+        echo "🔹 Asm4pg -> Converting and compressing .fasta or .fa file"
+        awk 'NR%2==1{sub(":.*", "", $0); print ">" substr($0,2)} NR%2==2{print}' "$INPUT_FILE" | pigz -p "$THREADS" > "$OUTPUT_FILE"
         ;;
+
+    fastq|fq)
+        echo "🔹 Asm4pg -> Converting and compressing .fastq or .fq file"
+        awk 'NR%4==1{sub(":.*", "", $0); print ">" substr($0,2)} NR%4==2{print}' "$INPUT_FILE" | pigz -p "$THREADS" > "$OUTPUT_FILE"
+        ;;
+
+    bam)
+        echo "🔹 Asm4pg -> Converting BAM to FASTA"
+        samtools fasta -@ "$THREADS" "$INPUT_FILE" | pigz -p "$THREADS" > "$OUTPUT_FILE"
+        ;;
+
     *)
-        echo "Error: Unsupported file type. Please provide a .bam, .fastq, or .fastq.gz file."
+        echo "❌ Asm4pg -> Unsupported file format: $INPUT_FILE"
         exit 1
         ;;
 esac
 
-# Confirm completion
-echo "Conversion complete. Output written to: $output_file"
+echo "✅ Asm4pg -> Processing completed: $OUTPUT_FILE"
