@@ -14,8 +14,9 @@ This workflow leverages **[Snakemake](https://snakemake.readthedocs.io/en/stable
 - **Trio mode**  
   Uses parental short reads to partition long reads by haplotype before assembly.
 
-![Workflow DAG](doc/dag.svg)  
-
+&nbsp;
+![Workflow flowchart](doc/asm4pg_flowchart_bg.svg)  
+[Animated version](https://asm4pg-animated-7dc863.pages.mia.inra.fr/) 
 ## 📂 Repository Structure  
 
 ```bash
@@ -87,7 +88,7 @@ sbatch asm4pg run # Then
 ```
 > **Nb :** If your account name can't be automatically determined, add it in the `.config/snakemake/profiles/slurm/config.yaml` file.
 
-## Other runing options
+## ⚙️ Other runing options
 ```
 asm4pg [dry|run|local-run|dag|rulegraph|unlock]
     dry - run in dry-run mode
