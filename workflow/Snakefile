@@ -326,13 +326,20 @@ rule kat:
     log:
         os.path.join(output_dir, "{sample}_results", "logs", "kat_hap{n}.log")
     resources:
-        mem_mb=40000,
+        mem_mb=100000,
     container: 
         f"{container_registry}/kat2.4.1"
     shell:
         """
-        kat comp -o {params.out_dir} -t {threads} -m {params.km_size} --output_type png -v {input.jellyfish} {input.hap} > {log} 2>&1 
+        echo "🔹 Asm4pg -> starting kat comp" > {log} 2>&1
+        kat comp -o {params.out_dir} -t {threads} -m {params.km_size} --output_type png -v {input.jellyfish} {input.hap} >> {log} 2>&1
+        echo "🔹 Asm4pg -> starting kat plot" > {log} 2>&1
         kat plot spectra-cn -x 200 -o {params.out_dir}.katplot.png {params.out_dir}-main.mx >> {log} 2>&1 
+        if [ ! -s {output} ]; then
+            echo "⚠️  Asm4pg -> plot missing, check logs" >> {log}
+        else
+            echo "✅ Asm4pg -> plot created" >> {log}
+        fi
         """
 
 # Creates a k-mer database from the input reads 
