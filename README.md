@@ -16,7 +16,6 @@ This workflow leverages **[Snakemake](https://snakemake.readthedocs.io/en/stable
 
 &nbsp;
 ![Workflow flowchart](doc/asm4pg_flowchart_bg.svg)  
-[Animated version](https://asm4pg-animated-7dc863.pages.mia.inra.fr/) 
 ## 📂 Repository Structure  
 
 ```bash
