@@ -91,6 +91,6 @@ if __name__ == "__main__":
         plt.title("No cutoffs found")
         plt.axis('off')
         plt.savefig(opts.out_fn, dpi=300)
-        print("✅🔹 Asm4pg -> Saved empty graph")
+        print("✅ Asm4pg -> Saved empty graph")
 
 
