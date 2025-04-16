@@ -26,9 +26,15 @@ def get_mode(wildcards) -> str:
 # Fetch r1/r2 fasta file for hi-c
 def get_run(wildcards, run: int) -> str:
     try:
+        # Try to get the value with lowercase (r1 or r2)
         run = config["samples"][wildcards.sample][f"r{run}"]
     except KeyError:
-        return 'None'
+        try:
+            # If the lowercase key doesn't work, try uppercase (R1 or R2)
+            run = config["samples"][wildcards.sample][f"R{run}"]
+        except KeyError:
+            # If both fail, return 'None'
+            return 'None'
     return run
 
 # Fetch the purge mode, return a boolean from config file
