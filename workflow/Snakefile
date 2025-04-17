@@ -347,10 +347,13 @@ rule meryl:
     input:
         rules.input_conversion.output
     output:
-        db = temp(directory(os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "meryl", "{sample}_reads-db.meryl"))),
-        output_dir = temp(directory(os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "meryl")))
+        db = directory(os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "merqury", "{sample}_reads-db.meryl"))
     params:
-        km_size = get_kmer_size
+        km_size = get_kmer_size,
+        mode = get_mode,
+        r1 = lambda wildcards: get_run(wildcards, run=1),
+        r2 = lambda wildcards: get_run(wildcards, run=2),
+        out_dir = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "merqury")
     threads: 20
     benchmark:
         os.path.join(output_dir, "{sample}_results", "benchmark", "meryl_benchmark.txt")
@@ -361,20 +364,32 @@ rule meryl:
     container:
         f"{container_registry}/merqury1.3"
     shell:
-        "meryl k={params.km_size} threads={threads} count {input} output {output.db} > {log} 2>&1"
+        """
+        echo "🔹 Asm4pg -> starting meryl" > {log} 2>&1
+        if [[ "{params.mode}" == "trio" ]]; then
+            echo "🔹 Asm4pg -> trio mode detected" >> {log} 2>&1
+            echo "🔹 Asm4pg -> counting p1" >> {log} 2>&1
+            meryl k={params.km_size} threads={threads} count {params.r1} output {sample}_P1-db.meryl >> {log} 2>&1
+            echo "🔹 Asm4pg -> counting p2" >> {log} 2>&1
+            meryl k={params.km_size} threads={threads} count {params.r1} output {sample}_P2-db.meryl >> {log} 2>&1
+        fi
+        echo "🔹 Asm4pg -> counting input reads" >> {log} 2>&1
+        meryl k={params.km_size} threads={threads} count {input} output {output.db} >> {log} 2>&1
+        """
 
 # Calculates metrics like QV and completeness, providing a quantitative assessment of the genome assembly.
 rule merqury:
     input:
         km_database = rules.meryl.output,
-        hap1 = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap1","{sample}_final_hap1.fasta.gz"),
-        hap2 = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap2","{sample}_final_hap2.fasta.gz"),
+        hap1 = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap1","{sample}_final_hap1.fasta"),
+        hap2 = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap2","{sample}_final_hap2.fasta"),
     output:
         qv = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "merqury", "{sample}_merqury.qv"),
         stats = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "merqury", "{sample}_merqury.completeness.stats")
     params:
         prefix = "{sample}_merqury",
-        out_dir = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "merqury")
+        out_dir = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "merqury"),
+        mode = get_mode
     threads: 20
     benchmark:
         os.path.join(output_dir, "{sample}_results", "benchmark", "merqury_benchmark.txt")
@@ -386,16 +401,25 @@ rule merqury:
         f"{container_registry}/merqury1.3"
     shell:
         """
-        # Create temporary copies of haplotypes
-        cp {input.hap1} {params.out_dir}/tmp_hap1.fasta.gz > {log} 2>&1 
-        cp {input.hap2} {params.out_dir}/tmp_hap2.fasta.gz >> {log} 2>&1 
-
-        # Run Merqury
+        echo "🔹 Asm4pg -> Starting merqury" > {log} 2>&1
+        cp {input.hap1} {params.out_dir}/{sample}_hap1.fasta > {log} 2>&1 
+        cp {input.hap2} {params.out_dir}/{sample}_hap2.fasta >> {log} 2>&1 
         cd {params.out_dir} >> {log} 2>&1 
-        export MERQURY=/usr/local/share/merqury 
-        merqury.sh {input.km_database} {params.out_dir}/tmp_hap1.fasta.gz {params.out_dir}/tmp_hap2.fasta.gz {params.prefix} >> {log} 2>&1 
-        rm tmp_hap1.fasta.gz >> {log} 2>&1 
-        rm tmp_hap2.fasta.gz >> {log} 2>&1 
+        export MERQURY=/usr/local/share/merqury
+
+        if [[ "{params.mode}" == "trio" ]]; then
+            echo "🔹 Asm4pg -> trio mode detected" >> {log} 2>&1
+            echo "🔹 Asm4pg -> creating hapmer" >> {log} 2>&1
+            $MERQURY/trio/hapmers.sh {sample}_P1-db.meryl {sample}_P2-db.meryl {input.km_database} >> {log} 2>&1
+            echo "🔹 Asm4pg -> runing merqury" >> {log} 2>&1
+            merqury.sh {input.km_database} {sample}_P1-db.hapmer.meryl {sample}_P2-db.hapmer.meryl {sample}_hap1.fasta {sample}_hap2.fasta {params.prefix} >> {log} 2>&1 
+        else
+            echo "🔹 Asm4pg -> default mode detected" >> {log} 2>&1
+            merqury.sh {input.km_database} {sample}_hap1.fasta {sample}_hap2.fasta {params.prefix} >> {log} 2>&1 
+        fi
+        echo "🔹 Asm4pg -> cleaning up" >> {log} 2>&1
+        rm {sample}_hap1.fasta.gz >> {log} 2>&1 
+        rm {sample}_hap2.fasta.gz >> {log} 2>&1 
         """
 
 # Identifies LTR retrotransposons
