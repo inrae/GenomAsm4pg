@@ -517,7 +517,6 @@ rule quast_call:
         quast_bool=get_quast_bool,
         reference_genome=get_reference,
         purge_bool=get_purge_bool,
-        results_dir = output_dir,
         quast_output = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "quast")
     container:
         f"{container_registry}/staphb/quast:5.2.0"
@@ -531,7 +530,7 @@ rule quast_call:
     shell:
         """
         if {params.quast_bool}; then
-            ./workflow/scripts/quast_call.sh {params.reference_genome} {params.purge_bool} {input.raw_hap1} {input.raw_hap2} {input.final_hap1} {input.final_hap2} {params.quast_output} {params.results_dir} > {log} 2>&1 
+            ./workflow/scripts/quast_call.sh {params.reference_genome} {params.purge_bool} {input.raw_hap1} {input.raw_hap2} {input.final_hap1} {input.final_hap2} {params.quast_output} > {log} 2>&1 
         else
             mkdir -p {params.quast_output}
             echo "Quast turned off" > {params.quast_output}/quast.txt 2> {log} 2>&1 
