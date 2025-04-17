@@ -288,6 +288,11 @@ rule jellyfish:
         jellyfish count -m {params.km_size} -s 100M -t {threads} -o {output.jf} -C <(zcat {input.reads}) >> {log} 2>&1
         echo "🔹 Asm4pg -> starting to compute jellyfish histogram" >> {log} 2>&1
         jellyfish histo -h 1000000 -t {threads} {output.jf} > {output.histo} 2>> {log}
+        if [ ! -s {output.histo} ]; then
+            echo "⚠️  Asm4pg -> jellyfish histo, check logs" >> {log}
+        else
+            echo "✅ Asm4pg -> jellyfish histo created" >> {log}
+        fi
         """
 
 # Analyze the k-mer histogram and estimate genome characteristics, including genome size, heterozygosity, and error rates. 
@@ -369,9 +374,9 @@ rule meryl:
         if [[ "{params.mode}" == "trio" ]]; then
             echo "🔹 Asm4pg -> trio mode detected" >> {log} 2>&1
             echo "🔹 Asm4pg -> counting p1" >> {log} 2>&1
-            meryl k={params.km_size} threads={threads} count {params.r1} output {sample}_P1-db.meryl >> {log} 2>&1
+            meryl k={params.km_size} threads={threads} count {params.r1} output {wildcards.sample}_P1-db.meryl >> {log} 2>&1
             echo "🔹 Asm4pg -> counting p2" >> {log} 2>&1
-            meryl k={params.km_size} threads={threads} count {params.r1} output {sample}_P2-db.meryl >> {log} 2>&1
+            meryl k={params.km_size} threads={threads} count {params.r1} output {wildcards.sample}_P2-db.meryl >> {log} 2>&1
         fi
         echo "🔹 Asm4pg -> counting input reads" >> {log} 2>&1
         meryl k={params.km_size} threads={threads} count {input} output {output.db} >> {log} 2>&1
@@ -402,24 +407,24 @@ rule merqury:
     shell:
         """
         echo "🔹 Asm4pg -> Starting merqury" > {log} 2>&1
-        cp {input.hap1} {params.out_dir}/{sample}_hap1.fasta > {log} 2>&1 
-        cp {input.hap2} {params.out_dir}/{sample}_hap2.fasta >> {log} 2>&1 
+        cp {input.hap1} {params.out_dir}/{wildcards.sample}_hap1.fasta > {log} 2>&1 
+        cp {input.hap2} {params.out_dir}/{wildcards.sample}_hap2.fasta >> {log} 2>&1 
         cd {params.out_dir} >> {log} 2>&1 
         export MERQURY=/usr/local/share/merqury
 
         if [[ "{params.mode}" == "trio" ]]; then
             echo "🔹 Asm4pg -> trio mode detected" >> {log} 2>&1
             echo "🔹 Asm4pg -> creating hapmer" >> {log} 2>&1
-            $MERQURY/trio/hapmers.sh {sample}_P1-db.meryl {sample}_P2-db.meryl {input.km_database} >> {log} 2>&1
+            $MERQURY/trio/hapmers.sh {wildcards.sample}_P1-db.meryl {wildcards.sample}_P2-db.meryl {input.km_database} >> {log} 2>&1
             echo "🔹 Asm4pg -> runing merqury" >> {log} 2>&1
-            merqury.sh {input.km_database} {sample}_P1-db.hapmer.meryl {sample}_P2-db.hapmer.meryl {sample}_hap1.fasta {sample}_hap2.fasta {params.prefix} >> {log} 2>&1 
+            merqury.sh {input.km_database} {wildcards.sample}_P1-db.hapmer.meryl {wildcards.sample}_P2-db.hapmer.meryl {wildcards.sample}_hap1.fasta {wildcards.sample}_hap2.fasta {params.prefix} >> {log} 2>&1 
         else
             echo "🔹 Asm4pg -> default mode detected" >> {log} 2>&1
-            merqury.sh {input.km_database} {sample}_hap1.fasta {sample}_hap2.fasta {params.prefix} >> {log} 2>&1 
+            merqury.sh {input.km_database} {wildcards.sample}_hap1.fasta {wildcards.sample}_hap2.fasta {params.prefix} >> {log} 2>&1 
         fi
         echo "🔹 Asm4pg -> cleaning up" >> {log} 2>&1
-        rm {sample}_hap1.fasta.gz >> {log} 2>&1 
-        rm {sample}_hap2.fasta.gz >> {log} 2>&1 
+        rm {wildcards.sample}_hap1.fasta.gz >> {log} 2>&1 
+        rm {wildcards.sample}_hap2.fasta.gz >> {log} 2>&1 
         """
 
 # Identifies LTR retrotransposons
@@ -437,7 +442,15 @@ rule LTR_finder:
     container:
         f"{container_registry}/ltr_finder:latest"
     shell:
-        "ltr_finder -C {input} > {output} 2> {log} 2>&1 "
+        """
+        echo "🔹 Asm4pg -> Starting LTR finder" > {log} 2>&1
+        ltr_finder -C {input} > {output} 2>> {log} 2>&1
+        if [ ! -s {output} ]; then
+            echo "⚠️  Asm4pg -> scn missing, check logs" >> {log}
+        else
+            echo "✅ Asm4pg -> snc created" >> {log}
+        fi
+        """
 
 # Calculates the LTR Assembly Index (LAI), a metric for assembly quality based on LTR retrotransposons
 rule LTR_retriever:
