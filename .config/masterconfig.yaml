@@ -22,7 +22,7 @@ output_dir: "results/"
 
 # List of parameters :
 #   fasta_gz: Your reads (mandatory)
-#   mode: [default, hi-c, trio] (default: default)
+#   mode: [default, hi-c, trio, ont] (default: default, use fasq or bam for ont)
 #   r1: The run1/parent1 read file
 #   r2: The run2/parent2 read file
 #   run_purge_dups: [True, False] (default: False)
