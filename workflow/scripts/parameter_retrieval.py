@@ -18,6 +18,8 @@ def get_purge_force(wildcards) -> str:
 def get_mode(wildcards) -> str:
     try:
         mode = config["samples"][wildcards.sample]["mode"]
+        if mode == "Trio":
+            mode = "trio"
     except KeyError:
         print(f'Asm4pg -> "mode" unspecified for {wildcards.sample}, using default assembly mode for hifiasm', file=sys.stderr)
         return 'default'
