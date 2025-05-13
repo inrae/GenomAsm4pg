@@ -15,12 +15,14 @@ RUN_2=$6
 PREFIX=$7
 OUT1=$8
 OUT2=$9
+INPUT_FQ=${10}
 
 echo "Asm4pg -> Given hifiasm parameters:"
 echo "  MODE: $MODE"
 echo "  PURGE_FORCE: $PURGE_FORCE"
 echo "  THREADS: $THREADS"
-echo "  INPUT: $INPUT"
+echo "  INPUT FASTA: $INPUT"
+echo "  INPUT FASTQ: $INPUT_FQ"
 echo "  RUN_1: $RUN_1"
 echo "  RUN_2: $RUN_2"
 echo "  PREFIX: $PREFIX"
@@ -79,7 +81,13 @@ run_hifiasm() {
             mv "${PREFIX}.bp.hap2.p_ctg.gfa" "$OUT2"
             cleanup_files
             ;;
-        
+        ont)
+            echo "🔹 Asm4pg -> ONT mode, using a fastq file"
+            hifiasm -l"$PURGE_FORCE" -o "$PREFIX" -t "$THREADS" --ont "$INPUT_FQ"
+            mv "${PREFIX}.bp.hap1.p_ctg.gfa" "$OUT1"
+            mv "${PREFIX}.bp.hap2.p_ctg.gfa" "$OUT2"
+            cleanup_files
+            ;;
         hi-c)
             [[ "$RUN_1" == *.fastq.gz && "$RUN_2" == *.fastq.gz ]] && run_fastp
             hifiasm -l"$PURGE_FORCE" -o "$PREFIX" -t "$THREADS" --h1 "$RUN_1" --h2 "$RUN_2" "$INPUT"
