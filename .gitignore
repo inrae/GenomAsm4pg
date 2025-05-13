@@ -27,3 +27,4 @@ slurm_logs
 .quast
 !**hifiasm_dockerfile
 !asm4pg
+.vscode
