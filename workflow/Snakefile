@@ -38,7 +38,10 @@ rule input_conversion:
     input: 
         lambda wildcards: config["samples"][wildcards.sample]["reads"]
     output:
-        os.path.join(output_dir, "{sample}_results", "00_converted_input","reads_{sample}_fasta.gz")
+        fastagz = os.path.join(output_dir, "{sample}_results", "00_converted_input","reads_{sample}.fasta.gz")
+    params:
+        mode = get_mode,
+        fastqgz = os.path.join(output_dir, "{sample}_results", "00_converted_input","reads_{sample}.fastq.gz")
     log:
         os.path.join(output_dir, "{sample}_results", "logs", "input_conversion.log")
     benchmark:
@@ -50,13 +53,13 @@ rule input_conversion:
         f"{container_registry}/samtools-pigz:latest"
     shell:
         """
-        ./workflow/scripts/input_conversion.sh {input} {output} {threads} > {log} 2>&1
+        ./workflow/scripts/input_conversion.sh {input} {output.fastagz} {threads} {params.mode} {params.fastqgz} > {log} 2>&1
         """
 
 # Genome assembly using hifiasm
 rule hifiasm:
     input:
-        reads = rules.input_conversion.output
+        fasta = rules.input_conversion.output.fastagz
     output:
         hap1 = os.path.join(output_dir, "{sample}_results", "01_raw_assembly","raw_{sample}_hap1.gfa"),
         hap2 = os.path.join(output_dir, "{sample}_results", "01_raw_assembly","raw_{sample}_hap2.gfa")
@@ -67,7 +70,8 @@ rule hifiasm:
         run_2 = lambda wildcards: get_run(wildcards, run=2),
         purge_force = get_purge_force,
         raw_out_hap1 = os.path.join(output_dir, "{sample}_results", "01_raw_assembly","{sample}.bp.hap1.p_ctg.gfa"),
-        raw_out_hap2 = os.path.join(output_dir, "{sample}_results", "01_raw_assembly","{sample}.bp.hap2.p_ctg.gfa")
+        raw_out_hap2 = os.path.join(output_dir, "{sample}_results", "01_raw_assembly","{sample}.bp.hap2.p_ctg.gfa"),
+        fastqgz = os.path.join(output_dir, "{sample}_results", "00_converted_input","reads_{sample}.fastq.gz")
     benchmark:
         os.path.join(output_dir, "{sample}_results", "benchmark", "hifiasm_benchmark.txt")
     log:
@@ -84,12 +88,13 @@ rule hifiasm:
             {params.mode} \
             {params.purge_force} \
             {threads} \
-            {input.reads} \
+            {input.fasta} \
             {params.run_1} \
             {params.run_2} \
             {params.prefix} \
             {output.hap1} \
-            {output.hap2} > {log} 2>&1
+            {output.hap2} \
+            {params.fastqgz} > {log} 2>&1
         """
 
 # Convert the GFA files of hifiasm to FASTA.gz
@@ -119,7 +124,7 @@ rule pigz_gfa_to_fasta:
 rule haplotigs_handling:
     input:
         hap_fasta = os.path.join(output_dir, "{sample}_results", "01_raw_assembly","{sample}_hap{n}.fasta.gz"),
-        reads = rules.input_conversion.output
+        reads = rules.input_conversion.output.fastagz
     output:
         hap = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap{n}","{sample}_final_hap{n}.fasta.gz"),
         cutoffs = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap{n}","cutoffs")
@@ -177,7 +182,7 @@ rule cutoffs_graph:
 # Produce basic stats for the reads files
 rule genometools_on_raw_data:
     input:
-        rules.input_conversion.output
+        rules.input_conversion.output.fastagz
     output:
         os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "{sample}_genometools_stats.txt")
     priority: 1
@@ -267,7 +272,7 @@ rule find_telomeres:
 # Count k-mers in the input reads and generate a histogram of k-mer frequencies.
 rule jellyfish:
     input:
-        reads = rules.input_conversion.output
+        reads = rules.input_conversion.output.fastagz
     output:
         jf = temp(os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "jellyfish", "{sample}.jf")),
         histo = os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "jellyfish", "{sample}.histo")
@@ -350,7 +355,7 @@ rule kat:
 # Creates a k-mer database from the input reads 
 rule meryl:
     input:
-        rules.input_conversion.output
+        rules.input_conversion.output.fastagz
     output:
         db = directory(os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "merqury", "{sample}_reads-db.meryl"))
     params:
@@ -416,22 +421,30 @@ rule merqury:
             $MERQURY/trio/hapmers.sh {wildcards.sample}_P1-db.meryl {wildcards.sample}_P2-db.meryl {input.km_database} >> {log} 2>&1
             echo "🔹 Asm4pg -> running merqury" >> {log} 2>&1
             merqury.sh {input.km_database} {wildcards.sample}_P1-db.hapmer.meryl {wildcards.sample}_P2-db.hapmer.meryl {wildcards.sample}_hap1.fasta {wildcards.sample}_hap2.fasta {params.prefix} >> {log} 2>&1
-            echo "Trio mode, blocks and switch error rate : " > {output.stats}
-            cat *.stats >> {output.stats}
-            echo "Hap 1 :" > {output.qv}
-            echo "Hap 2 :" >> {output.qv}
-            cat *hap1*.qv | head -n 1 >> {output.qv}
-            cat *hap2*.qv | head -n 1 >> {output.qv}
-            # Safer removal of PNG files
-            find . -maxdepth 1 -type f -iname '*hap1*.png' -exec rm -f {} + >> {log} 2>&1
-            find . -maxdepth 1 -type f -iname '*hap2*.png' -exec rm -f {} + >> {log} 2>&1
+            rm *.fai >> {log} 2>&1
+            rm *.txt >> {log} 2>&1
+            rm *.gaps >> {log} 2>&1
+            rm *.count* >> {log} 2>&1
+            rm *block.sizes >> {log} 2>&1
+            rm *contig.sizes* >> {log} 2>&1
+            rm *block.stats* >> {log} 2>&1
+            rm *hap1*.png >> {log} 2>&1
+            rm *hap2*.png >> {log} 2>&1
         else
             echo "🔹 Asm4pg -> default mode detected" >> {log} 2>&1
             merqury.sh {input.km_database} {wildcards.sample}_hap1.fasta {wildcards.sample}_hap2.fasta {params.prefix} >> {log} 2>&1
+            rm *hap*.png >> {log} 2>&1
         fi
         echo "🔹 Asm4pg -> cleaning up" >> {log} 2>&1
-        find . -maxdepth 1 -type f ! \( -iname '*.qv' -o -iname '*.stats' -o -iname '*.png' -o -iname '*.meryl' \) -print -delete >> {log} 2>&1
+        rm *.bed >> {log} 2>&1
+        rm *.wig >> {log} 2>&1
+        rm *.fasta >> {log} 2>&1
+        rm *.hist >> {log} 2>&1
+        rm *.filt >> {log} 2>&1
+        rm *.ploidy >> {log} 2>&1
+        rm *hap*.qv >> {log} 2>&1
         rm -rf logs >> {log} 2>&1
+        echo "🔹 Asm4pg -> Done!" >> {log} 2>&1
         """
 
 # Identifies LTR retrotransposons
