@@ -8,11 +8,14 @@ This workflow leverages **[Snakemake](https://snakemake.readthedocs.io/en/stable
 - **HiFi mode (default)**  
   Performs primary genome assembly using high-fidelity long reads.
 
-- **Hi-C mode**  
+- **hi-c mode**  
   Uses Hi-C data to scaffold the assembled contigs into chromosome-scale scaffolds.
 
-- **Trio mode**  
+- **trio mode**  
   Uses parental short reads to partition long reads by haplotype before assembly.
+
+- **ont mode**  
+  Uses ultra long reads (in fastq or bam format, no fasta) to perform the assembly 
 
 &nbsp;
 ![Workflow flowchart](doc/asm4pg_flowchart_bg.svg)  
@@ -91,16 +94,50 @@ sbatch asm4pg run # Then
 > **Nb :** Use the command `squeue --format="%.10i %.9P %.6j %.10k %.8u %.2t %.10M %.6D %.20R" -A $user` to see job **names**
 ## ⚙️ Other runing options
 ```
-asm4pg [dry|run|local-run|dag|rulegraph|unlock]
+asm4pg [dry|run|local-run|dag|rulegraph|unlock|touch]
     dry - run in dry-run mode
     run - run the workflow with SLURM
     local-run - run the workflow localy (on a single node)
     dag - generate the directed acyclic graph for the workflow
     rulegraph - generate the rulegraph for the workflow
     unlock - Unlock the directory if snakemake crashed
+    touch - Tell snakemake that all files are up to date (use with caution)
 ```
 ## 🔧 Using the full potential of the workflow :
 Asm4pg has many options. If you wish to modify the default values and know more about the workflow, please refer to the [documentation](doc/documentation.md)
+
+## Output of the workflow :
+
+```bash
+└── sample
+    └── results
+        ├── 00_converted_input
+        ├── 01_raw_assembly
+        │   ├── sample.fasta.gz
+        │   └── sample.gfa
+        ├── 02_final_assembly
+        │   ├── hap1/hap2 
+        │   │   ├── sample.fasta.gz # <- The final assembly
+        │   │   └── ragtag_scafold
+        ├── 03_raw_data_qc
+        │   ├── genometools
+        │   ├── genomescope
+        │   └── jellyfish
+        ├── 04_assembly_qc
+        │   ├── hap1/hap2
+        │   │   ├── genometools
+        │   │   ├── busco
+        │   │   ├── katplot
+        │   │   ├── LTR/LAI
+        │   │   └── telomeres
+        │   ├── merqury
+        │   │   ├── ...
+        │   │   └── meryl_database.meryl
+        │   └── quast
+        ├── final_report.html # <- The final report
+        ├── benchmark
+        └── logs
+```
 
 ## 📜 How to cite asm4pg?
 
