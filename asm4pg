@@ -58,6 +58,9 @@ run_snakemake() {
         dry)
             snakemake -c $(nproc) --dry-run --rerun-incomplete
             ;;
+        touch)
+            snakemake -c $(nproc) --touch
+            ;;
         dag)
             snakemake -c $(nproc) --dag > dag.dot 
             if [ $? -eq 0 ]; then
@@ -86,11 +89,11 @@ run_snakemake() {
             fi
             ;;
         run)
-            snakemake --workflow-profile ./.config/snakemake/profiles/slurm --rerun-incomplete
+            snakemake --workflow-profile ./.config/snakemake/profiles/slurm --rerun-incomplete 
             ;;
         local-run)
             SNG_BIND=$(pwd)
-            snakemake --use-singularity --singularity-args "-B $SNG_BIND" -j $(nproc)
+            snakemake --use-singularity --singularity-args "-B $SNG_BIND" -j $(nproc) --rerun-incomplete 
             ;;
         *)
             echo "Invalid option: $option"
