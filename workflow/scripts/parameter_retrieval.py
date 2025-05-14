@@ -96,6 +96,8 @@ def get_ragtag_bool(wildcards) -> bool:
 def get_quast_bool(wildcards) -> bool:
     try:
         quast_bool = config["samples"][wildcards.sample]["run_quast"]
+        if quast_bool=="true":
+            quast_bool = True
     except KeyError:
         print(f'Asm4pg -> "run_quast" unspecified for {wildcards.sample}, using "False" by default', file=sys.stderr)
         return False

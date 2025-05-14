@@ -538,7 +538,7 @@ rule scafolding:
         """
 
 # Rule to create a quast report assessing the quality of all assemblies
-rule quast_call:
+rule quast:
     input:
         raw_hap1 = os.path.join(output_dir, "{sample}_results", "01_raw_assembly", "{sample}_hap1.fasta.gz"),
         raw_hap2 = os.path.join(output_dir, "{sample}_results", "01_raw_assembly", "{sample}_hap2.fasta.gz"),
@@ -562,7 +562,7 @@ rule quast_call:
         os.path.join(output_dir, "{sample}_results", "logs", "quast_call.log")
     shell:
         """
-        if {params.quast_bool}; then
+        if [[ "{params.quast_bool}" == "True" ]]; then
             ./workflow/scripts/quast_call.sh {params.reference_genome} {params.purge_bool} {input.raw_hap1} {input.raw_hap2} {input.final_hap1} {input.final_hap2} {params.quast_output} > {log} 2>&1 
         else
             mkdir -p {params.quast_output}
