@@ -24,7 +24,7 @@ if [ $# -ne 1 ] || [ "$1" == "help" ]; then
     exit 1
 fi
 echo "Welcome to Asm4pg! Make sure .config/masterconfig.yaml is correctly edited for this run."
-
+MEM_MB=$(free -m | awk '/^Mem:/{print $2}')
 #######################
 # Update line 44 and 45
 #######################
@@ -42,6 +42,7 @@ case "${SLURM_SUBMIT_HOST:-$(hostname)}" in
         module load miniconda/3
         eval "$(conda shell.bash hook)"
         conda activate wf_env
+        MEM_MB=${SLURM_MEM_PER_NODE:-204800}
         ;;
     *)
         echo '🔹 Asm4pg -> Unkown host, dont forget to modify line 44 and 45 with the right modules and environement'
@@ -93,7 +94,8 @@ run_snakemake() {
             ;;
         local-run)
             SNG_BIND=$(pwd)
-            snakemake --use-singularity --singularity-args "-B $SNG_BIND" -j $(nproc) --rerun-incomplete 
+            echo "🔹 Asm4pg -> Using $MEM_MB Mb of memory"
+            snakemake --use-singularity --singularity-args "-B $SNG_BIND" -j $(nproc) --rerun-incomplete --resources mem_mb=$MEM_MB
             ;;
         *)
             echo "Invalid option: $option"
