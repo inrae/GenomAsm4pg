@@ -267,7 +267,15 @@ rule find_telomeres:
     log:
         os.path.join(output_dir, "{sample}_results", "logs", "find_telomeres_hap{n}.log")
     shell:
-        "python3 workflow/scripts/FindTelomeres.py {input} > {output} 2> {log} 2>&1 "
+        """
+        echo "🔹 Asm4pg -> starting to counts telomeres" > {log} 2>&1
+        python3 workflow/scripts/FindTelomeres.py {input} > {output} 2>> {log} 2>&1
+        if [ ! -s {output} ]; then
+            echo "⚠️  Asm4pg -> file missing, check logs" >> {log}
+        else
+            echo "✅ Asm4pg -> done!" >> {log}
+        fi
+        """
 
 # Count k-mers in the input reads and generate a histogram of k-mer frequencies.
 rule jellyfish:
@@ -294,7 +302,7 @@ rule jellyfish:
         echo "🔹 Asm4pg -> starting to compute jellyfish histogram" >> {log} 2>&1
         jellyfish histo -h 1000000 -t {threads} {output.jf} > {output.histo} 2>> {log}
         if [ ! -s {output.histo} ]; then
-            echo "⚠️  Asm4pg -> jellyfish histo, check logs" >> {log}
+            echo "⚠️  Asm4pg -> jellyfish missing histo, check logs" >> {log}
         else
             echo "✅ Asm4pg -> jellyfish histo created" >> {log}
         fi
@@ -562,12 +570,15 @@ rule quast:
         os.path.join(output_dir, "{sample}_results", "logs", "quast_call.log")
     shell:
         """
+        echo "🔹 Asm4pg -> Checking QUAST status" > {log} 2>&1 
         if [[ "{params.quast_bool}" == "True" ]]; then
-            ./workflow/scripts/quast_call.sh {params.reference_genome} {params.purge_bool} {input.raw_hap1} {input.raw_hap2} {input.final_hap1} {input.final_hap2} {params.quast_output} > {log} 2>&1 
+            echo "🔹 Asm4pg -> Starting QUAST" > {log} 2>&1 
+            ./workflow/scripts/quast_call.sh {params.reference_genome} {params.purge_bool} {input.raw_hap1} {input.raw_hap2} {input.final_hap1} {input.final_hap2} {params.quast_output} >> {log} 2>&1 
         else
             mkdir -p {params.quast_output}
-            echo "Quast turned off" > {params.quast_output}/quast.txt 2> {log} 2>&1 
+            echo "🔹 Asm4pg -> Quast turned off" > {params.quast_output}/quast.txt 2>> {log} 2>&1 
         fi
+        echo "✅ Asm4pg -> done!" >> {log} 2>&1
         """
 
 # Rule to generate the html report
