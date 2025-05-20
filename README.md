@@ -94,7 +94,7 @@ sbatch asm4pg run # Then
 > **Nb :** Use the command `squeue --format="%.10i %.9P %.6j %.10k %.8u %.2t %.10M %.6D %.20R" -A $user` to see job **names**
 ## ⚙️ Other runing options
 ```
-asm4pg [dry|run|local-run|dag|rulegraph|unlock|touch]
+asm4pg [dry|run|local-run|dag|rulegraph|unlock|touch] [additional snakemake args]
     dry - run in dry-run mode
     run - run the workflow with SLURM
     local-run - run the workflow localy (on a single node)
