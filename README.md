@@ -102,6 +102,7 @@ asm4pg [dry|run|local-run|dag|rulegraph|unlock|touch] [additional snakemake args
     rulegraph - generate the rulegraph for the workflow
     unlock - Unlock the directory if snakemake crashed
     touch - Tell snakemake that all files are up to date (use with caution)
+    [additional snakemake args] - for any snakemake arg, like --until hifiasm
 ```
 ## 🔧 Using the full potential of the workflow :
 Asm4pg has many options. If you wish to modify the default values and know more about the workflow, please refer to the [documentation](doc/documentation.md)
