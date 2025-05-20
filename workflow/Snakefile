@@ -29,10 +29,10 @@ rule all:
             os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap{n}","cutoffs_graph_hap{n}.png"),
             sample=config["samples"].keys(), n=[1, 2]
         ),
-        directory(expand(
+        expand(
             os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "quast"),
             sample=config["samples"].keys()
-        ))
+        )
 
 rule input_conversion:
     input: 
