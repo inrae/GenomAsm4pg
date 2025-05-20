@@ -17,6 +17,8 @@ OUT1=$8
 OUT2=$9
 INPUT_FQ=${10}
 
+echo "🔹 Asm4pg -> Starting assembly: $date"
+
 echo "Asm4pg -> Given hifiasm parameters:"
 echo "  MODE: $MODE"
 echo "  PURGE_FORCE: $PURGE_FORCE"
@@ -26,6 +28,9 @@ echo "  INPUT FASTQ: $INPUT_FQ"
 echo "  RUN_1: $RUN_1"
 echo "  RUN_2: $RUN_2"
 echo "  PREFIX: $PREFIX"
+
+available_mem=$(free -h | awk '/Mem:/ {print $7}')
+echo "🔹 Asm4pg -> Available memory: $available_mem"
 
 cleanup_files() {
     echo "🔹 Asm4pg -> Cleaning up intermediate files..."
@@ -126,3 +131,4 @@ run_hifiasm() {
 # Main Execution
 run_hifiasm
 echo "✅ Asm4pg -> Hifiasm assembly Done."
+echo "$date"
