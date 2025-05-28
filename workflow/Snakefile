@@ -225,7 +225,7 @@ rule busco_hap1:
     benchmark:
         os.path.join(output_dir, "{sample}_results", "benchmark", "busco_hap1_benchmark.txt")
     resources:
-        mem_mb=100000
+        mem_mb=250000
     log:
         os.path.join(output_dir, "{sample}_results", "logs", "busco_hap1.log")
     container:
@@ -503,14 +503,23 @@ rule LTR_retriever:
         f"{container_registry}/ltr_retriever:3.0.1"
     shell:
         '''
-        export PATH="/opt/LTR_retriever:$PATH" 
-        cp {input.hap} {params.out_dir}/tmp_hap.fasta > {log} 2>&1 
-        cd {params.out_dir} >> {log} 2>&1 
-        LTR_retriever -threads {threads} -genome tmp_hap.fasta -infinder {params.scn} >> {log} 2>&1 
-        mv tmp_hap.fasta.out.LAI {params.prefix}.out.LAI >> {log} 2>&1 
-        mv tmp_hap.fasta.tbl recap_{params.prefix}.tbl >> {log} 2>&1 
-        echo "🔹 Asm4pg -> Cleaning LTR_retriever tmp output files" >> {log} 2>&1 
-        rm tmp* >> {log} 2>&1 
+        export PATH="/opt/LTR_retriever:$PATH"
+        cp {input.hap} {params.out_dir}/tmp_hap.fasta > {log} 2>&1
+        cd {params.out_dir} >> {log} 2>&1
+        LTR_retriever -threads {threads} -genome tmp_hap.fasta -infinder {params.scn} >> {log} 2>&1
+        
+        # Check if LAI file was created, if not create a placeholder
+        if [ -f tmp_hap.fasta.out.LAI ]; then
+            mv tmp_hap.fasta.out.LAI {params.prefix}.out.LAI >> {log} 2>&1
+        else
+            echo "Impossible to calculate LAI score for this assembly" > {params.prefix}.out.LAI
+            echo "🔹 Asm4pg -> LAI file not generated, created placeholder" >> {log} 2>&1
+        fi
+        
+        mv tmp_hap.fasta.tbl recap_{params.prefix}.tbl >> {log} 2>&1
+        echo "🔹 Asm4pg -> Cleaning LTR_retriever tmp output files" >> {log} 2>&1
+        rm tmp* >> {log} 2>&1
+        echo "✅ Asm4pg -> done!" >> {log} 2>&1
         '''
 
 # Rule to create scafold on assemblies
