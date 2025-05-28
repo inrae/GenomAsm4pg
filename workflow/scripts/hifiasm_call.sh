@@ -63,7 +63,7 @@ align_hic_reads() {
     echo "🔹 Asm4pg -> Aligning Hi-C reads to contigs..."
     for hap in hap1 hap2; do
         bwa mem -5SP -t "$THREADS" "${PREFIX}.${hap}.p_ctg.fasta" "$RUN_1" "$RUN_2" | \
-            samtools view -Sb - | samtools sort -@ "$THREADS" -o "${PREFIX}_${hap}_hic_aligned.bam"
+            samtools view -Sb - | samtools sort -@ "$THREADS" -m 4G -o "${PREFIX}_${hap}_hic_aligned.bam"
         samtools index "${PREFIX}_${hap}_hic_aligned.bam"
     done
 }
