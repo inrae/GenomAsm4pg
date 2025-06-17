@@ -1,4 +1,4 @@
-# [Asm4pg](https://forgemia.inra.fr/asm4pg/GenomAsm4pg)  
+# [Asm4pg](https://forge.inrae.fr/asm4pg/GenomAsm4pg/)  
 
 **Asm4pg** is an **automatic and reproducible genome assembly workflow** designed for **pangenomic applications** using **PacBio HiFi data**.  
 
@@ -48,7 +48,7 @@ This workflow leverages **[Snakemake](https://snakemake.readthedocs.io/en/stable
 
 Clone the Git repository
 ```bash
-git clone https://forgemia.inra.fr/asm4pg/GenomAsm4pg.git && cd GenomAsm4pg && mkdir slurm_logs
+git clone https://forge.inrae.fr/asm4pg/GenomAsm4pg/ && cd GenomAsm4pg && mkdir slurm_logs
 ```
 
 - Create an environement for snakemake (from the provided envfile): 
@@ -144,7 +144,7 @@ Asm4pg has many options. If you wish to modify the default values and know more 
 
 Waiting for the publication, you can cite asm4pg as follow: 
 
-Denni S\*, Piat L\*, Bouallegue S, Tran J, Smith K, Wu C, Klopp C, Bui QT, Duvaux L.  Asm4pg: a workflow for efficient long-read genome assembly for pangenomics (In prep.). https://forgemia.inra.fr/asm4pg/GenomAsm4pg
+Denni S\*, Piat L\*, Bouallegue S, Tran J, Smith K, Wu C, Klopp C, Bui QT, Duvaux L.  Asm4pg: a workflow for efficient long-read genome assembly for pangenomics (In prep.). https://forge.inrae.fr/asm4pg/GenomAsm4pg/
 
 \* This authors contributed equally to this work.
 

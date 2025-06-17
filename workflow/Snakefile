@@ -8,7 +8,7 @@ include: "scripts/parameter_retrieval.py"
 import os
 import yaml
 
-container_registry = config.get("container_registry", "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg")
+container_registry = config.get("container_registry", "docker://registry.forge.inrae.fr/asm4pg/genomasm4pg")
 output_dir = os.path.join(config.get("output_dir_pdw", os.getcwd()), config.get("output_dir", "results/"))
 
 rule all:
