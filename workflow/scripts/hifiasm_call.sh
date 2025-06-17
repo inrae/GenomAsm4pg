@@ -15,15 +15,22 @@ RUN_2=$6
 PREFIX=$7
 OUT1=$8
 OUT2=$9
+INPUT_FQ=${10}
+
+echo "🔹 Asm4pg -> Starting assembly: $date"
 
 echo "Asm4pg -> Given hifiasm parameters:"
 echo "  MODE: $MODE"
 echo "  PURGE_FORCE: $PURGE_FORCE"
 echo "  THREADS: $THREADS"
-echo "  INPUT: $INPUT"
+echo "  INPUT FASTA: $INPUT"
+echo "  INPUT FASTQ: $INPUT_FQ"
 echo "  RUN_1: $RUN_1"
 echo "  RUN_2: $RUN_2"
 echo "  PREFIX: $PREFIX"
+
+available_mem=$(free -h | awk '/Mem:/ {print $7}')
+echo "🔹 Asm4pg -> Available memory: $available_mem"
 
 cleanup_files() {
     echo "🔹 Asm4pg -> Cleaning up intermediate files..."
@@ -56,7 +63,7 @@ align_hic_reads() {
     echo "🔹 Asm4pg -> Aligning Hi-C reads to contigs..."
     for hap in hap1 hap2; do
         bwa mem -5SP -t "$THREADS" "${PREFIX}.${hap}.p_ctg.fasta" "$RUN_1" "$RUN_2" | \
-            samtools view -Sb - | samtools sort -@ "$THREADS" -o "${PREFIX}_${hap}_hic_aligned.bam"
+            samtools view -Sb - | samtools sort -@ "$THREADS" -m 4G -o "${PREFIX}_${hap}_hic_aligned.bam"
         samtools index "${PREFIX}_${hap}_hic_aligned.bam"
     done
 }
@@ -79,7 +86,13 @@ run_hifiasm() {
             mv "${PREFIX}.bp.hap2.p_ctg.gfa" "$OUT2"
             cleanup_files
             ;;
-        
+        ont)
+            echo "🔹 Asm4pg -> ONT mode, using a fastq file"
+            hifiasm -l"$PURGE_FORCE" -o "$PREFIX" -t "$THREADS" --ont "$INPUT_FQ"
+            mv "${PREFIX}.bp.hap1.p_ctg.gfa" "$OUT1"
+            mv "${PREFIX}.bp.hap2.p_ctg.gfa" "$OUT2"
+            cleanup_files
+            ;;
         hi-c)
             [[ "$RUN_1" == *.fastq.gz && "$RUN_2" == *.fastq.gz ]] && run_fastp
             hifiasm -l"$PURGE_FORCE" -o "$PREFIX" -t "$THREADS" --h1 "$RUN_1" --h2 "$RUN_2" "$INPUT"
@@ -118,3 +131,4 @@ run_hifiasm() {
 # Main Execution
 run_hifiasm
 echo "✅ Asm4pg -> Hifiasm assembly Done."
+echo "$date"

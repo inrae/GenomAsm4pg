@@ -18,6 +18,8 @@ def get_purge_force(wildcards) -> str:
 def get_mode(wildcards) -> str:
     try:
         mode = config["samples"][wildcards.sample]["mode"]
+        if mode == "Trio":
+            mode = "trio"
     except KeyError:
         print(f'Asm4pg -> "mode" unspecified for {wildcards.sample}, using default assembly mode for hifiasm', file=sys.stderr)
         return 'default'
@@ -26,9 +28,15 @@ def get_mode(wildcards) -> str:
 # Fetch r1/r2 fasta file for hi-c
 def get_run(wildcards, run: int) -> str:
     try:
+        # Try to get the value with lowercase (r1 or r2)
         run = config["samples"][wildcards.sample][f"r{run}"]
     except KeyError:
-        return 'None'
+        try:
+            # If the lowercase key doesn't work, try uppercase (R1 or R2)
+            run = config["samples"][wildcards.sample][f"R{run}"]
+        except KeyError:
+            # If both fail, return 'None'
+            return 'None'
     return run
 
 # Fetch the purge mode, return a boolean from config file
@@ -88,6 +96,8 @@ def get_ragtag_bool(wildcards) -> bool:
 def get_quast_bool(wildcards) -> bool:
     try:
         quast_bool = config["samples"][wildcards.sample]["run_quast"]
+        if quast_bool=="true":
+            quast_bool = True
     except KeyError:
         print(f'Asm4pg -> "run_quast" unspecified for {wildcards.sample}, using "False" by default', file=sys.stderr)
         return False

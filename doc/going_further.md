@@ -10,6 +10,9 @@ Usage: `asm4pg [dry|run|local-run|dag|rulegraph|unlock]`
 - `dag` - generate the directed acyclic graph for the workflow
 - `rulegraph` - generate the rulegraph for the workflow
 - `unlock` - unlock the directory if Snakemake crashed
+- `touch` - Tell snakemake that all files are up to date 
+
+> **Nb :** Touch can be usefull if you are replacing files or updating the config
 
 ## 02. Workflow Options
 
@@ -17,7 +20,7 @@ Inside the `./.config/masterconfig.yaml` file, you can add more options.
 Here are all the options and their default values:
 
 - `reads`: Your reads (mandatory) (fasta.gz, fasta, fastq.gz, fastq, or bam)
-- `mode`: [default, hi-c, trio] The mode for Hifiasm assembly (default: default)
+- `mode`: [default, hi-c, trio, ont] The mode for Hifiasm assembly (default: default)
 - `r1`: If hi-c or trio mode, the run1/parent1 read file (fasta.gz, fastq.gz)
 - `r2`: If hi-c or trio mode, the run2/parent2 read file
 - `run_purge_dups`: [True, False] If set to true, the workflow will run [purge_dups](https://github.com/dfguan/purge_dups) on the assembly (default: False)
@@ -77,6 +80,15 @@ samples:
     r2: parent2.fasta.gz
 ```
 
+### ONT config
+This example shows how to use the workflow with ont assembly mode. Note that you NEED to used files holding quality of the reads. Reads quality are present un BAM and fastQ files (not in fasta files).
+```yaml
+samples:
+  example1:
+    reads: example.fastq.gz
+    mode: ont
+```
+
 ### Advanced Config
 ```yaml
 samples:
@@ -91,6 +103,7 @@ samples:
     busco_lineage: eudicots_odb10
     run_ragtag: True
     reference_genome: ref.fasta.gz
+    run_quast: True
 ```
 
 ## 04. Run the Workflow on Multiple Datasets

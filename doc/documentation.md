@@ -1,4 +1,4 @@
-# [asm4pg](https://forgemia.inra.fr/asm4pg/GenomAsm4pg)
+# [asm4pg](https://forge.inrae.fr/asm4pg/GenomAsm4pg/)
 
 Asm4pg is an automatic and reproducible genome assembly workflow for pangenomic applications using PacBio HiFi data.
 

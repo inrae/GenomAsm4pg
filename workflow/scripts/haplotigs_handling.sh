@@ -31,7 +31,18 @@ run_purge_dups() {
     pbcstat "$DIRR/$PREFIX.paf.gz" -O "$DIRR"
 
     echo "🔹 Asm4pg -> Running calcuts..."
-    calcuts "$DIRR/PB.stat" > "$DIRR/cutoffs" 2> "$DIRR/calcuts.log"
+    if ! calcuts "$DIRR/PB.stat" > "$DIRR/cutoffs" 2> "$DIRR/calcuts.log"; then
+        if grep -q '\[M::calcuts\] Find 0 peaks' "$DIRR/calcuts.log"; then
+            echo "⚠️  Asm4pg -> No peaks found in calcuts. Skipping purging and copying input to output."
+            cp "$HAP_IN" "$HAP_OUT"
+            echo "No cutoffs, calcuts found 0 peaks" > "$DIRR/cutoffs"
+            cleanup_temp_files
+            return 0
+        else
+            echo "❌ Asm4pg -> calcuts failed for another reason."
+            exit 1
+        fi
+    fi
 
     echo "🔹 Asm4pg -> Splitting assembly..."
     split_fa "$HAP_IN" > "$DIRR/$PREFIX.split"

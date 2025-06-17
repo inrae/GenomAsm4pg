@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --cpus-per-task=5
-#SBATCH -o slurm_logs/out_job_%j.out
-#SBATCH -e slurm_logs/err_job_%j.err
+#SBATCH -o slurm_logs/asm4pg_slurm_log_%j.log
+#SBATCH -e slurm_logs/asm4pg_slurm_log_%j.log
 #SBATCH --time=80:00:00
 #SBATCH -J asm4pg
 #SBATCH --mem=10G
@@ -11,10 +11,10 @@
 # Use this script to run asm4pg on a HPC
 
 # Verify arguments
-if [ $# -ne 1 ] || [ "$1" == "help" ]; then
+if [ $# -lt 1 ] || [ "$1" == "help" ]; then
     echo "Use this script to run asm4pg"
     echo ""
-    echo "Usage: asm4pg [dry|run|local-run|dag|rulegraph|unlock]"
+    echo "Usage: asm4pg [dry|run|local-run|dag|rulegraph|unlock] [additional snakemake args]"
     echo "    dry - run in dry-run mode"
     echo "    run - run the workflow with SLURM"
     echo "    local-run - run the workflow localy (on a single node)"
@@ -24,38 +24,45 @@ if [ $# -ne 1 ] || [ "$1" == "help" ]; then
     exit 1
 fi
 echo "Welcome to Asm4pg! Make sure .config/masterconfig.yaml is correctly edited for this run."
-
+MEM_MB=$(free -m | awk '/^Mem:/{print $2}')
 #######################
-# Update line 44 and 45
+# Update line 48 with your cluster if not on cbib or genotoul
 #######################
 echo '🔹 Asm4pg -> Activating execution environment'
 case "${SLURM_SUBMIT_HOST:-$(hostname)}" in
     **geno**)
+        echo '🔹 Asm4pg -> Identified genotoul cluster'
         module purge
         module load containers/Apptainer/1.2.5     
         source activate wf_env                     
         ;;
     **bb8**)
-        conda activate wf_env 
+        echo '🔹 Asm4pg -> Identified cbib cluster, use the local-run on cbib'
+        module purge
+        module load miniconda/3
+        eval "$(conda shell.bash hook)"
+        conda activate wf_env
+        MEM_MB=${SLURM_MEM_PER_NODE:-204800}
         ;;
     *)
-        echo '🔹 Asm4pg -> Unkown host, dont forget to modify line 44 and 45 with the right modules and environement'
-        module purge
-        module load containers/Apptainer/1.2.5 
-        source activate wf_env 
-
+        echo '🔹 Asm4pg -> Unkown host, or local run (if not configure this file line 48)'
         ;;
 esac
 
 run_snakemake() {
     local option="$1"
+    shift  # Remove the first argument, keep the rest
+    local extra_args="$@"  # Collect the rest of the arguments
     echo '🔹 Asm4pg -> Starting Snakemake workflow'
     case "$option" in
         dry)
-            snakemake -c $(nproc) --dry-run --rerun-incomplete
+            snakemake -c $(nproc) --dry-run --rerun-incomplete $extra_args
+            ;;
+        touch)
+            snakemake -c $(nproc) --touch $extra_args
             ;;
         dag)
-            snakemake -c $(nproc) --dag > dag.dot 
+            snakemake -c $(nproc) --dag $extra_args > dag.dot 
             if [ $? -eq 0 ]; then
                 echo "✅ Asm4pg -> DAG has been successfully generated as dag.dot"
             else
@@ -64,7 +71,7 @@ run_snakemake() {
             fi
             ;;
         rulegraph)
-            snakemake -c $(nproc) --rulegraph > rulegraph.dot 
+            snakemake -c $(nproc) --rulegraph $extra_args > rulegraph.dot 
             if [ $? -eq 0 ]; then
                 echo "✅ Asm4pg -> Rulegraph has been successfully generated as rulegraph.dot"
             else
@@ -73,7 +80,7 @@ run_snakemake() {
             fi
             ;;
         unlock)
-            snakemake -c $(nproc) --unlock
+            snakemake -c $(nproc) --unlock $extra_args
             if [ $? -eq 0 ]; then
                 echo "✅ Asm4pg -> Unlocked"
             else
@@ -82,18 +89,19 @@ run_snakemake() {
             fi
             ;;
         run)
-            snakemake --workflow-profile ./.config/snakemake/profiles/slurm --rerun-incomplete
+            snakemake --workflow-profile ./.config/snakemake/profiles/slurm --rerun-incomplete $extra_args
             ;;
         local-run)
             SNG_BIND=$(pwd)
-            snakemake --use-singularity --singularity-args "-B $SNG_BIND" -j $(nproc)
+            echo "🔹 Asm4pg -> Using $MEM_MB Mb of memory"
+            snakemake --use-singularity --singularity-args "-B $SNG_BIND" -j $(nproc) --rerun-incomplete --resources mem_mb=$MEM_MB $extra_args
             ;;
         *)
             echo "Invalid option: $option"
-            echo "Usage: asm4pg [dry|run|local-run|dag|rulegraph|unlock]"
+            echo "Usage: asm4pg [dry|run|local-run|dag|rulegraph|unlock] [additional snakemake args]"
             exit 1
             ;;
     esac
 }
 
-run_snakemake "$1"
+run_snakemake "$@"
