@@ -14,7 +14,7 @@ output_dir_pdw: /home/lpiat/work/GenomAsm4pg/
 # ----
 
 # Container to pull the images from
-container_registry: "docker://registry.forgemia.inra.fr/asm4pg/genomasm4pg"
+container_registry: "docker://registry.forge.inrae.fr/asm4pg/genomasm4pg"
 # You can modify the output path if you need to
 output_dir: "results/"
 
