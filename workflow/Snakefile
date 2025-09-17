@@ -32,7 +32,12 @@ rule all:
         expand(
             os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "quast"),
             sample=config["samples"].keys()
+        ), 
+        expand(
+            os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "mitogenome", "contigs_stats.tsv"),
+            sample=config["samples"].keys(), n=[1, 2]
         )
+        
 
 rule input_conversion:
     input: 
@@ -152,7 +157,6 @@ rule haplotigs_handling:
             {params.out_dir} > {log} 2>&1
         """
 
-
 rule mito_genome_extraction:
     input:
         rules.haplotigs_handling.output.hap
@@ -171,15 +175,22 @@ rule mito_genome_extraction:
     container:
         f"{container_registry}/mitohifi:3.2.1"
     shell:
-        """        
-        if [[ -s {input} ]]; then
-            echo "🔹 Asm4pg -> starting mitohifi" > {log} 2>&1
-            mitohifi.py -c {input} -f {params.mito_reference} -t {threads} --outfolder {params.out_dir} 2>> {log}
-            echo "✅ Asm4pg -> done!" >> {log} 2>&1
+        """
+        INPUT_ABS=$(realpath {input})
+        FASTA_REF_ABS=$(realpath {params.mito_reference[0]})
+        GB_REF_ABS=$(realpath {params.mito_reference[1]})
+        LOG_ABS=$(realpath {log})
+        
+        cd {params.out_dir}
+        
+        if [[ -s $INPUT_ABS ]]; then
+            echo "🔹 Asm4pg -> starting mitohifi" > $LOG_ABS 2>&1
+            mitohifi.py -c $INPUT_ABS -f $FASTA_REF_ABS -g $GB_REF_ABS -t {threads} >> $LOG_ABS 2>&1
+            echo "✅ Asm4pg -> done!" >> $LOG_ABS 2>&1
         else
-            echo "🔹 Asm4pg -> no reference_mitochondrial_genome specified, skiping" > {log} 2>>&1
+            echo "🔹 Asm4pg -> no input contigs, skipping" > $LOG_ABS 2>&1
             touch {output}
-            echo "✅ Asm4pg -> done!" >> {log} 2>&1
+            echo "✅ Asm4pg -> done!" >> $LOG_ABS 2>&1
         fi
         """
         
