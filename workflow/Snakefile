@@ -157,9 +157,10 @@ rule mito_genome_extraction:
     input:
         rules.haplotigs_handling.output.hap
     output:
-        ? 
+        os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "mitogenome", "contigs_stats.tsv"),
     params:
-        mito_reference = get_mito_reference
+        mito_reference = get_mito_reference,
+        out_dir = os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "mitogenome")
     threads: 20
     benchmark:
         os.path.join(output_dir, "{sample}_results", "benchmark", "mito_genome_extraction{n}_benchmark.txt")
@@ -170,10 +171,18 @@ rule mito_genome_extraction:
     container:
         f"{container_registry}/mitohifi:3.2.1"
     shell:
+        """        
+        if [[ -s {input} ]]; then
+            echo "🔹 Asm4pg -> starting mitohifi" > {log} 2>&1
+            mitohifi.py -c {input} -f {params.mito_reference} -t {threads} --outfolder {params.out_dir} 2>> {log}
+            echo "✅ Asm4pg -> done!" >> {log} 2>&1
+        else
+            echo "🔹 Asm4pg -> no reference_mitochondrial_genome specified, skiping" > {log} 2>>&1
+            touch {output}
+            echo "✅ Asm4pg -> done!" >> {log} 2>&1
+        fi
         """
-        mitohifi.py -c {input} -f {input.mito_reference} -t {threads}
-        """
-
+        
 # Rule to unzip the haplotypes
 rule unpigz_to_fasta:
     input:
