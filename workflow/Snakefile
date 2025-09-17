@@ -152,6 +152,28 @@ rule haplotigs_handling:
             {params.out_dir} > {log} 2>&1
         """
 
+
+rule mito_genome_extraction:
+    input:
+        rules.haplotigs_handling.output.hap
+    output:
+        ? 
+    params:
+        mito_reference = get_mito_reference
+    threads: 20
+    benchmark:
+        os.path.join(output_dir, "{sample}_results", "benchmark", "mito_genome_extraction{n}_benchmark.txt")
+    resources:
+        mem_mb=100000
+    log:
+        os.path.join(output_dir, "{sample}_results", "logs", "mito_genome_extraction{n}.log")
+    container:
+        f"{container_registry}/mitohifi:3.2.1"
+    shell:
+        """
+        mitohifi.py -c {input} -f {input.mito_reference} -t {threads}
+        """
+
 # Rule to unzip the haplotypes
 rule unpigz_to_fasta:
     input:
