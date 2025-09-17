@@ -1,8 +1,11 @@
 #!/bin/bash
+# -*- coding: utf-8 -*-
 
-# Script de downsampling simple
-# Usage: ./downsampling.sh -i input.fastq.gz -c 50 -l 20000
 
+# License: GPL-3+
+# Persons: Michel Gomes [cre,aut], Stephanie Sidibe Bocs [ctb]
+# Workflow : Séparation reads + Assemblage mito
+# Usage: ./01.sh -i input.fastq.gz -o output_dir -r reference_mito.fasta
 set -euo pipefail
 
 # Valeurs par défaut
