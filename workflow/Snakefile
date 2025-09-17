@@ -535,6 +535,7 @@ rule LTR_retriever:
             mv tmp_hap.fasta.out.LAI {params.prefix}.out.LAI >> {log} 2>&1
         else
             echo "Impossible to calculate LAI score for this assembly" > {params.prefix}.out.LAI
+            echo "Impossible to calculate LAI score for this assembly" > tmp_hap.fasta.tbl
             echo "🔹 Asm4pg -> LAI file not generated, created placeholder" >> {log} 2>&1
         fi
         
