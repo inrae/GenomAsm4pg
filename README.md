@@ -1,4 +1,4 @@
-# [Asm4pg](https://forge.inrae.fr/asm4pg/GenomAsm4pg/)  
+# [TST toto Asm4pg](https://forge.inrae.fr/asm4pg/GenomAsm4pg/)  
 
 **Asm4pg** is an **automatic and reproducible genome assembly workflow** designed for **pangenomic applications** using **PacBio HiFi data**.  
 
