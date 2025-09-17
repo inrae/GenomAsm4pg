@@ -76,12 +76,13 @@ def get_kmer_size(wildcards) -> int:
     return size
 
 # Fetch the reference genome
-def get_mito_reference(wildcards) -> str:
+def get_mito_reference(wildcards) -> list:
     try:
-        reference_genome = config["samples"][wildcards.sample]["reference_mitochondrial_genome"]
+        ref = config["samples"][wildcards.sample]["reference_mitochondrial_genome"]
+        print(ref)
     except KeyError:
         return 'None'
-    return reference_genome
+    return ref
 
 # Fetch the reference mito genome
 def get_reference(wildcards) -> str:

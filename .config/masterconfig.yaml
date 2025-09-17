@@ -4,10 +4,11 @@
 # Here is an example of mininmal configuration. Refer to the documentation for all options
 
 samples:
-  insect_example_assembly_01 :
-    reads: chr11-2M.fa.gz
+  mito:
+    reads: test_genome.fasta.gz
     busco_lineage: mammalia_odb10
-    reference_mitochondrial_genome: human_mt.fasta
+    reference_mitochondrial_genome: [human_mt.fasta, human_mt.gb]
+    run_quast: True
 
 # FULL path to your output dir (mandatory)
 output_dir_pdw: /home/lucien/Documents/taches/15_mitohifi/GenomAsm4pg
