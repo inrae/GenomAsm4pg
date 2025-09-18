@@ -191,32 +191,48 @@ rule mito_genome_extraction:
         """
         INPUT_ABS=$(realpath {input})
         LOG_ABS=$(realpath {log})
-        FASTA_REF_ABS=$(realpath {params.mito_reference[0]})
-        GB_REF_ABS=$(realpath {params.mito_reference[1]})
-        cd {params.out_dir}
         
-        if [[ "{params.mito_reference}" != "None" ]] && [[ -s $INPUT_ABS ]]; then
-            echo "🔹 Asm4pg -> starting mitohifi" > $LOG_ABS 2>&1
-            if mitohifi.py -c $INPUT_ABS -f $FASTA_REF_ABS -g $GB_REF_ABS -t {threads} -d >> $LOG_ABS 2>&1; then
-                echo "🔹 Asm4pg -> cleaning up..." >> $LOG_ABS 2>&1
-                rm fixed_header_contigs.fasta
-                rm -rf coverage_mapping
-                rm -rf final_mitogenome_choice
-                rm -rf potential_contigs
-                mv final_mitogenome.fasta {wildcards.sample}_mitogenome_hap{wildcards.n}.fasta
-                mv final_mitogenome.gb {wildcards.sample}_mitogenome_hap{wildcards.n}.gb
-                echo "✅ Asm4pg -> done!" >> $LOG_ABS 2>&1
-            else
-                echo "🔹 Asm4pg -> mitogenome extraction unsuccessful, check logs" >> $LOG_ABS 2>&1
-                rm *
-                echo "mitogenome extraction unsuccessful, check logs" > {output}
-            fi
-        else
-            echo "🔹 Asm4pg -> no input mitogenome or reference not provided, skipping" > $LOG_ABS 2>&1
+        # First check if mito_reference is provided
+        if [[ "{params.mito_reference}" == "None" ]]; then
+            echo "🔹 Asm4pg -> no mitogenome reference provided, skipping" > $LOG_ABS 2>&1
+            cd {params.out_dir}
             echo "No ref mitogenome specified" > {output}
             echo "✅ Asm4pg -> done!" >> $LOG_ABS 2>&1
+            exit 0
         fi
-        """ 
+        
+        # Get realpath of references since we know they exist
+        FASTA_REF_ABS=$(realpath {params.mito_reference[0]})
+        GB_REF_ABS=$(realpath {params.mito_reference[1]})
+        
+        # Then check if input file is empty
+        if [[ ! -s $INPUT_ABS ]]; then
+            echo "🔹 Asm4pg -> input haplotype empty, skipping" > $LOG_ABS 2>&1
+            cd {params.out_dir}
+            echo "Input haplotype empty" > {output}
+            echo "✅ Asm4pg -> done!" >> $LOG_ABS 2>&1
+            exit 0
+        fi
+        
+        # If we get here, both reference exists and input is non-empty
+        cd {params.out_dir}
+        echo "🔹 Asm4pg -> starting mitohifi" > $LOG_ABS 2>&1
+        
+        if mitohifi.py -c $INPUT_ABS -f $FASTA_REF_ABS -g $GB_REF_ABS -t {threads} -d >> $LOG_ABS 2>&1; then
+            echo "🔹 Asm4pg -> cleaning up..." >> $LOG_ABS 2>&1
+            rm fixed_header_contigs.fasta
+            rm -rf coverage_mapping
+            rm -rf final_mitogenome_choice
+            rm -rf potential_contigs
+            mv final_mitogenome.fasta {wildcards.sample}_mitogenome_hap{wildcards.n}.fasta
+            mv final_mitogenome.gb {wildcards.sample}_mitogenome_hap{wildcards.n}.gb
+            echo "✅ Asm4pg -> done!" >> $LOG_ABS 2>&1
+        else
+            echo "🔹 Asm4pg -> mitogenome extraction unsuccessful, check logs" >> $LOG_ABS 2>&1
+            rm *
+            echo "mitogenome extraction unsuccessful, check logs" > {output}
+        fi
+        """
 
 # Make purge_dups cutoffs graph
 rule cutoffs_graph:
@@ -247,18 +263,25 @@ rule genometools_on_raw_data:
     shell:
         """
         echo "🔹 Asm4pg -> starting genometools on {input}" > {log} 2>&1
-        gt seqstat {input} > {output} 2>> {log}
-        if [ ! -s {output} ]; then
-            echo "⚠️  Asm4pg -> Warning: genometools output file is empty!" >> {log}
+        
+        # Check if input file is empty
+        if [ ! -s {input} ]; then
+            echo "input file empty" > {output}
+            echo "⚠️  Asm4pg -> Warning: Input file is empty!" >> {log}
         else
-            echo "✅ Asm4pg -> genometools completed successfully" >> {log}
+            gt seqstat {input} > {output} 2>> {log}
+            if [ ! -s {output} ]; then
+                echo "⚠️  Asm4pg -> Warning: genometools output file is empty!" >> {log}
+            else
+                echo "✅ Asm4pg -> genometools completed successfully" >> {log}
+            fi
         fi
         """
 
 # Produce basic stats for each haplotypes assembled
 use rule genometools_on_raw_data as genometools_on_assembly with:
     input:
-        rules.haplotigs_handling.output.hap
+        rules.unpigz_to_fasta.output
     output:
         os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "{sample}_hap{n}_genometools_stats.txt")
     log:
@@ -286,10 +309,26 @@ rule busco_hap1:
         f"{container_registry}/busco:5.7.1"
     shell:
         """
-        busco -f -i {input.hap} -l {params.lineage} --out_path {params.prefix} -o {params.sample} -m genome -c {threads} > {log} 2>&1 
-        echo "🔹 Aasm4pg -> cleaning busco output files" >> {log} 2>&1 
-        mv {params.prefix}/{params.sample}/short_summary.specific.{params.lineage}.{params.sample}.txt {output} >> {log} 2>&1
-        rm -rf {params.prefix}/{params.sample} >> {log} 2>&1
+        echo "🔹 Asm4pg -> starting BUSCO on {input.hap}" > {log} 2>&1
+        
+        # Check if input file is empty
+        if [ ! -s {input.hap} ]; then
+            echo "input file empty" > {output}
+            echo "⚠️  Asm4pg -> Warning: Input file is empty, skipping BUSCO!" >> {log}
+        else
+            busco -f -i {input.hap} -l {params.lineage} --out_path {params.prefix} -o {params.sample} -m genome -c {threads} >> {log} 2>&1 
+            
+            # Check if BUSCO produced the expected output
+            if [ -f {params.prefix}/{params.sample}/short_summary.specific.{params.lineage}.{params.sample}.txt ]; then
+                echo "🔹 Asm4pg -> cleaning busco output files" >> {log} 2>&1 
+                mv {params.prefix}/{params.sample}/short_summary.specific.{params.lineage}.{params.sample}.txt {output} >> {log} 2>&1
+                rm -rf {params.prefix}/{params.sample} >> {log} 2>&1
+                echo "✅ Asm4pg -> BUSCO completed successfully" >> {log}
+            else
+                echo "⚠️  Asm4pg -> Warning: BUSCO did not produce expected output!" >> {log}
+                echo "BUSCO failed to produce output" > {output}
+            fi
+        fi
         """
 
 # BUSCO stats haplotype 2 (we do them one by on to avoid downlaoding the database twice)
@@ -558,23 +597,33 @@ rule LTR_retriever:
     shell:
         '''
         export PATH="/opt/LTR_retriever:$PATH"
-        cp {input.hap} {params.out_dir}/tmp_hap.fasta > {log} 2>&1
-        cd {params.out_dir} >> {log} 2>&1
-        LTR_retriever -threads {threads} -genome tmp_hap.fasta -infinder {params.scn} >> {log} 2>&1
         
-        # Check if LAI file was created, if not create a placeholder
-        if [ -f tmp_hap.fasta.out.LAI ]; then
-            mv tmp_hap.fasta.out.LAI {params.prefix}.out.LAI >> {log} 2>&1
+        echo "🔹 Asm4pg -> starting LTR_retriever on {input.hap}" > {log} 2>&1
+        
+        # Check if input hap file is empty
+        if [ ! -s {input.hap} ]; then
+            echo "input file empty" > {output.lai}
+            echo "input file empty" > {output.recap}
+            echo "⚠️  Asm4pg -> Warning: Input hap file is empty, skipping LTR_retriever!" >> {log}
         else
-            echo "Impossible to calculate LAI score for this assembly" > {params.prefix}.out.LAI
-            echo "Impossible to calculate LAI score for this assembly" > tmp_hap.fasta.tbl
-            echo "🔹 Asm4pg -> LAI file not generated, created placeholder" >> {log} 2>&1
+            cp {input.hap} {params.out_dir}/tmp_hap.fasta >> {log} 2>&1
+            cd {params.out_dir} >> {log} 2>&1
+            LTR_retriever -threads {threads} -genome tmp_hap.fasta -infinder {params.scn} >> {log} 2>&1 || true
+            
+            # Check if LAI file was created, if not create a placeholder
+            if [ -f tmp_hap.fasta.out.LAI ]; then
+                mv tmp_hap.fasta.out.LAI {params.prefix}.out.LAI >> {log} 2>&1
+            else
+                echo "Impossible to calculate LAI score for this assembly" > {params.prefix}.out.LAI
+                echo "Impossible to calculate LAI score for this assembly" > tmp_hap.fasta.tbl
+                echo "🔹 Asm4pg -> LAI file not generated, created placeholder" >> {log} 2>&1
+            fi
+            
+            mv tmp_hap.fasta.tbl recap_{params.prefix}.tbl >> {log} 2>&1
+            echo "🔹 Asm4pg -> Cleaning LTR_retriever tmp output files" >> {log} 2>&1
+            rm tmp* >> {log} 2>&1
+            echo "✅ Asm4pg -> done!" >> {log} 2>&1
         fi
-        
-        mv tmp_hap.fasta.tbl recap_{params.prefix}.tbl >> {log} 2>&1
-        echo "🔹 Asm4pg -> Cleaning LTR_retriever tmp output files" >> {log} 2>&1
-        rm tmp* >> {log} 2>&1
-        echo "✅ Asm4pg -> done!" >> {log} 2>&1
         '''
 
 # Rule to create scafold on assemblies
