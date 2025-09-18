@@ -196,7 +196,7 @@ rule mito_genome_extraction:
         
         cd {params.out_dir}
         
-        if [[ -s $INPUT_ABS ]]; then
+        if [[ "{params.mito_reference}" != "None" ]]; then
             echo "🔹 Asm4pg -> starting mitohifi" > $LOG_ABS 2>&1
             mitohifi.py -c $INPUT_ABS -f $FASTA_REF_ABS -g $GB_REF_ABS -t {threads} -d >> $LOG_ABS 2>&1
             echo "🔹 Asm4pg -> cleaning up..." >> $LOG_ABS 2>&1
@@ -208,8 +208,8 @@ rule mito_genome_extraction:
             mv final_mitogenome.gb {wildcards.sample}_mitogenome_hap{wildcards.n}.gb
             echo "✅ Asm4pg -> done!" >> $LOG_ABS 2>&1
         else
-            echo "🔹 Asm4pg -> no input mitogenome, skipping" > $LOG_ABS 2>&1
-            touch {output}
+            echo "🔹 Asm4pg -> no input mitogenome or reference not provided, skipping" > $LOG_ABS 2>&1
+            echo "No ref mitogenome specified" > {output}
             echo "✅ Asm4pg -> done!" >> $LOG_ABS 2>&1
         fi
         """        
