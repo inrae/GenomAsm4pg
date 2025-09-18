@@ -670,8 +670,8 @@ rule generate_report:
 
         merqury_stats=os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "merqury", "{sample}_merqury.completeness.stats"),
         merqury_qv=os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "merqury", "{sample}_merqury.qv"),
-        mitogenome_contigs_hap1 = os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{1}", "mitogenome", "contigs_stats.tsv"),
-        mitogenome_contigs_hap2 = os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{2}", "mitogenome", "contigs_stats.tsv")
+        mitogenome_contigs_hap1 = os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap1", "mitogenome", "contigs_stats.tsv"),
+        mitogenome_contigs_hap2 = os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap2", "mitogenome", "contigs_stats.tsv")
     output:
         os.path.join(output_dir, "{sample}_results", "{sample}_assembly_report.html")
     params:
