@@ -201,11 +201,9 @@ rule mito_genome_extraction:
             mitohifi.py -c $INPUT_ABS -f $FASTA_REF_ABS -g $GB_REF_ABS -t {threads} -d >> $LOG_ABS 2>&1
             echo "🔹 Asm4pg -> cleaning up..." >> $LOG_ABS 2>&1
             rm fixed_header_contigs.fasta
-            rm -rf contigs*
             rm -rf coverage_mapping
             rm -rf final_mitogenome_choice
             rm -rf potential_contigs
-            rm contigs_annotations.png
             mv final_mitogenome.fasta {wildcards.sample}_mitogenome_hap{wildcards.n}.fasta
             mv final_mitogenome.gb {wildcards.sample}_mitogenome_hap{wildcards.n}.gb
             echo "✅ Asm4pg -> done!" >> $LOG_ABS 2>&1
