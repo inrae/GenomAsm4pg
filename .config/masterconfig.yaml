@@ -4,14 +4,12 @@
 # Here is an example of mininmal configuration. Refer to the documentation for all options
 
 samples:
-  mito:
-    reads: test_genome.fasta.gz
-    busco_lineage: mammalia_odb10
-    reference_mitochondrial_genome: [human_mt.fasta, human_mt.gb]
-    run_quast: True
+  insect_example_assembly_01 :
+    reads: ladybug_long_reads.bam
+    busco_lineage: insecta_odb10
 
 # FULL path to your output dir (mandatory)
-output_dir_pdw: /home/lucien/Documents/taches/15_mitohifi/GenomAsm4pg
+output_dir_pdw: /home
 
 # ----
 
@@ -30,7 +28,7 @@ output_dir: "results/"
 #   run_purge_dups: [True, False] (default: False)
 #   run_ragtag: [True, False] (default: False)
 #   reference_genome: fasta.gz reference genome used for ragtag
-#   reference_mitochondrial_genome: fasta file used to segregate mitochondrial contigs
+#   reference_mitochondrial_genome: list, the reference mitogenome and annotation in genbank format [mitogenome.fasta, annot.gb]
 #   busco_lineage: (default: eukaryota_odb10)
 #   run_quast: [True, False] (default: False)
 
