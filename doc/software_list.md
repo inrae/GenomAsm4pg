@@ -28,3 +28,4 @@ Images are automatically pulled by Snakemake on first run and stored in the proj
 - matplotlib 0.11.5
 - [genometools](https://github.com/genometools/genometools) 1.5.9 https://doi.org/10.1109/tcbb.2013.68
 - [FindTelomeres](https://github.com/JanaSperschneider/FindTelomeres)
+- [MitoHiFi](https://github.com/marcelauliano/MitoHiFi) 3.2.3 https://doi.org/10.1186/s12859-023-05385-y
