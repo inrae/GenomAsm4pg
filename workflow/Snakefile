@@ -157,9 +157,22 @@ rule haplotigs_handling:
             {params.out_dir} > {log} 2>&1
         """
 
-rule mito_genome_extraction:
+        
+# Rule to unzip the haplotypes
+rule unpigz_to_fasta:
     input:
         rules.haplotigs_handling.output.hap
+    output:
+        temp(os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap{n}","{sample}_final_hap{n}.fasta"))
+    container:
+        f"{container_registry}/samtools-pigz:latest"
+    threads: 4
+    shell:
+        "unpigz -k -p {threads} {input}"
+
+rule mito_genome_extraction:
+    input:
+        rules.unpigz_to_fasta.output
     output:
         os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "mitogenome", "contigs_stats.tsv"),
     params:
@@ -185,26 +198,23 @@ rule mito_genome_extraction:
         
         if [[ -s $INPUT_ABS ]]; then
             echo "🔹 Asm4pg -> starting mitohifi" > $LOG_ABS 2>&1
-            mitohifi.py -c $INPUT_ABS -f $FASTA_REF_ABS -g $GB_REF_ABS -t {threads} >> $LOG_ABS 2>&1
+            mitohifi.py -c $INPUT_ABS -f $FASTA_REF_ABS -g $GB_REF_ABS -t {threads} -d >> $LOG_ABS 2>&1
+            echo "🔹 Asm4pg -> cleaning up..." >> $LOG_ABS 2>&1
+            rm fixed_header_contigs.fasta
+            rm -rf contigs*
+            rm -rf coverage_mapping
+            rm -rf final_mitogenome_choice
+            rm -rf potential_contigs
+            rm contigs_annotations.png
+            mv final_mitogenome.fasta {wildcards.sample}_mitogenome_hap{wildcards.n}.fasta
+            mv final_mitogenome.gb {wildcards.sample}_mitogenome_hap{wildcards.n}.gb
             echo "✅ Asm4pg -> done!" >> $LOG_ABS 2>&1
         else
-            echo "🔹 Asm4pg -> no input contigs, skipping" > $LOG_ABS 2>&1
+            echo "🔹 Asm4pg -> no input mitogenome, skipping" > $LOG_ABS 2>&1
             touch {output}
             echo "✅ Asm4pg -> done!" >> $LOG_ABS 2>&1
         fi
-        """
-        
-# Rule to unzip the haplotypes
-rule unpigz_to_fasta:
-    input:
-        rules.haplotigs_handling.output.hap
-    output:
-        temp(os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap{n}","{sample}_final_hap{n}.fasta"))
-    container:
-        f"{container_registry}/samtools-pigz:latest"
-    threads: 4
-    shell:
-        "unpigz -k -p {threads} {input}"
+        """        
 
 # Make purge_dups cutoffs graph
 rule cutoffs_graph:
