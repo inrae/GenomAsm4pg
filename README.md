@@ -2,6 +2,10 @@
 
 **Asm4pg** is an **automatic and reproducible genome assembly workflow** designed for **pangenomic applications** using **PacBio HiFi data**.  
 
+The official MSpangepop repo can be found at the [INRAE forge](https://forge.inrae.fr/asm4pg/GenomAsm4pg).\
+A GitHub mirror can be found at [INRAE GitHub](https://github.com/inrae/GenomAsm4pg).
+
+
 This workflow leverages **[Snakemake](https://snakemake.readthedocs.io/en/stable/)** for efficient genome assembly and generates an **HTML report** summarizing key assembly statistics.  
 
 **Asm4pg** can assamble in :
