@@ -47,7 +47,8 @@ case "$EXTENSION" in
             exit 1
         fi
         echo "🔹 Asm4pg -> Converting and compressing .fasta or .fa file"
-        awk 'NR%2==1{sub(":.*", "", $0); print ">" substr($0,2)} NR%2==2{print}' "$INPUT_FILE" | pigz -p "$THREADS" > "$OUTPUT_FA"
+        pigz -p "$THREADS" -c "$INPUT_FILE" > "$OUTPUT_FA"
+
         ;;
 
     fastq|fq)

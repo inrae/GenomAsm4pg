@@ -16,6 +16,7 @@ PREFIX=$7
 OUT1=$8
 OUT2=$9
 INPUT_FQ=${10}
+INPUT_LONG=${12}
 
 echo "🔹 Asm4pg -> Starting assembly: $date"
 
@@ -87,10 +88,34 @@ run_hifiasm() {
             cleanup_files
             ;;
         ont)
-            echo "🔹 Asm4pg -> ONT mode, using a fastq file"
-            hifiasm -l"$PURGE_FORCE" -o "$PREFIX" -t "$THREADS" --ont "$INPUT_FQ"
-            mv "${PREFIX}.bp.hap1.p_ctg.gfa" "$OUT1"
-            mv "${PREFIX}.bp.hap2.p_ctg.gfa" "$OUT2"
+            # 1. Lancer Hifiasm
+            hifiasm -l"$PURGE_FORCE" -o "$PREFIX" -t "$THREADS" --ont "$INPUT_FQ" --ul "$INPUT_LONG"
+
+            # 2. Vérifier  les fichiers de sortie produits
+            # Cas n°1 : Hifiasm a produit une sortie haploïde standard (.p_ctg.gfa)
+            if [ -f "${PREFIX}.p_ctg.gfa" ]; then
+                echo "✅ Asm4pg -> Sortie haploïde standard détectée."
+                mv "${PREFIX}.p_ctg.gfa" "$OUT1"
+                cp "$OUT1" "$OUT2" # Crée un fichier hap2 vide pour Snakemake
+
+            # Cas n°2 : Hifiasm a produit une sortie diploïde standard (.bp.hap1.p_ctg.gfa)
+            elif [ -f "${PREFIX}.bp.hap1.p_ctg.gfa" ]; then
+                echo "✅ Asm4pg -> Sortie diploïde standard détectée."
+                mv "${PREFIX}.bp.hap1.p_ctg.gfa" "$OUT1"
+                cp "$OUT1" "$OUT2" # Crée un fichier hap2 vide pour Snakemake
+            
+            # Cas n°3 : Hifiasm a produit une sortie haploïde mais avec le préfixe 'bp.' 
+            elif [ -f "${PREFIX}.bp.p_ctg.gfa" ]; then
+                echo "✅ Asm4pg -> Sortie haploïde avec préfixe 'bp.' détectée."
+                mv "${PREFIX}.bp.p_ctg.gfa" "$OUT1"
+                cp "$OUT1" "$OUT2" # Crée un fichier hap2 vide pour Snakemake
+
+            else
+                echo "ERREUR FATALE: Hifiasm n'a produit aucun des fichiers d'assemblage attendus !"
+                echo "Vérifiez les logs de hifiasm et la qualité/quantité de vos données."
+                exit 1
+            fi
+            
             cleanup_files
             ;;
         hi-c)
