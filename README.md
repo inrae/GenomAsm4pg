@@ -10,14 +10,30 @@ On a integrer deux étapes de préprocessing **optionnelles** pour optimiser la 
 
 **Pipeline scientifique :**
 1. **Alignement** des reads contre une référence mitochondriale avec `minimap2`
-2. **Classification automatique** : reads alignés → mitochondriaux, reads non-alignés → nucléaires
+2. **Classification** : reads alignés → mitochondriaux, reads non-alignés → nucléaires
 3. **Extraction parallèle** des deux populations avec `samtools` et `seqtk`
 
 
+#### **classification par alignement**
+
+**Principe:** Utilisation de l'alignement différentiel pour discriminer l'origine cellulaire des reads.
+
+```bash
+# Étape 1 : Alignement avec Minimap2 
+minimap2 -ax map-ont -t $THREADS $MITO_REFERENCE $INPUT_READS > alignments.sam
+
+# Étape 2 : Classification par flag SAM
+samtools view -F 4 alignments.sam | cut -f1 > mito_ids.txt    # Flag -F 4 = reads ALIGNÉS
+samtools view -f 4 alignments.sam | cut -f1 > nuclear_ids.txt # Flag -f 4 = reads NON-ALIGNÉS
+
+# Étape 3 : Extraction 
+seqtk subseq $INPUT_READS mito_ids.txt | gzip > reads_mito.fastq.gz
+seqtk subseq $INPUT_READS nuclear_ids.txt | gzip > reads_nuclear.fastq.gz
+```
 
 ### Downsampling  avec préservation des reads longs
 
-**Pipeline scientifiquement informé :**
+**Pipeline scientifiquement :**
 1. **Estimation de la taille du génome** avec `Jellyfish` (comptage k-mers) + `GenomeScope`
 2. **Calcul** du ratio de downsampling pour atteindre la couverture cible (current_cov = tot bases / genome size, ratio)
 3. **Sous-échantillonnage** des reads avec `SeqKit`
@@ -25,6 +41,62 @@ On a integrer deux étapes de préprocessing **optionnelles** pour optimiser la 
 
 ** Les reads longs sont extraits du **pool non-échantillonné**, maximisant ainsi la récupération des reads informatifs !
 
+#### **estimation de la taille du génome**
+
+**Méthode :** Analyse des fréquences k-mers + modèle statistique GenomeScope
+
+```bash
+# Étape 1 : Comptage exhaustif des k-mers avec Jellyfish
+jellyfish count -m $KMER_SIZE -s 100M -t $THREADS -C -o genome.jf <(zcat reads.fastq.gz)
+jellyfish histo -h 1000000 -t $THREADS genome.jf > kmer_frequencies.histo
+```
+
+**Formule GenomeScope pour estimation taille du génome :**
+```
+Génome_haploïde = Σ(fréquence_i × nombre_kmers_i) / pic_hétérozygote
+```
+
+#### **Calculs du downsampling**
+
+**Variables extraites  :**
+```bash
+# Extraction des résultats GenomeScope (script_downsampling.sh)
+ESTIMATED_GENOME_SIZE=$(awk '/Genome Haploid Length/ {gsub(/,/, "", $4); print $4}' genomescope/summary.txt)
+TOTAL_BASES=$(zcat reads.fastq.gz | awk 'NR%4==2{bases+=length($0)}END{print bases}')
+```
+
+**Calcul du ratio de downsampling :**
+```bash
+# 1. Couverture actuelle
+CURRENT_COVERAGE = TOTAL_BASES / ESTIMATED_GENOME_SIZE
+
+# 2. Fraction de downsampling
+FRACTION = TARGET_COVERAGE / CURRENT_COVERAGE
+
+# 3. Sécurité (pas d'upsampling)
+if FRACTION > 1.0:
+    FRACTION = 1.0
+
+# 4. Couverture finale obtenue
+FINAL_COVERAGE = (BASES_APRÈS_DOWNSAMPLING) / ESTIMATED_GENOME_SIZE
+```
+#### **préservation des ultra-long reads**
+
+Extraction des reads longs depuis le **pool non-échantillonné**
+
+```bash
+# Étape 1 : Downsampling principal avec seed reproductible
+seqkit sample -p $FRACTION -s 42 reads.fastq.gz > downsampled_reads.fastq.gz
+
+# Étape 2 : Identification des reads sélectionnés
+seqkit seq -n downsampled_reads.fastq.gz > selected_ids.txt
+
+# Étape 3 : Récupération du pool NON-échantillonné
+seqkit grep -v -f selected_ids.txt reads.fastq.gz > remaining_reads.fastq.gz
+
+# Étape 4 : Extraction des ultra-long reads (≥20kb) du pool restant
+seqkit seq -m 20000 remaining_reads.fastq.gz > ultra_long_reads.fastq.gz
+```
 
 
 
