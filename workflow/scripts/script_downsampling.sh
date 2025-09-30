@@ -2,8 +2,7 @@
 
 #================================================================
 # Script de downsampling avec estimation de la taille du génome
-# Version : 3.2
-# Auteur  : Michel Gomes
+# Auteur  : MG, SSB
 #================================================================
 # Étapes du pipeline :
 #   1. Comptage des k-mers avec Jellyfish

@@ -1,6 +1,6 @@
-# Author: Lucien PIAT based on Sukanya Denni's work
+# Author: based on Lucien PIAT and  Sukanya Denni's work
 # For: Project Pangenoak
-# Date: april, 2025
+# Date: sept, 2025
 
 configfile: ".config/masterconfig.yaml"
 include: "scripts/parameter_retrieval.py"
@@ -34,9 +34,83 @@ rule all:
             sample=config["samples"].keys()
         )
 
-rule input_conversion:
-    input: 
+rule separate_reads:
+    input:
         lambda wildcards: config["samples"][wildcards.sample]["reads"]
+    output:
+        nuclear = os.path.join(output_dir, "{sample}_results", "00_preprocess", "separation", "reads_{sample}_nuclear.fastq.gz"),
+        mito = os.path.join(output_dir, "{sample}_results", "00_preprocess", "separation", "reads_{sample}_mito.fastq.gz")
+    params:
+        run_sep = get_run_separation,
+        mito_ref = get_mito_reference,
+        work_dir = os.path.join(output_dir, "{sample}_results", "00_preprocess", "separation")
+    threads: 12
+    log:
+        os.path.join(output_dir, "{sample}_results", "logs", "separate_reads.log")
+    benchmark:
+        os.path.join(output_dir, "{sample}_results", "benchmark", "separate_reads_benchmark.txt")
+    priority: 50
+    shell:
+        """
+        module purge
+        module load bioinfo-ifb
+        module load minimap2/2.28
+        module load samtools/1.9
+        module load seqtk/1.3
+        mkdir -p {params.work_dir} $(dirname {log}) && \
+        ./workflow/scripts/separation_reads.sh {params.run_sep} {input} {params.mito_ref} {threads} {params.work_dir} {output.nuclear} {output.mito} > {log} 2>&1
+        """
+
+rule downsample_reads:
+    input:
+        lambda wildcards: (
+            os.path.join(output_dir, f"{wildcards.sample}_results", "00_preprocess", "separation", f"reads_{wildcards.sample}_nuclear.fastq.gz")
+            if get_run_separation(wildcards)
+            else config["samples"][wildcards.sample]["reads"]
+        )
+    output:
+        downsampled = os.path.join(output_dir, "{sample}_results", "00_preprocess", "downsampling", "reads_{sample}_downsampled.fastq.gz"),
+        longreads = os.path.join(output_dir, "{sample}_results", "00_preprocess", "downsampling", "reads_{sample}_longreads.fastq.gz")
+    params:
+        run_ds = get_run_downsampling,
+        coverage = get_target_coverage,
+        kmer_size = get_kmer_size,
+        ploidy = get_ploidy,
+        work_dir = os.path.join(output_dir, "{sample}_results", "00_preprocess", "downsampling", "work")
+    threads: 16
+    log:
+        os.path.join(output_dir, "{sample}_results", "logs", "downsample_reads.log")
+    benchmark:
+        os.path.join(output_dir, "{sample}_results", "benchmark", "downsample_reads_benchmark.txt")
+    priority: 40
+    shell:
+        """
+        module purge
+        module load bioinfo-ifb
+        module load kmer-jellyfish/2.3.0
+        module load seqkit/2.9.0
+        source /storage/replicated/cirad/binaries/ifb/miniconda3/etc/profile.d/conda.sh
+        conda activate wf_env
+        mkdir -p {params.work_dir} $(dirname {log}) && \
+        ./workflow/scripts/downsampling.sh {params.run_ds} {input} {params.coverage} {params.kmer_size} {params.ploidy} {threads} {params.work_dir} {output.downsampled} {output.longreads} > {log} 2>&1
+        """
+
+rule input_conversion:
+    input:
+        main_reads = lambda wildcards: (
+            os.path.join(output_dir, f"{wildcards.sample}_results", "00_preprocess", "downsampling", f"reads_{wildcards.sample}_downsampled.fastq.gz")
+            if get_run_downsampling(wildcards)
+            else (
+                os.path.join(output_dir, f"{wildcards.sample}_results", "00_preprocess", "separation", f"reads_{wildcards.sample}_nuclear.fastq.gz")
+                if get_run_separation(wildcards)
+                else config["samples"][wildcards.sample]["reads"]
+            )
+        ),
+        longreads = lambda wildcards: (
+            os.path.join(output_dir, f"{wildcards.sample}_results", "00_preprocess", "downsampling", f"reads_{wildcards.sample}_longreads.fastq.gz")
+            if get_run_downsampling(wildcards)
+            else ""
+        )
     output:
         fastagz = os.path.join(output_dir, "{sample}_results", "00_converted_input","reads_{sample}.fasta.gz")
     params:
@@ -51,9 +125,11 @@ rule input_conversion:
         mem_mb=250000
     container:
         f"{container_registry}/samtools-pigz:latest"
+    priority: 30
     shell:
         """
-        ./workflow/scripts/input_conversion.sh {input} {output.fastagz} {threads} {params.mode} {params.fastqgz} > {log} 2>&1
+        mkdir -p $(dirname {log}) &&
+        ./workflow/scripts/input_conversion.sh {input.main_reads} {output.fastagz} {threads} {params.mode} {params.fastqgz} {input.longreads} > {log} 2>&1
         """
 
 # Genome assembly using hifiasm
@@ -71,7 +147,9 @@ rule hifiasm:
         purge_force = get_purge_force,
         raw_out_hap1 = os.path.join(output_dir, "{sample}_results", "01_raw_assembly","{sample}.bp.hap1.p_ctg.gfa"),
         raw_out_hap2 = os.path.join(output_dir, "{sample}_results", "01_raw_assembly","{sample}.bp.hap2.p_ctg.gfa"),
-        fastqgz = os.path.join(output_dir, "{sample}_results", "00_converted_input","reads_{sample}.fastq.gz")
+        fastqgz = os.path.join(output_dir, "{sample}_results", "00_converted_input","reads_{sample}.fastq.gz"),
+        longreads = os.path.join(output_dir, "{sample}_results", "00_preprocess", "downsampling", "reads_{sample}_longreads.fastq.gz")
+
     benchmark:
         os.path.join(output_dir, "{sample}_results", "benchmark", "hifiasm_benchmark.txt")
     log:
@@ -79,7 +157,7 @@ rule hifiasm:
     threads: 20
     priority: 2
     resources:
-        mem_mb=250000
+        mem_mb=450000
     container:
         f"{container_registry}/hifiasm-box:latest"
     shell:
@@ -94,7 +172,8 @@ rule hifiasm:
             {params.prefix} \
             {output.hap1} \
             {output.hap2} \
-            {params.fastqgz} > {log} 2>&1
+            {params.fastqgz} \
+            {params.longreads}> {log} 2>&1
         """
 
 # Convert the GFA files of hifiasm to FASTA.gz
@@ -232,7 +311,15 @@ rule busco_hap1:
         f"{container_registry}/busco:5.7.1"
     shell:
         """
-        busco -f -i {input.hap} -l {params.lineage} --out_path {params.prefix} -o {params.sample} -m genome -c {threads} > {log} 2>&1 
+        # --- Commande BUSCO modifiée ---
+        busco -f -i {input.hap} \
+              -l {params.lineage} \
+              --out_path {params.prefix} \
+              -o {params.sample} \
+              -m genome \
+              -c {threads} \
+              --offline \
+              --download_path  /scratch/users/gomesm/work/ganoderma_african/data/databases/busco_downloads/ > {log} 2>&1 
         echo "🔹 Aasm4pg -> cleaning busco output files" >> {log} 2>&1 
         mv {params.prefix}/{params.sample}/short_summary.specific.{params.lineage}.{params.sample}.txt {output} >> {log} 2>&1
         rm -rf {params.prefix}/{params.sample} >> {log} 2>&1
