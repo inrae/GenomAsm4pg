@@ -1,21 +1,6 @@
-# Asm4pg - fork from cluster mtp(new meso)
+# Asm4pg - fork for cluster mtp(io-cpu)
 
-**Asm4pg** est un **workflow d'assemblage génomique automatique et reproductible** conçu pour les **applications pangénomiques** utilisant des **données PacBio HiFi**.
 
-Ce workflow exploite **[Snakemake](https://snakemake.readthedocs.io/en/stable/)** pour un assemblage génomique efficace et génère un **rapport HTML** résumant les statistiques clés de l'assemblage.
-
-**Asm4pg** peut assembler dans les modes suivants :
-- **Mode HiFi (par défaut)**  
-  Effectue un assemblage génomique primaire en utilisant des reads longs haute fidélité.
-
-- **Mode hi-c**  
-  Utilise les données Hi-C pour scaffolder les contigs assemblés en scaffolds à l'échelle chromosomique.
-
-- **Mode trio**  
-  Utilise les reads courts parentaux pour partitionner les reads longs par haplotype avant l'assemblage.
-
-- **Mode ont**  
-  Utilise des reads ultra-longs (en format fastq ou bam, pas fasta) pour effectuer l'assemblage.
 
 ## Les nouvelles fonctionnalités de préprocessing
 
