@@ -5,10 +5,11 @@ singularity-args: "--bind /scratch/users/gomesm/"
 keep-going: true
 
 default-resources:
-  slurm_account: dedicated-cpu@cirad
+  slurm_account: dedicated-cpu@cirad 
   slurm_partition: cpu-dedicated
   slurm_qos: dedicated
   time: '24:30:00'
   runtime: 1800
   mem_mb: 25000
   threads: 1
+# io cluster mtp
