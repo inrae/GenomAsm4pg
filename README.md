@@ -19,7 +19,7 @@ On a integrer deux étapes de préprocessing **optionnelles** pour optimiser la 
 
 **Pipeline scientifiquement informé :**
 1. **Estimation de la taille du génome** avec `Jellyfish` (comptage k-mers) + `GenomeScope`
-2. **Calcul automatique** du ratio de downsampling pour atteindre la couverture cible
+2. **Calcul** du ratio de downsampling pour atteindre la couverture cible (current_cov = tot bases / genome size, ratio)
 3. **Sous-échantillonnage** des reads avec `SeqKit`
 4. **Préservation ** des reads ultra-longs (≥20kb) du reste des données
 
@@ -27,7 +27,6 @@ On a integrer deux étapes de préprocessing **optionnelles** pour optimiser la 
 
 
 
-**Utilisation recommandée :** Couverture >100x, particulièrement >200x
 
 ### Gestion  des sorties haploïdes
 
@@ -53,12 +52,12 @@ hifiasm -l"$PURGE_FORCE" -o "$PREFIX" -t "$THREADS" --ont "$INPUT_FQ" $UL_OPT
 
 # 2. Détection  des patterns de sortie
 if [ -f "${PREFIX}.p_ctg.gfa" ]; then
-    # ✅ Cas 1: Sortie haploïde standard (ex: -l0 ou données faible hétérozygotie)
+    #  Cas 1: Sortie haploïde standard (ex: -l0 ou données faible hétérozygotie)
     mv "${PREFIX}.p_ctg.gfa" "$OUT1"
     cp "$OUT1" "$OUT2"  # Duplique pour satisfaire Snakemake
     
 elif [ -f "${PREFIX}.bp.hap1.p_ctg.gfa" ]; then
-    # ✅ Cas 2: Sortie diploïde standard
+    #  Cas 2: Sortie diploïde standard
     mv "${PREFIX}.bp.hap1.p_ctg.gfa" "$OUT1"
     if [ -f "${PREFIX}.bp.hap2.p_ctg.gfa" ]; then
         mv "${PREFIX}.bp.hap2.p_ctg.gfa" "$OUT2"
@@ -67,13 +66,13 @@ elif [ -f "${PREFIX}.bp.hap1.p_ctg.gfa" ]; then
     fi
     
 elif [ -f "${PREFIX}.bp.p_ctg.gfa" ]; then
-    # ✅ Cas 3: Haploïde avec préfixe 'bp.' 
+    # Cas 3: Haploïde avec préfixe 'bp.' 
     mv "${PREFIX}.bp.p_ctg.gfa" "$OUT1"
     cp "$OUT1" "$OUT2"
     
 else
-    # ❌ Cas d'erreur avec diagnostic
-    echo "❌ ERREUR: Aucun fichier d'assemblage trouvé !"
+    # Cas d'erreur avec diagnostic
+    echo "ERREUR: Aucun fichier d'assemblage trouvé !"
     exit 1
 fi
 ```
@@ -118,7 +117,7 @@ shell: """
 
 #### **Support conditionnel des ultra-long reads**
 
-**Objectif :** Maximiser la contiguïté d'assemblage en utilisant les reads les plus informatifs.
+**Objectif :** Maximiser la contiguïté d'assemblage en utilisant les reads les plus grands.
 
 ```bash
 # Dans le script hifiasm_call.sh - Nouveau paramètre INPUT_LONG
@@ -140,7 +139,7 @@ hifiasm -l"$PURGE_FORCE" -o "$PREFIX" -t "$THREADS" --ont "$INPUT_FQ" $UL_OPT
 ### Flux de données intégré
 
 ```
-Reads bruts (ex: 300x de couverture)
+Reads bruts (ex: 250x de couverture)
     ↓
 [separate_reads] → Séparation mito/nucléaire intelligente
     ↓                  (reads nucléaires purifiés)
@@ -157,7 +156,7 @@ Reads bruts (ex: 300x de couverture)
     ↓              ↓
     ↓         Détection automatique sortie (haploïde/diploïde)
     ↓              ↓
-Assemblages finaux optimisés (contiguïté maximale)
+Assemblages finaux  (contiguïté maximale)
 ```
 
 **Points clés du flux :**
@@ -177,7 +176,7 @@ On peut activer/désactiver ces étapes indépendamment via la configuration(mas
 
 ```bash
 ├── README.md
-├── asm4pg  # <- Le script d'exécution
+├── asm4pg  # <- script d'exécution
 ├── doc
 ├── workflow
 │   ├── scripts
@@ -187,7 +186,7 @@ On peut activer/désactiver ces étapes indépendamment via la configuration(mas
     └── masterconfig.yaml # <- fichier configuration
 ```
 
-## ✅ Prérequis
+## Prérequis
 
 - **Miniforge/conda (pour Snakemake>=8.4.7 et le plugin SLURM)**
 - **Singularity/Apptainer** (pour l'exécution containerisée)
