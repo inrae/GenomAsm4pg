@@ -16,8 +16,7 @@ PREFIX=$7
 OUT1=$8
 OUT2=$9
 INPUT_FQ=${10}
-INPUT_LONG=${12}
-
+INPUT_LONG=${11}
 echo "🔹 Asm4pg -> Starting assembly: $date"
 
 echo "Asm4pg -> Given hifiasm parameters:"
@@ -26,6 +25,7 @@ echo "  PURGE_FORCE: $PURGE_FORCE"
 echo "  THREADS: $THREADS"
 echo "  INPUT FASTA: $INPUT"
 echo "  INPUT FASTQ: $INPUT_FQ"
+echo "  INPUT FASTQ: $INPUT_LONG"
 echo "  RUN_1: $RUN_1"
 echo "  RUN_2: $RUN_2"
 echo "  PREFIX: $PREFIX"
@@ -80,6 +80,7 @@ run_yahs_scaffolding() {
 
 run_hifiasm() {
     echo "🔹 Asm4pg -> Running hifiasm..."
+    echo "🔹 Asm4pg -> Running hifiasm..."
     case "$MODE" in
         default)
             hifiasm -l"$PURGE_FORCE" -o "$PREFIX" -t "$THREADS" "$INPUT"
@@ -88,31 +89,43 @@ run_hifiasm() {
             cleanup_files
             ;;
         ont)
+            echo "🔹 Asm4pg -> ONT mode, using a fastq file"
             # 1. Lancer Hifiasm
-            hifiasm -l"$PURGE_FORCE" -o "$PREFIX" -t "$THREADS" --ont "$INPUT_FQ" --ul "$INPUT_LONG"
+            UL_OPT=""
+            if [ -n "$INPUT_LONG" ]; then
+                UL_OPT="--ul $INPUT_LONG"
+                echo "🔹 Asm4pg -> Using ultra-long reads: $INPUT_LONG"
+            fi
 
-            # 2. Vérifier  les fichiers de sortie produits
+            hifiasm -l"$PURGE_FORCE" -o "$PREFIX" -t "$THREADS" --ont "$INPUT_FQ" $UL_OPT
+
+            # 2. Vérifier intelligemment les fichiers de sortie produits
             # Cas n°1 : Hifiasm a produit une sortie haploïde standard (.p_ctg.gfa)
             if [ -f "${PREFIX}.p_ctg.gfa" ]; then
                 echo "✅ Asm4pg -> Sortie haploïde standard détectée."
                 mv "${PREFIX}.p_ctg.gfa" "$OUT1"
-                cp "$OUT1" "$OUT2" # Crée un fichier hap2 vide pour Snakemake
+                cp "$OUT1" "$OUT2" # Crée un fichier hap2 identique pour Snakemake
 
             # Cas n°2 : Hifiasm a produit une sortie diploïde standard (.bp.hap1.p_ctg.gfa)
             elif [ -f "${PREFIX}.bp.hap1.p_ctg.gfa" ]; then
                 echo "✅ Asm4pg -> Sortie diploïde standard détectée."
                 mv "${PREFIX}.bp.hap1.p_ctg.gfa" "$OUT1"
-                cp "$OUT1" "$OUT2" # Crée un fichier hap2 vide pour Snakemake
+                if [ -f "${PREFIX}.bp.hap2.p_ctg.gfa" ]; then
+                    mv "${PREFIX}.bp.hap2.p_ctg.gfa" "$OUT2"
+                else
+                    cp "$OUT1" "$OUT2" # Crée un fichier hap2 identique si absent
+                fi
             
             # Cas n°3 : Hifiasm a produit une sortie haploïde mais avec le préfixe 'bp.' 
             elif [ -f "${PREFIX}.bp.p_ctg.gfa" ]; then
                 echo "✅ Asm4pg -> Sortie haploïde avec préfixe 'bp.' détectée."
                 mv "${PREFIX}.bp.p_ctg.gfa" "$OUT1"
-                cp "$OUT1" "$OUT2" # Crée un fichier hap2 vide pour Snakemake
+                cp "$OUT1" "$OUT2" # Crée un fichier hap2 identique pour Snakemake
 
+            # Cas d'erreur : Aucun fichier de sortie principal n'a été trouvé
             else
-                echo "ERREUR FATALE: Hifiasm n'a produit aucun des fichiers d'assemblage attendus !"
-                echo "Vérifiez les logs de hifiasm et la qualité/quantité de vos données."
+                echo "❌ ERREUR FATALE: Hifiasm n'a produit aucun des fichiers d'assemblage attendus !"
+                echo "   Vérifiez les logs de hifiasm et la qualité/quantité de vos données."
                 exit 1
             fi
             

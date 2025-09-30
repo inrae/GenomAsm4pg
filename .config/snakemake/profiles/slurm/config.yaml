@@ -1,12 +1,14 @@
 executor: slurm
 jobs: 10
 use-singularity: true
-singularity-args: "--bind $(pwd)"
-keep-going: True
+singularity-args: "--bind /scratch/users/gomesm/"
+keep-going: true
 
 default-resources:
-  #slurm_account: add if needed on your hpc
-  runtime: 4800
-  time: 80:00:00
+  slurm_account: dedicated-cpu@cirad
+  slurm_partition: cpu-dedicated
+  slurm_qos: dedicated
+  time: '24:30:00'
+  runtime: 1800
   mem_mb: 25000
   threads: 1
