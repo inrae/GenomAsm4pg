@@ -111,3 +111,14 @@ LAI
 ```{r comment='', echo=FALSE}
 cat(head(readLines(snakemake@input[["LAI_hap2"]]), 2), sep = '\n')
 ```
+
+### Mitogenome
+Contigs identified as mitochondrial
+#### Hap1 
+```{r comment='', echo=FALSE}
+cat(head(readLines(snakemake@input[["mitogenome_contigs_hap1"]]), 2), sep = '\n')
+```
+#### Hap1 
+```{r comment='', echo=FALSE}
+cat(head(readLines(snakemake@input[["mitogenome_contigs_hap2"]]), 2), sep = '\n')
+```

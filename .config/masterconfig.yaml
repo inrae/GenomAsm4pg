@@ -9,7 +9,7 @@ samples:
     busco_lineage: insecta_odb10
 
 # FULL path to your output dir (mandatory)
-output_dir_pdw: /home/lpiat/work/GenomAsm4pg/
+output_dir_pdw: /home
 
 # ----
 
@@ -27,7 +27,8 @@ output_dir: "results/"
 #   r2: The run2/parent2 read file
 #   run_purge_dups: [True, False] (default: False)
 #   run_ragtag: [True, False] (default: False)
-#   reference_genome: Assembled fasta.gz genome
+#   reference_genome: fasta.gz reference genome used for ragtag
+#   reference_mitochondrial_genome: list, the reference mitogenome and annotation in genbank format [mitogenome.fasta, annot.gb]
 #   busco_lineage: (default: eukaryota_odb10)
 #   run_quast: [True, False] (default: False)
 

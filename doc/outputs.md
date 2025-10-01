@@ -19,6 +19,7 @@ results/
     ├── 02_final_assembly
     │   ├── hap1
     │   │   ├── cutoffs                 # Purge_dups coverage cutoffs
+    │   │   ├── mitogenome              # Mitogenome and names of contigs identified as mitochondrial                 
     │   │   ├── ragtag_scafold
     │   │   │   └── recap.txt          # Scaffolding summary
     │   │   └── final_hap1.fasta.gz    # Final processed haplotype 1
