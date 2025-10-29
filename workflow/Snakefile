@@ -38,68 +38,210 @@ rule all:
             sample=config["samples"].keys(), n=[1, 2]
         )
         
-
 rule input_conversion:
-    input: 
-        lambda wildcards: config["samples"][wildcards.sample]["reads"]
+    input:
+        reads = lambda wildcards: config["samples"][wildcards.sample]["reads"]
     output:
-        fastagz = os.path.join(output_dir, "{sample}_results", "00_converted_input","reads_{sample}.fasta.gz")
+        fastagz = os.path.join(output_dir, "{sample}_results", "00_preprocess", "reads_{sample}.fasta.gz"),
+        fastqgz = os.path.join(output_dir, "{sample}_results", "00_preprocess", "reads_{sample}.fastq.gz")
     params:
-        mode = get_mode,
-        fastqgz = os.path.join(output_dir, "{sample}_results", "00_converted_input","reads_{sample}.fastq.gz")
+        mode = get_mode
+    threads: 20
+    container:
+        f"{container_registry}/samtools-pigz:latest"
+    resources:
+        mem_mb=250000
     log:
         os.path.join(output_dir, "{sample}_results", "logs", "input_conversion.log")
     benchmark:
         os.path.join(output_dir, "{sample}_results", "benchmark", "input_conversion_benchmark.txt")
+    shell:
+        """
+        bash workflow/scripts/input_conversion.sh \\
+            {input.reads} \\
+            {output.fastagz} \\
+            {threads} \\
+            {params.mode} \\
+            {output.fastqgz} > {log} 2>&1
+        """
+
+rule separate_reads:
+    input:
+        fasta = rules.input_conversion.output.fastagz,
+        fastq = rules.input_conversion.output.fastqgz
+    output:
+        nuclear_fasta = os.path.join(output_dir, "{sample}_results", "00_preprocess", "nuclear_{sample}.fasta.gz"),
+        nuclear_fastq = os.path.join(output_dir, "{sample}_results", "00_preprocess", "nuclear_{sample}.fastq.gz"),
+        mito_fasta = os.path.join(output_dir, "{sample}_results", "00_preprocess", "mito_{sample}.fasta.gz"),
+        mito_fastq = os.path.join(output_dir, "{sample}_results", "00_preprocess", "mito_{sample}.fastq.gz")
+    params:
+        run_bool = get_separation_bool,
+        mito_ref = get_mito_reference,
+        work_dir = lambda wildcards: os.path.join(output_dir, f"{wildcards.sample}_results", "00_preprocess", "separation_work"),
+        mode = get_mode
+    log:
+        os.path.join(output_dir, "{sample}_results", "logs", "separate_reads.log")
+    benchmark:
+        os.path.join(output_dir, "{sample}_results", "benchmark", "separate_reads_benchmark.txt")
     threads: 20
     resources:
         mem_mb=250000
     container:
-        f"{container_registry}/samtools-pigz:latest"
+        f"{container_registry}/biotools:minimap2-samtools-seqtk"
     shell:
         """
-        ./workflow/scripts/input_conversion.sh {input} {output.fastagz} {threads} {params.mode} {params.fastqgz} > {log} 2>&1
+        bash workflow/scripts/separation_reads.sh \
+            {params.run_bool} \
+            {input.fasta} \
+            {input.fastq} \
+            {params.mito_ref[0]} \
+            {threads} \
+            {params.work_dir} \
+            {output.nuclear_fasta} \
+            {output.nuclear_fastq} \
+            {output.mito_fasta} \
+            {output.mito_fastq} \
+            {params.mode} > {log} 2>&1
         """
 
-# Genome assembly using hifiasm
-rule hifiasm:
+# Count k-mers in the input reads and generate a histogram of k-mer frequencies.
+rule jellyfish:
     input:
-        fasta = rules.input_conversion.output.fastagz
+        reads = rules.input_conversion.output.fastagz
+    output:
+        jf = os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "jellyfish", "{sample}.jf"),
+        histo = os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "jellyfish", "{sample}.histo")
+    params:
+        km_size = get_kmer_size
+    threads: 20
+    benchmark:
+        os.path.join(output_dir, "{sample}_results", "benchmark", "jellyfish_benchmark.txt")
+    log:
+        os.path.join(output_dir, "{sample}_results", "logs", "jellyfish.log")
+    resources:
+        mem_mb=250000
+    container:
+        f"{container_registry}/jellyfish2.3.0"
+    shell:
+        """
+        echo "🔹 Asm4pg -> starting jellyfish counts of kmers of size {params.km_size}" > {log} 2>&1
+        jellyfish count -m {params.km_size} -s 100M -t {threads} -o {output.jf} -C <(zcat {input.reads}) >> {log} 2>&1
+        echo "🔹 Asm4pg -> starting to compute jellyfish histogram" >> {log} 2>&1
+        jellyfish histo -h 1000000 -t {threads} {output.jf} > {output.histo} 2>> {log}
+        if [ ! -s {output.histo} ]; then
+            echo "⚠️  Asm4pg -> jellyfish missing histo, check logs" >> {log}
+        else
+            echo "✅ Asm4pg -> jellyfish histo created" >> {log}
+        fi
+        """
+
+# Analyze the k-mer histogram and estimate genome characteristics, including genome size, heterozygosity, and error rates. 
+rule genomescope:
+    input:
+        rules.jellyfish.output.histo
+    output:
+        plot = os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "genomescope", "linear_plot.png"),
+        summary = os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "genomescope", "summary.txt")
+    params:
+        ploidy = get_ploidy,
+        km_size = get_kmer_size,
+        out_dir = os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "genomescope"),
+    benchmark:
+        os.path.join(output_dir, "{sample}_results", "benchmark", "genomescope_benchmark.txt")
+    log:
+        os.path.join(output_dir, "{sample}_results", "logs", "genomescope.log")
+    container:
+        f"{container_registry}/genomescope2.0"
+    shell:
+        "genomescope.R -k {params.km_size} -i {input} -o {params.out_dir} -p {params.ploidy} > {log} 2>&1 "
+
+# Rule for downsampling reads to a specific coverage based on estimated genome size
+rule downsample_reads:
+    input:
+        # Always use separation outputs as input (they exist even if separation is skipped)
+        fasta = rules.separate_reads.output.nuclear_fasta,
+        fastq = rules.separate_reads.output.nuclear_fastq,
+        # Use the actual genomescope output location
+        genomescope_summary = rules.genomescope.output.summary
+    output:
+        downsampled_fasta = os.path.join(output_dir, "{sample}_results", "00_preprocess", "downsampled_{sample}.fasta.gz"),
+        downsampled_fastq = os.path.join(output_dir, "{sample}_results", "00_preprocess", "downsampled_{sample}.fastq.gz"),
+        longreads_fasta = os.path.join(output_dir, "{sample}_results", "00_preprocess", "longreads_{sample}.fasta.gz"),
+        longreads_fastq = os.path.join(output_dir, "{sample}_results", "00_preprocess", "longreads_{sample}.fastq.gz")
+    params:
+        run_bool = get_downsampling_bool,
+        coverage = get_target_coverage,
+        work_dir = lambda wildcards: os.path.join(output_dir, f"{wildcards.sample}_results", "00_preprocess", "downsampling_work"),
+        mode = get_mode
+    threads: 1
+    container:
+        f"{container_registry}/downsampling:latest"
+    resources:
+        mem_mb=100000
+    benchmark:
+        os.path.join(output_dir, "{sample}_results", "benchmark", "downsample_reads_benchmark.txt")
+    log:
+        os.path.join(output_dir, "{sample}_results", "logs", "downsample_reads.log")
+    shell:
+        """
+        bash workflow/scripts/downsampling.sh \
+            {params.run_bool} \
+            {input.fasta} \
+            {input.fastq} \
+            {input.genomescope_summary} \
+            {params.coverage} \
+            {threads} \
+            {params.work_dir} \
+            {output.downsampled_fasta} \
+            {output.downsampled_fastq} \
+            {output.longreads_fasta} \
+            {output.longreads_fastq} \
+            {params.mode} > {log} 2>&1
+        """
+
+rule run_hifiasm:
+    input:
+        # Always require downsampling outputs (they exist even if downsampling is skipped)
+        fasta_downsampled = rules.downsample_reads.output.downsampled_fasta,
+        fastq_downsampled = rules.downsample_reads.output.downsampled_fastq,
+        fasta_longreads = rules.downsample_reads.output.longreads_fasta,
+        fastq_longreads = rules.downsample_reads.output.longreads_fastq
     output:
         hap1 = os.path.join(output_dir, "{sample}_results", "01_raw_assembly","raw_{sample}_hap1.gfa"),
         hap2 = os.path.join(output_dir, "{sample}_results", "01_raw_assembly","raw_{sample}_hap2.gfa")
     params:
-        prefix = os.path.join(output_dir, "{sample}_results", "01_raw_assembly","{sample}"), 
-        mode = get_mode, 
-        run_1 = lambda wildcards: get_run(wildcards, run=1),
-        run_2 = lambda wildcards: get_run(wildcards, run=2),
+        mode = get_mode,
         purge_force = get_purge_force,
-        raw_out_hap1 = os.path.join(output_dir, "{sample}_results", "01_raw_assembly","{sample}.bp.hap1.p_ctg.gfa"),
-        raw_out_hap2 = os.path.join(output_dir, "{sample}_results", "01_raw_assembly","{sample}.bp.hap2.p_ctg.gfa"),
-        fastqgz = os.path.join(output_dir, "{sample}_results", "00_converted_input","reads_{sample}.fastq.gz")
-    benchmark:
-        os.path.join(output_dir, "{sample}_results", "benchmark", "hifiasm_benchmark.txt")
-    log:
-        os.path.join(output_dir, "{sample}_results", "logs", "hifiasm.log")
+        run1 = lambda wildcards: get_run(wildcards, 1),
+        run2 = lambda wildcards: get_run(wildcards, 2),
+        prefix = lambda wildcards: os.path.join(output_dir, f"{wildcards.sample}_results", "01_raw_assembly", wildcards.sample),
+        # Determine which files to actually use based on mode
+        input_fasta = lambda wildcards, input: input.fasta_downsampled,
+        input_fastq = lambda wildcards, input: input.fastq_downsampled if get_mode(wildcards) == "ont" else "None",
+        input_longreads = lambda wildcards, input: input.fastq_longreads if get_mode(wildcards) == "ont" and get_downsampling_bool(wildcards) else input.fasta_longreads if get_downsampling_bool(wildcards) else "None"
     threads: 20
-    priority: 2
     resources:
         mem_mb=250000
     container:
         f"{container_registry}/hifiasm-box:latest"
+    benchmark:
+        os.path.join(output_dir, "{sample}_results", "benchmark", "hifiasm_benchmark.txt")
+    log:
+        os.path.join(output_dir, "{sample}_results", "logs", "hifiasm.log")
     shell:
         """
-        ./workflow/scripts/hifiasm_call.sh \
+        bash workflow/scripts/hifiasm_call.sh \
             {params.mode} \
             {params.purge_force} \
             {threads} \
-            {input.fasta} \
-            {params.run_1} \
-            {params.run_2} \
+            {params.input_fasta} \
+            {params.run1} \
+            {params.run2} \
             {params.prefix} \
             {output.hap1} \
             {output.hap2} \
-            {params.fastqgz} > {log} 2>&1
+            {params.input_fastq} \
+            {params.input_longreads} > {log} 2>&1
         """
 
 # Convert the GFA files of hifiasm to FASTA.gz
@@ -170,7 +312,7 @@ rule unpigz_to_fasta:
     shell:
         "unpigz -k -p {threads} {input}"
 
-rule mito_genome_extraction:
+rule mito_genome_from_assembly:
     input:
         rules.unpigz_to_fasta.output
     output:
@@ -180,11 +322,11 @@ rule mito_genome_extraction:
         out_dir = os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "mitogenome")
     threads: 20
     benchmark:
-        os.path.join(output_dir, "{sample}_results", "benchmark", "mito_genome_extraction{n}_benchmark.txt")
+        os.path.join(output_dir, "{sample}_results", "benchmark", "mito_genome_from_assembly{n}_benchmark.txt")
     resources:
         mem_mb=100000
     log:
-        os.path.join(output_dir, "{sample}_results", "logs", "mito_genome_extraction{n}.log")
+        os.path.join(output_dir, "{sample}_results", "logs", "mito_genome_from_assembly{n}.log")
     container:
         f"{container_registry}/mitohifi:3.2.1"
     shell:
@@ -230,7 +372,7 @@ rule mito_genome_extraction:
         else
             echo "🔹 Asm4pg -> mitogenome extraction unsuccessful, check logs" >> $LOG_ABS 2>&1
             rm *
-            echo "mitogenome extraction unsuccessful, check logs" > {output}
+            echo "mitogenome extraction unsuccessful (from assembly), check logs" > {output}
         fi
         """
 
@@ -369,57 +511,6 @@ rule find_telomeres:
             echo "✅ Asm4pg -> done!" >> {log}
         fi
         """
-
-# Count k-mers in the input reads and generate a histogram of k-mer frequencies.
-rule jellyfish:
-    input:
-        reads = rules.input_conversion.output.fastagz
-    output:
-        jf = temp(os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "jellyfish", "{sample}.jf")),
-        histo = os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "jellyfish", "{sample}.histo")
-    params:
-        km_size = get_kmer_size
-    threads: 10
-    benchmark:
-        os.path.join(output_dir, "{sample}_results", "benchmark", "jellyfish_benchmark.txt")
-    log:
-        os.path.join(output_dir, "{sample}_results", "logs", "jellyfish.log")
-    resources:
-        mem_mb=80000,
-    container:
-        f"{container_registry}/jellyfish2.3.0"
-    shell:
-        """
-        echo "🔹 Asm4pg -> starting jellyfish counts of kmers of size {params.km_size}" >> {log} 2>&1
-        jellyfish count -m {params.km_size} -s 100M -t {threads} -o {output.jf} -C <(zcat {input.reads}) >> {log} 2>&1
-        echo "🔹 Asm4pg -> starting to compute jellyfish histogram" >> {log} 2>&1
-        jellyfish histo -h 1000000 -t {threads} {output.jf} > {output.histo} 2>> {log}
-        if [ ! -s {output.histo} ]; then
-            echo "⚠️  Asm4pg -> jellyfish missing histo, check logs" >> {log}
-        else
-            echo "✅ Asm4pg -> jellyfish histo created" >> {log}
-        fi
-        """
-
-# Analyze the k-mer histogram and estimate genome characteristics, including genome size, heterozygosity, and error rates. 
-rule genomescope:
-    input:
-        rules.jellyfish.output.histo
-    output:
-        plot = os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "genomescope", "linear_plot.png"),
-        summary = os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "genomescope", "summary.txt")
-    params:
-        ploidy = get_ploidy,
-        km_size = get_kmer_size,
-        out_dir = os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "genomescope"),
-    benchmark:
-        os.path.join(output_dir, "{sample}_results", "benchmark", "genomescope_benchmark.txt")
-    log:
-        os.path.join(output_dir, "{sample}_results", "logs", "genomescope.log")
-    container:
-        f"{container_registry}/genomescope2.0"
-    shell:
-        "genomescope.R -k {params.km_size} -i {input} -o {params.out_dir} -p {params.ploidy} > {log} 2>&1 "
 
 # Compare the k-mer content between the assembly and the raw reads.
 rule kat:
