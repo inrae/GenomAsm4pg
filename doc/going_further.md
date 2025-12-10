@@ -28,7 +28,10 @@ Here are all the options and their default values:
 - `run_ragtag`: [True, False] If set to true, the workflow will run RagTag and produce a scaffold of the assemblies (default: False)
 - `reference_genome`: The reference genome used for QUAST and RagTag scaffolding
 - `run_quast`: [True, False] If set to true, the workflow will run Quast and porduce global assembly statistics.
-- `reference_mitochondrial_genome`: list, the reference mitogenome and annotation in genbank format [mitogenome.fasta, annot.gb] if set will identify mitochondrial contigs
+- `reference_mitochondrial_genome`: list, the reference mitogenome and annotation in genbank format [mitogenome.fasta, annot.gb]
+- `run_mito_separation:` [True, False] (default: False) If set to true, the workflow will extract mithocondrial reads BEFORE the assembly.
+- `run_downsampling:` [True, False] (default: False) If set to true, will reduce read count match target coverage
+-  `target_coverage:` int (defaut: 50)
 
 ⚠️ Advanced options (use only if you have read the tools' documentation; we recommend keeping default values):
 
