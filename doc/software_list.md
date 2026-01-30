@@ -8,7 +8,7 @@ Images are automatically pulled by Snakemake on first run and stored in the proj
 ## List of tools embeded in the workflow
 
 - [hifiasm](https://github.com/chhylp123/hifiasm) 0.24.0-r703 https://doi.org/10.1038/s41592-020-01056-5 
-- [Samtools](https://github.com/samtools/samtools) 1.10 and 1.13 https://doi.org/10.1093/gigascience/giab008 
+- [Samtools](https://github.com/samtools/samtools) 1.10 and 1.13 and 1.9 https://doi.org/10.1093/gigascience/giab008 
 - [fastp](https://github.com/OpenGene/fastp) 0.24.0  https://doi.org/10.1093/bioinformatics/bty560 
 - [bwa](https://github.com/lh3/bwa)  0.7.17-r1188  https://doi.org/10.48550/arXiv.1303.3997
 - [YaHS](https://github.com/c-zhou/yahs) 1.2.2  https://doi.org/10.1093/bioinformatics/btac808
@@ -28,3 +28,7 @@ Images are automatically pulled by Snakemake on first run and stored in the proj
 - matplotlib 0.11.5
 - [genometools](https://github.com/genometools/genometools) 1.5.9 https://doi.org/10.1109/tcbb.2013.68
 - [FindTelomeres](https://github.com/JanaSperschneider/FindTelomeres)
+- [MitoHiFi](https://github.com/marcelauliano/MitoHiFi) 3.2.3 https://doi.org/10.1186/s12859-023-05385-y
+- [minimap2](https://github.com/lh3/minimap2) v2.28 https://doi.org/10.1093/bioinformatics/bty191
+- [seqtk](https://github.com/lh3/seqtk) v1.3 https://github.com/lh3/seqtk
+- [seqkit](https://github.com/shenwei356/seqkit) v2.6.1 https://doi.org/10.1371/journal.pone.0163962

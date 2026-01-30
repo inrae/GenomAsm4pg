@@ -116,13 +116,14 @@ Asm4pg has many options. If you wish to modify the default values and know more 
 ```bash
 └── sample
     └── results
-        ├── 00_converted_input
+        ├── 00_preprocess
         ├── 01_raw_assembly
         │   ├── sample.fasta.gz
         │   └── sample.gfa
         ├── 02_final_assembly
         │   ├── hap1/hap2 
         │   │   ├── sample.fasta.gz # <- The final assembly
+        │   │   ├── mitogenome
         │   │   └── ragtag_scafold
         ├── 03_raw_data_qc
         │   ├── genometools

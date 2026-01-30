@@ -75,7 +75,15 @@ def get_kmer_size(wildcards) -> int:
         return 21
     return size
 
-# Fetch the reference genome
+# Fetch the reference mito genome (list of two files)
+def get_mito_reference(wildcards) -> list:
+    try:
+        ref = config["samples"][wildcards.sample]["reference_mitochondrial_genome"]
+    except KeyError:
+        return 'None'
+    return ref
+
+# Fetch the reference  genome
 def get_reference(wildcards) -> str:
     try:
         reference_genome = config["samples"][wildcards.sample]["reference_genome"]
@@ -102,3 +110,33 @@ def get_quast_bool(wildcards) -> bool:
         print(f'Asm4pg -> "run_quast" unspecified for {wildcards.sample}, using "False" by default', file=sys.stderr)
         return False
     return quast_bool
+
+# Fetch whether to run mitochondrial read separation
+def get_separation_bool(wildcards) -> bool:
+    try:
+        run_sep = config["samples"][wildcards.sample]["run_mito_separation"]
+        if run_sep == "true":
+            run_sep = True
+    except KeyError:
+        print(f'Asm4pg -> "run_mito_separation" unspecified for {wildcards.sample}, using "False" by default', file=sys.stderr)
+        return False
+    return run_sep
+
+# Fetch whether to run downsampling
+def get_downsampling_bool(wildcards) -> bool:
+    try:
+        run_ds = config["samples"][wildcards.sample]["run_downsampling"]
+        if run_ds == "true":
+            run_ds = True
+    except KeyError:
+        print(f'Asm4pg -> "run_downsampling" unspecified for {wildcards.sample}, using "False" by default', file=sys.stderr)
+        return False
+    return run_ds
+
+def get_target_coverage(wildcards) -> int:
+    try:
+        cov = config["samples"][wildcards.sample]["target_coverage"]
+    except KeyError:
+        print(f'Asm4pg -> "target_coverage" unspecified for {wildcards.sample}, using 50 by default', file=sys.stderr)
+        return 50
+    return cov
