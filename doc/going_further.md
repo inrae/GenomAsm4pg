@@ -1,8 +1,8 @@
 # Going Further
 
-## 01. Job.sh/local_run.sh Options
+## 01. asm4pg Options
 
-Usage: `asm4pg [dry|run|local-run|dag|rulegraph|unlock]`
+Usage: `asm4pg [dry|run|local-run|dag|rulegraph|unlock|touch]`
 
 - `dry` - run in dry-run mode
 - `run` - run the workflow with SLURM
