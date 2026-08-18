@@ -70,7 +70,7 @@ case "$EXTENSION" in
             echo "" | gzip > "$OUTPUT_FQ"
         fi
         ;;
-downsampling
+
     bam)
         echo "🔹 Asm4pg -> Converting BAM to FASTA"
         samtools fasta -@ "$THREADS" "$INPUT_FILE" | pigz -p "$THREADS" > "$OUTPUT_FA"
