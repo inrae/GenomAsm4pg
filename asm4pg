@@ -30,13 +30,13 @@ MEM_MB=$(free -m | awk '/^Mem:/{print $2}')
 #######################
 echo '🔹 Asm4pg -> Activating execution environment'
 case "${SLURM_SUBMIT_HOST:-$(hostname)}" in
-    **geno**)
+    *geno*)
         echo '🔹 Asm4pg -> Identified genotoul cluster'
         module purge
         module load containers/Apptainer/1.2.5     
         source activate wf_env                     
         ;;
-    **bb8**)
+    *bb8*)
         echo '🔹 Asm4pg -> Identified cbib cluster, use the local-run on cbib'
         module purge
         module load miniconda/3
