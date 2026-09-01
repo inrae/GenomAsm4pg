@@ -223,7 +223,7 @@ rule run_hifiasm:
     resources:
         mem_mb=250000
     container:
-        f"{container_registry}/hifiasm-box:latest"
+        f"{container_registry}/hifiasm-box:0.25.0"
     benchmark:
         os.path.join(output_dir, "{sample}_results", "benchmark", "hifiasm_benchmark.txt")
     log:
