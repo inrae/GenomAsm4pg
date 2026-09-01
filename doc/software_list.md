@@ -13,7 +13,7 @@ Images are automatically pulled by Snakemake on first run and stored in the proj
 - [bwa](https://github.com/lh3/bwa)  0.7.17-r1188  https://doi.org/10.48550/arXiv.1303.3997
 - [YaHS](https://github.com/c-zhou/yahs) 1.2.2  https://doi.org/10.1093/bioinformatics/btac808
 - [purge_dups](https://github.com/dfguan/purge_dups) 1.2.5 https://doi.org/10.1093/bioinformatics/btaa025 
-- [BUSCO](https://gitlab.com/ezlab/busco) 5.7.1  https://doi.org/10.1007/978-1-4939-9173-0_14
+- [compleasm](https://github.com/huangnengCSU/compleasm) 0.2.9, bundling miniprot 0.12-r237 and hmmsearch 3.3.2  https://doi.org/10.1093/bioinformatics/btad595
 - biopython 1.75  https://doi.org/10.1093/bioinformatics/btp163 
 - [genomescope](https://github.com/tbenavi1/genomescope2.0) 2.0 https://doi.org/10.1093/bioinformatics/btx153
 - [merqury](https://github.com/marbl/merqury) and [meryl](https://github.com/marbl/meryl) 1.3 : https://doi.org/10.1186/s13059-020-02134-9

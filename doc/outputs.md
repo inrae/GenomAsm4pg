@@ -35,8 +35,9 @@ results/
     │   └── genometools_stats.txt      # Basic sequence statistics
     ├── 04_assembly_qc
     │ ├── hap1
-    │ │   ├── busco                    # Completeness assessment
-    │ │   │   └── busco_run1_hap1.txt
+    │ │   ├── compleasm                # Completeness assessment
+    │ │   │   ├── compleasm_run1_hap1.txt
+    │ │   │   └── full_table_run1_hap1.tsv
     │ │   ├── katplot                  # K-mer frequency analysis
     │ │   │   ├── run1_hap1.katplot.png
     │ │   │   ├── run1_hap1-main.mx.spectra-cn.png

@@ -128,7 +128,7 @@ Asm4pg has many options. If you wish to modify the default values and know more 
         ├── 04_assembly_qc
         │   ├── hap1/hap2
         │   │   ├── genometools
-        │   │   ├── busco
+        │   │   ├── compleasm
         │   │   ├── katplot
         │   │   ├── LTR/LAI
         │   │   └── telomeres
