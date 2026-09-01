@@ -57,6 +57,13 @@ def get_busco_lin(wildcards) -> str:
         return "eukaryota_odb10"
     return lin
 
+# compleasm takes the lineage name and the OrthoDB as separate arguments,
+def split_lineage(lineage: str):
+    if "_odb" in lineage:
+        name, odb = lineage.split("_odb", 1)
+        return name, "odb" + odb
+    return lineage, "odb10"
+
 # Fetch the genome ploidy
 def get_ploidy(wildcards) -> int:
     try:
