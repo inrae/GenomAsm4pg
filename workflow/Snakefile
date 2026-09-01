@@ -430,64 +430,73 @@ use rule genometools_on_raw_data as genometools_on_assembly with:
         os.path.join(output_dir, "{sample}_results", "logs", "genometools_on_assembly_hap{n}.log")
     priority: 0
 
-# BUSCO stats haplotype 1
-rule busco_hap1:
-    input:
-        hap = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap1","{sample}_final_hap1.fasta")
+# Download the BUSCO lineage ONCE, before any assessment runs. Keyed on the lineage
+rule download_compleasm_lineage:
     output:
-        os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "busco", "busco_{sample}_hap1.txt")
+        directory(os.path.join(output_dir, "compleasm_lineages", "{lineage}"))
     params:
-        prefix = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "busco"),
-        lineage=get_busco_lin, 
-        sample="{sample}_hap1"
+        name = lambda wildcards: split_lineage(wildcards.lineage)[0],
+        odb = lambda wildcards: split_lineage(wildcards.lineage)[1]
+    threads: 1
+    log:
+        os.path.join(output_dir, "logs", "download_compleasm_lineage_{lineage}.log")
+    container:
+        f"{container_registry}/compleasm:0.2.9"
+    shell:
+        """
+        echo "🔹 Asm4pg -> downloading compleasm lineage {wildcards.lineage}" > {log} 2>&1
+        compleasm download {params.name} --odb {params.odb} -L {output} >> {log} 2>&1
+        """
+
+# calculate the busco with compleasm
+rule compleasm:
+    input:
+        hap = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap{n}","{sample}_final_hap{n}.fasta"),
+        lineage = lambda wildcards: os.path.join(output_dir, "compleasm_lineages", get_busco_lin(wildcards))
+    output:
+        summary = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "compleasm", "compleasm_{sample}_hap{n}.txt")
+    params:
+        run_dir = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "compleasm", "run_hap{n}"),
+        out_dir = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "compleasm"),
+        name = lambda wildcards: split_lineage(get_busco_lin(wildcards))[0],
+        odb = lambda wildcards: split_lineage(get_busco_lin(wildcards))[1],
+        lineage = get_busco_lin
     threads: 20
     benchmark:
-        os.path.join(output_dir, "{sample}_results", "benchmark", "busco_hap1_benchmark.txt")
+        os.path.join(output_dir, "{sample}_results", "benchmark", "compleasm_hap{n}_benchmark.txt")
     resources:
         mem_mb=250000
     log:
-        os.path.join(output_dir, "{sample}_results", "logs", "busco_hap1.log")
+        os.path.join(output_dir, "{sample}_results", "logs", "compleasm_hap{n}.log")
     container:
-        f"{container_registry}/busco:5.7.1"
+        f"{container_registry}/compleasm:0.2.9"
     shell:
         """
-        echo "🔹 Asm4pg -> starting BUSCO on {input.hap}" > {log} 2>&1
-        
+        echo "🔹 Asm4pg -> starting compleasm on {input.hap}" > {log} 2>&1
+
         # Check if input file is empty
         if [ ! -s {input.hap} ]; then
-            echo "input file empty" > {output}
-            echo "⚠️  Asm4pg -> Warning: Input file is empty, skipping BUSCO!" >> {log}
+            echo "input file empty" > {output.summary}
+            echo "⚠️  Asm4pg -> Warning: Input file is empty, skipping compleasm!" >> {log}
         else
-            busco -f -i {input.hap} -l {params.lineage} --out_path {params.prefix} -o {params.sample} -m genome -c {threads} >> {log} 2>&1 
-            
-            # Check if BUSCO produced the expected output
-            if [ -f {params.prefix}/{params.sample}/short_summary.specific.{params.lineage}.{params.sample}.txt ]; then
-                echo "🔹 Asm4pg -> cleaning busco output files" >> {log} 2>&1 
-                mv {params.prefix}/{params.sample}/short_summary.specific.{params.lineage}.{params.sample}.txt {output} >> {log} 2>&1
-                rm -rf {params.prefix}/{params.sample} >> {log} 2>&1
-                echo "✅ Asm4pg -> BUSCO completed successfully" >> {log}
+            compleasm run -a {input.hap} -o {params.run_dir} \
+                -l {params.name} --odb {params.odb} \
+                -L {input.lineage} -t {threads} >> {log} 2>&1
+
+            if [ -f {params.run_dir}/summary.txt ]; then
+                echo "🔹 Asm4pg -> cleaning compleasm output files" >> {log} 2>&1
+                mv {params.run_dir}/summary.txt {output.summary} >> {log} 2>&1
+                # Keep the BUSCO-format table, the one other tools expect
+                mv {params.run_dir}/{params.lineage}/full_table_busco_format.tsv \
+                   {params.out_dir}/full_table_{wildcards.sample}_hap{wildcards.n}.tsv >> {log} 2>&1 || true
+                rm -rf {params.run_dir} >> {log} 2>&1
+                echo "✅ Asm4pg -> compleasm completed successfully" >> {log}
             else
-                echo "⚠️  Asm4pg -> Warning: BUSCO did not produce expected output!" >> {log}
-                echo "BUSCO failed to produce output" > {output}
+                echo "⚠️  Asm4pg -> Warning: compleasm did not produce expected output!" >> {log}
+                echo "compleasm failed to produce output" > {output.summary}
             fi
         fi
         """
-
-# BUSCO stats haplotype 2 (we do them one by on to avoid downlaoding the database twice)
-use rule busco_hap1 as busco_hap2 with:
-    input:
-        hap = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap2","{sample}_final_hap2.fasta"),
-        other = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "busco", "busco_{sample}_hap1.txt")
-    output:
-        os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "busco", "busco_{sample}_hap2.txt")
-    benchmark:
-        os.path.join(output_dir, "{sample}_results", "benchmark", "busco_hap2_benchmark.txt")
-    log:
-        os.path.join(output_dir, "{sample}_results", "logs", "busco_hap2.log")
-    params:
-        prefix = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "busco"),
-        lineage=get_busco_lin, 
-        sample="{sample}_hap2"
 
 # Estimate telomeric region content
 rule find_telomeres:
@@ -795,8 +804,8 @@ rule generate_report:
         genometools_hap1 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "{sample}_hap1_genometools_stats.txt"),
         genometools_hap2 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "{sample}_hap2_genometools_stats.txt"),
         
-        busco_hap1 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "busco", "busco_{sample}_hap1.txt"),
-        busco_hap2 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "busco", "busco_{sample}_hap2.txt"),
+        compleasm_hap1 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "compleasm", "compleasm_{sample}_hap1.txt"),
+        compleasm_hap2 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "compleasm", "compleasm_{sample}_hap2.txt"),
 
         kplot_hap1 =os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "katplot", "{sample}_hap1.katplot.png"),
         kplot_hap2 =os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "katplot", "{sample}_hap2.katplot.png"),
