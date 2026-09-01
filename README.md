@@ -8,7 +8,7 @@ A GitHub mirror can be found at [INRAE GitHub](https://github.com/inrae/GenomAsm
 
 This workflow leverages **[Snakemake](https://snakemake.readthedocs.io/en/stable/)** for efficient genome assembly and generates an **HTML report** summarizing key assembly statistics.  
 
-**Asm4pg** can assamble in :
+**Asm4pg** can assemble in :
 - **HiFi mode (default)**  
   Performs primary genome assembly using high-fidelity long reads.
 
