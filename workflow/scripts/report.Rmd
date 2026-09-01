@@ -73,6 +73,7 @@ cat(readLines(snakemake@input[["merqury_qv"]]), sep = '\n')
 
 ### Completeness (compleasm)
 S: single copy, D: duplicated, F: fragmented, I: incomplete, M: missing, N: total markers
+
 #### Hap 1
 ```{r comment='', echo=FALSE}
 cat(readLines(snakemake@input[["compleasm_hap1"]]), sep = '\n')
