@@ -43,6 +43,11 @@ fi
 available_mem=$(free -h | awk '/Mem:/ {print $7}')
 echo "🔹 Asm4pg -> Available memory: $available_mem"
 
+# Bloom filter exponent shared by hifiasm -f and yak -b: 2**N bits if this step 
+# OOM-kills any smaller box. Uncomment the second line to cap it 
+BLOOM_BITS=37
+#BLOOM_BITS=34
+
 cleanup_files() {
     echo "🔹 Asm4pg -> Cleaning up intermediate files..."
     # Don't remove GFA files - we might need them!
@@ -163,7 +168,7 @@ run_hifiasm() {
     case "$MODE" in
         default)
             echo "🔹 Asm4pg -> Running in default mode"
-            hifiasm -l"$PURGE_FORCE" -o "$PREFIX" -t "$THREADS" "$INPUT" || HIFIASM_EXIT=$?
+            hifiasm -l"$PURGE_FORCE" -f"$BLOOM_BITS" -o "$PREFIX" -t "$THREADS" "$INPUT" || HIFIASM_EXIT=$?
             handle_hifiasm_output "default" ${HIFIASM_EXIT:-0}
             if [[ $? -eq 0 ]]; then
                 cleanup_files
@@ -182,7 +187,7 @@ run_hifiasm() {
             fi
             
             # Build command
-            HIFIASM_CMD="hifiasm -l$PURGE_FORCE -o $PREFIX -t $THREADS --ont $INPUT_FQ"
+            HIFIASM_CMD="hifiasm -l$PURGE_FORCE -f$BLOOM_BITS -o $PREFIX -t $THREADS --ont $INPUT_FQ"
             
             # Add ultra-long reads if available
             if [[ -n "$INPUT_LONG" ]] && [[ -s "$INPUT_LONG" ]]; then
@@ -203,7 +208,7 @@ run_hifiasm() {
             
         hi-c)
             [[ "$RUN_1" == *.fastq.gz && "$RUN_2" == *.fastq.gz ]] && run_fastp
-            hifiasm -l"$PURGE_FORCE" -o "$PREFIX" -t "$THREADS" --h1 "$RUN_1" --h2 "$RUN_2" "$INPUT" || HIFIASM_EXIT=$?
+            hifiasm -l"$PURGE_FORCE" -f"$BLOOM_BITS" -o "$PREFIX" -t "$THREADS" --h1 "$RUN_1" --h2 "$RUN_2" "$INPUT" || HIFIASM_EXIT=$?
             
             if [[ ${HIFIASM_EXIT:-0} -eq 139 ]]; then
                 echo "⚠️ Asm4pg -> Hifiasm segfaulted, checking outputs..."
@@ -221,11 +226,11 @@ run_hifiasm() {
         
         trio)
             echo "🔹 Asm4pg -> Generating yak files for parental reads..."
-            yak count -k31 -b37 -t16 -o "${PREFIX}_parent1.yak" "$RUN_1"
-            yak count -k31 -b37 -t16 -o "${PREFIX}_parent2.yak" "$RUN_2"
+            yak count -k31 -b"$BLOOM_BITS" -t "$THREADS" -o "${PREFIX}_parent1.yak" "$RUN_1"
+            yak count -k31 -b"$BLOOM_BITS" -t "$THREADS" -o "${PREFIX}_parent2.yak" "$RUN_2"
 
             echo "🔹 Asm4pg -> Running hifiasm in trio mode..."
-            hifiasm -o "$PREFIX" -t "$THREADS" -1 "${PREFIX}_parent1.yak" -2 "${PREFIX}_parent2.yak" "$INPUT" || HIFIASM_EXIT=$?
+            hifiasm -f"$BLOOM_BITS" -o "$PREFIX" -t "$THREADS" -1 "${PREFIX}_parent1.yak" -2 "${PREFIX}_parent2.yak" "$INPUT" || HIFIASM_EXIT=$?
             
             if [[ ${HIFIASM_EXIT:-0} -eq 139 ]]; then
                 echo "⚠️ Asm4pg -> Hifiasm segfaulted, checking outputs..."
