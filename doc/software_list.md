@@ -10,7 +10,7 @@ Images are automatically pulled by Snakemake on first run and stored in the proj
 - [hifiasm](https://github.com/chhylp123/hifiasm) 0.25.0-r726 https://doi.org/10.1038/s41592-020-01056-5 
 - [Samtools](https://github.com/samtools/samtools) 1.10 and 1.13 and 1.9 https://doi.org/10.1093/gigascience/giab008 
 - [fastp](https://github.com/OpenGene/fastp) 1.3.6  https://doi.org/10.1093/bioinformatics/bty560 
-- [bwa](https://github.com/lh3/bwa)  0.7.17-r1188  https://doi.org/10.48550/arXiv.1303.3997
+- [minibwa](https://github.com/lh3/minibwa) 0.7-r421 (Hi-C read alignment, replaces bwa-mem)  https://arxiv.org/abs/2606.15357
 - [YaHS](https://github.com/c-zhou/yahs) 1.2.2  https://doi.org/10.1093/bioinformatics/btac808
 - [purge_dups](https://github.com/dfguan/purge_dups) 1.2.5 https://doi.org/10.1093/bioinformatics/btaa025 
 - [compleasm](https://github.com/huangnengCSU/compleasm) 0.2.9, bundling miniprot 0.12-r237 and hmmsearch 3.3.2  https://doi.org/10.1093/bioinformatics/btad595
