@@ -124,12 +124,11 @@ Asm4pg has many options. If you wish to modify the default values and know more 
         ├── 03_raw_data_qc
         │   ├── genometools
         │   ├── genomescope
-        │   └── jellyfish
+        │   └── meryl
         ├── 04_assembly_qc
         │   ├── hap1/hap2
         │   │   ├── genometools
         │   │   ├── compleasm
-        │   │   ├── katplot
         │   │   ├── LTR/LAI
         │   │   └── telomeres
         │   ├── merqury

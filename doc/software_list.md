@@ -21,8 +21,6 @@ Images are automatically pulled by Snakemake on first run and stored in the proj
 - [LTR_retriever](https://github.com/oushujun/LTR_retriever) 3.0.1  https://doi.org/10.1104/pp.17.01310
 - [RagTag](https://github.com/malonge/RagTag) 2.0.1  https://doi.org/10.1186/s13059-022-02823-7
 - [QUAST](https://github.com/ablab/quast) 5.2.0 https://doi.org/10.1093/bioinformatics/btt086
-- [jellyfish](https://github.com/gmarcais/Jellyfish) 2.3.0  https://doi.org/10.1093/bioinformatics/btr011
-- [KAT](https://github.com/TGAC/KAT) 2.4.1 https://doi.org/10.1093/bioinformatics/btw663
 - [YAK](https://github.com/lh3/yak) 0.1-r93
 - R markdown 4.0.3
 - matplotlib 0.11.5

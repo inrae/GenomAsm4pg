@@ -29,19 +29,14 @@ results/
     │   ├── genomescope
     │   │   ├── linear_plot.png        # K-mer frequency distribution
     │   │   └── log_plot.png           # Log-scale k-mer distribution
-    │   ├── jellyfish
-    │   │   ├── run.histo              # K-mer count histogram
-    │   │   └── run.jf                 # K-mer count database
+    │   ├── meryl
+    │   │   └── run.histo              # K-mer histogram, feeds GenomeScope
     │   └── genometools_stats.txt      # Basic sequence statistics
     ├── 04_assembly_qc
     │ ├── hap1
     │ │   ├── compleasm                # Completeness assessment
     │ │   │   ├── compleasm_run1_hap1.txt
     │ │   │   └── full_table_run1_hap1.tsv
-    │ │   ├── katplot                  # K-mer frequency analysis
-    │ │   │   ├── run1_hap1.katplot.png
-    │ │   │   ├── run1_hap1-main.mx.spectra-cn.png
-    │ │   │   └── run1_hap1.stats
     │ │   ├── LTR                      # Transposable element analysis
     │ │   │   ├── recap_run1_hap1.tbl
     │ │   │   ├── run1_hap1.out.LAI
