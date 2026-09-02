@@ -43,15 +43,18 @@ fi
 available_mem=$(free -h | awk '/Mem:/ {print $7}')
 echo "🔹 Asm4pg -> Available memory: $available_mem"
 
-# Bloom filter exponent shared by hifiasm -f and yak -b: 2**N bits if this step 
-# OOM-kills any smaller box. Uncomment the second line to cap it 
+# Memory optimisation for small machines, uncoment the second block
 BLOOM_BITS=37
+HIC_SORT_MEM="4G"
+MINIBWA_OPTS=""
+
 #BLOOM_BITS=34
+#HIC_SORT_MEM="512M"
+#MINIBWA_OPTS="-K 20m --mmap"
 
 cleanup_files() {
     echo "🔹 Asm4pg -> Cleaning up intermediate files..."
-    # Don't remove GFA files - we might need them!
-    rm -f ${PREFIX}*.{agp,bin,amb,ann,fai,bwt,pac,sa,fasta,lowQ.bed,yak}
+    rm -f ${PREFIX}*.{agp,bin,amb,ann,fai,bwt,pac,sa,fasta,lowQ.bed,yak,l2b,mbw}
 }
 
 run_fastp() {
@@ -73,14 +76,14 @@ convert_gfa_to_fasta() {
 }
 
 align_hic_reads() {
-    echo "🔹 Asm4pg -> Indexing FASTA file with BWA..."
-    bwa index "${PREFIX}.hap1.p_ctg.fasta"
-    bwa index "${PREFIX}.hap2.p_ctg.fasta"
+    echo "🔹 Asm4pg -> Indexing FASTA file with minibwa..."
+    minibwa index "${PREFIX}.hap1.p_ctg.fasta" "${PREFIX}.hap1.p_ctg"
+    minibwa index "${PREFIX}.hap2.p_ctg.fasta" "${PREFIX}.hap2.p_ctg"
 
     echo "🔹 Asm4pg -> Aligning Hi-C reads to contigs..."
     for hap in hap1 hap2; do
-        bwa mem -5SP -t "$THREADS" "${PREFIX}.${hap}.p_ctg.fasta" "$RUN_1" "$RUN_2" | \
-            samtools view -Sb - | samtools sort -@ "$THREADS" -m 4G -o "${PREFIX}_${hap}_hic_aligned.bam"
+        minibwa map --hic -t "$THREADS" $MINIBWA_OPTS "${PREFIX}.${hap}.p_ctg" "$RUN_1" "$RUN_2" | \
+            samtools view -Sb - | samtools sort -@ "$THREADS" -m "$HIC_SORT_MEM" -o "${PREFIX}_${hap}_hic_aligned.bam"
         samtools index "${PREFIX}_${hap}_hic_aligned.bam"
     done
 }
