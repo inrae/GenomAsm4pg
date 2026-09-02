@@ -104,37 +104,6 @@ rule separate_reads:
             {params.mode} > {log} 2>&1
         """
 
-# Count k-mers in the input reads and generate a histogram of k-mer frequencies.
-rule jellyfish:
-    input:
-        reads = rules.input_conversion.output.fastagz
-    output:
-        jf = os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "jellyfish", "{sample}.jf"),
-        histo = os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "jellyfish", "{sample}.histo")
-    params:
-        km_size = get_kmer_size
-    threads: 20
-    benchmark:
-        os.path.join(output_dir, "{sample}_results", "benchmark", "jellyfish_benchmark.txt")
-    log:
-        os.path.join(output_dir, "{sample}_results", "logs", "jellyfish.log")
-    resources:
-        mem_mb=250000
-    container:
-        f"{container_registry}/jellyfish2.3.0"
-    shell:
-        """
-        echo "🔹 Asm4pg -> starting jellyfish counts of kmers of size {params.km_size}" > {log} 2>&1
-        jellyfish count -m {params.km_size} -s 100M -t {threads} -o {output.jf} -C <(zcat {input.reads}) >> {log} 2>&1
-        echo "🔹 Asm4pg -> starting to compute jellyfish histogram" >> {log} 2>&1
-        jellyfish histo -h 1000000 -t {threads} {output.jf} > {output.histo} 2>> {log}
-        if [ ! -s {output.histo} ]; then
-            echo "⚠️  Asm4pg -> jellyfish missing histo, check logs" >> {log}
-        else
-            echo "✅ Asm4pg -> jellyfish histo created" >> {log}
-        fi
-        """
-
 # Analyze the k-mer histogram and estimate genome characteristics, including genome size, heterozygosity, and error rates. 
 rule genomescope:
     input:
