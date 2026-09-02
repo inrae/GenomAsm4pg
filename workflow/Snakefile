@@ -556,6 +556,14 @@ rule merqury:
         cp {input.hap2} {params.out_dir}/{wildcards.sample}_hap2.fasta >> {log} 2>&1
         cd {params.out_dir} >> {log} 2>&1
         export MERQURY=/usr/local/share/merqury
+
+        find . -maxdepth 1 -mindepth 1 \
+             ! -name '{wildcards.sample}_P1-db.meryl' \
+             ! -name '{wildcards.sample}_P2-db.meryl' \
+             ! -name '{wildcards.sample}_reads-db.meryl' \
+             ! -name '{wildcards.sample}_hap1.fasta' \
+             ! -name '{wildcards.sample}_hap2.fasta' \
+             -exec rm -rf {{}} + >> {log} 2>&1 || true
         if [[ "{params.mode}" == "trio" ]]; then
             echo "🔹 Asm4pg -> trio mode detected" >> {log} 2>&1
             echo "🔹 Asm4pg -> creating hapmer" >> {log} 2>&1
@@ -569,12 +577,9 @@ rule merqury:
             rm *block.sizes >> {log} 2>&1
             rm *contig.sizes* >> {log} 2>&1
             rm *block.stats* >> {log} 2>&1
-            rm *hap1*.png >> {log} 2>&1
-            rm *hap2*.png >> {log} 2>&1
         else
             echo "🔹 Asm4pg -> default mode detected" >> {log} 2>&1
             merqury.sh {input.km_database} {wildcards.sample}_hap1.fasta {wildcards.sample}_hap2.fasta {params.prefix} >> {log} 2>&1
-            rm *hap*.png >> {log} 2>&1
         fi
         echo "🔹 Asm4pg -> cleaning up" >> {log} 2>&1
         rm *.bed >> {log} 2>&1
