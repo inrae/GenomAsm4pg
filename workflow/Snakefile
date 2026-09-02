@@ -490,38 +490,6 @@ rule find_telomeres:
         fi
         """
 
-# Compare the k-mer content between the assembly and the raw reads.
-rule kat:
-    input:
-        hap = rules.haplotigs_handling.output.hap,
-        jellyfish = rules.jellyfish.output.jf
-    output:
-        os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "katplot", "{sample}_hap{n}.katplot.png")
-    params:
-        out_dir = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "katplot", "{sample}_hap{n}"),
-        km_size = get_kmer_size
-    threads: 4
-    benchmark:
-        os.path.join(output_dir, "{sample}_results", "benchmark", "kat_hap{n}_benchmark.txt")
-    log:
-        os.path.join(output_dir, "{sample}_results", "logs", "kat_hap{n}.log")
-    resources:
-        mem_mb=100000,
-    container: 
-        f"{container_registry}/kat2.4.1"
-    shell:
-        """
-        echo "🔹 Asm4pg -> starting kat comp" > {log} 2>&1
-        kat comp -o {params.out_dir} -t {threads} -m {params.km_size} --output_type png -v {input.jellyfish} {input.hap} >> {log} 2>&1
-        echo "🔹 Asm4pg -> starting kat plot" > {log} 2>&1
-        kat plot spectra-cn -x 200 -o {params.out_dir}.katplot.png {params.out_dir}-main.mx >> {log} 2>&1 
-        if [ ! -s {output} ]; then
-            echo "⚠️  Asm4pg -> plot missing, check logs" >> {log}
-        else
-            echo "✅ Asm4pg -> plot created" >> {log}
-        fi
-        """
-
 # Creates a k-mer database from the input reads 
 rule meryl:
     input:
