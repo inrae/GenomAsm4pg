@@ -5,12 +5,19 @@ import sys
 # Used to retrieve the parameters for rules
 # 07/01/25
 
+# Avoid spamming the user with each lambda call of snakemake. 
+_WARNED = set()
+def warn_once(message: str) -> None:
+    if message not in _WARNED:
+        _WARNED.add(message)
+        print(message, file=sys.stderr)
+
 # Fetch the purge level for hifiasm
 def get_purge_force(wildcards) -> str:
     try:
         force = config["samples"][wildcards.sample]["assembly_purge_force"]
     except KeyError:
-        print(f'Asm4pg -> "assembly_purge_force" unspecified for {wildcards.sample}, using l3 by default', file=sys.stderr)
+        warn_once(f'Asm4pg -> "assembly_purge_force" unspecified for {wildcards.sample}, using l3 by default')
         return '3'
     return force
 
@@ -21,7 +28,7 @@ def get_mode(wildcards) -> str:
         if mode == "Trio":
             mode = "trio"
     except KeyError:
-        print(f'Asm4pg -> "mode" unspecified for {wildcards.sample}, using default assembly mode for hifiasm', file=sys.stderr)
+        warn_once(f'Asm4pg -> "mode" unspecified for {wildcards.sample}, using default assembly mode for hifiasm')
         return 'default'
     return mode
 
@@ -44,7 +51,7 @@ def get_purge_bool(wildcards) -> bool:
     try: 
         purge_bool = config["samples"][wildcards.sample]["run_purge_dups"]
     except KeyError:
-        print(f'Asm4pg -> "run_purge_dups" unspecified for {wildcards.sample}, using "False" by default', file=sys.stderr)
+        warn_once(f'Asm4pg -> "run_purge_dups" unspecified for {wildcards.sample}, using "False" by default')
         return False
     return purge_bool
 
@@ -53,7 +60,7 @@ def get_busco_lin(wildcards) -> str:
     try:
         lin = config["samples"][wildcards.sample]["busco_lineage"]
     except KeyError:
-        print(f'Asm4pg -> "busco_lineage" unspecified for {wildcards.sample}, using "eukaryota_odb10" by default', file=sys.stderr)
+        warn_once(f'Asm4pg -> "busco_lineage" unspecified for {wildcards.sample}, using "eukaryota_odb10" by default')
         return "eukaryota_odb10"
     return lin
 
@@ -69,7 +76,7 @@ def get_ploidy(wildcards) -> int:
     try:
         ploidy = config["samples"][wildcards.sample]["ploidy"]
     except KeyError:
-        print(f'Asm4pg -> "ploidy" unspecified for {wildcards.sample}, using 2 by default', file=sys.stderr)
+        warn_once(f'Asm4pg -> "ploidy" unspecified for {wildcards.sample}, using 2 by default')
         return 2
     return ploidy
 
@@ -78,7 +85,7 @@ def get_kmer_size(wildcards) -> int:
     try:
         size = config["samples"][wildcards.sample]["kmer_size"]
     except KeyError:
-        print(f'Asm4pg -> "kmer_size" unspecified for {wildcards.sample}, using 21 by default', file=sys.stderr)
+        warn_once(f'Asm4pg -> "kmer_size" unspecified for {wildcards.sample}, using 21 by default')
         return 21
     return size
 
@@ -103,7 +110,7 @@ def get_ragtag_bool(wildcards) -> bool:
     try:
         ragtag_bool = config["samples"][wildcards.sample]["run_ragtag"]
     except KeyError:
-        print(f'Asm4pg -> "run_ragtag" unspecified for {wildcards.sample}, using "False" by default', file=sys.stderr)
+        warn_once(f'Asm4pg -> "run_ragtag" unspecified for {wildcards.sample}, using "False" by default')
         return False
     return ragtag_bool
 
@@ -114,7 +121,7 @@ def get_quast_bool(wildcards) -> bool:
         if quast_bool=="true":
             quast_bool = True
     except KeyError:
-        print(f'Asm4pg -> "run_quast" unspecified for {wildcards.sample}, using "False" by default', file=sys.stderr)
+        warn_once(f'Asm4pg -> "run_quast" unspecified for {wildcards.sample}, using "False" by default')
         return False
     return quast_bool
 
@@ -125,7 +132,7 @@ def get_separation_bool(wildcards) -> bool:
         if run_sep == "true":
             run_sep = True
     except KeyError:
-        print(f'Asm4pg -> "run_mito_separation" unspecified for {wildcards.sample}, using "False" by default', file=sys.stderr)
+        warn_once(f'Asm4pg -> "run_mito_separation" unspecified for {wildcards.sample}, using "False" by default')
         return False
     return run_sep
 
@@ -136,7 +143,7 @@ def get_downsampling_bool(wildcards) -> bool:
         if run_ds == "true":
             run_ds = True
     except KeyError:
-        print(f'Asm4pg -> "run_downsampling" unspecified for {wildcards.sample}, using "False" by default', file=sys.stderr)
+        warn_once(f'Asm4pg -> "run_downsampling" unspecified for {wildcards.sample}, using "False" by default')
         return False
     return run_ds
 
@@ -144,6 +151,6 @@ def get_target_coverage(wildcards) -> int:
     try:
         cov = config["samples"][wildcards.sample]["target_coverage"]
     except KeyError:
-        print(f'Asm4pg -> "target_coverage" unspecified for {wildcards.sample}, using 50 by default', file=sys.stderr)
+        warn_once(f'Asm4pg -> "target_coverage" unspecified for {wildcards.sample}, using 50 by default')
         return 50
     return cov
