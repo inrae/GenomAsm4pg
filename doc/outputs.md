@@ -1,6 +1,8 @@
 # Workflow Output
 
 ## Directories
+- `00_preprocess`: converted reads, plus `chloroplast_<sample>.fasta.gz` and its
+  `_stats.txt` when a chloroplast reference is configured
 - `01_raw_assembly`: Direct Hifiasm output
 - `02_final_assembly`: Processed haplotypes (purged/scaffolded)
 - `03_raw_qc`: Read quality metrics
