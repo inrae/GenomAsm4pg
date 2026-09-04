@@ -612,6 +612,9 @@ rule LTR_finder:
         rules.unpigz_to_fasta.output
     output:
         temp(os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "LTR", "{sample}_hap{n}.scn"))
+    params:
+        out_dir = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "LTR")
+    threads: 8
     resources:
         mem_mb=60000, 
     benchmark:
@@ -619,15 +622,27 @@ rule LTR_finder:
     log:
         os.path.join(output_dir, "{sample}_results", "logs", "LTR_finder_hap{n}.log")
     container:
-        f"{container_registry}/ltr_finder:latest"
+        f"{container_registry}/ltr_finder_parallel:1.4"
     shell:
         """
-        echo "🔹 Asm4pg -> Starting LTR finder" > {log} 2>&1
-        ltr_finder -C {input} > {output} 2>> {log} 2>&1
-        if [ ! -s {output} ]; then
-            echo "⚠️  Asm4pg -> scn missing, check logs" >> {log}
+        echo "🔹 Asm4pg -> Starting LTR_FINDER_parallel" > {log} 2>&1
+        INPUT_ABS=$(realpath {input})
+        LOG_ABS=$(realpath {log})
+        OUT_ABS=$(realpath -m {output})
+        SEQ=$(basename $INPUT_ABS)
+        mkdir -p {params.out_dir}
+        cd {params.out_dir}
+
+        LTR_FINDER_parallel -seq $INPUT_ABS -threads {threads} \
+            -harvest_out -size 1000000 -time 300 >> $LOG_ABS 2>&1
+
+        rm -f $SEQ.shortID $SEQ.shortID.list >> $LOG_ABS 2>&1
+        if [ -s $SEQ.finder.combine.scn ]; then
+            mv $SEQ.finder.combine.scn $OUT_ABS >> $LOG_ABS 2>&1
+            echo "✅ Asm4pg -> scn created" >> $LOG_ABS
         else
-            echo "✅ Asm4pg -> snc created" >> {log}
+            echo "⚠️  Asm4pg -> scn missing, check logs" >> $LOG_ABS
+            : > $OUT_ABS
         fi
         """
 
@@ -666,7 +681,7 @@ rule LTR_retriever:
         else
             cp {input.hap} {params.out_dir}/tmp_hap.fasta >> {log} 2>&1
             cd {params.out_dir} >> {log} 2>&1
-            LTR_retriever -threads {threads} -genome tmp_hap.fasta -infinder {params.scn} >> {log} 2>&1 || true
+            LTR_retriever -threads {threads} -genome tmp_hap.fasta -inharvest {params.scn} >> {log} 2>&1 || true
             
             # Check if LAI file was created, if not create a placeholder
             if [ -f tmp_hap.fasta.out.LAI ]; then

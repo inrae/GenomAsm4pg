@@ -17,7 +17,7 @@ Images are automatically pulled by Snakemake on first run and stored in the proj
 - biopython 1.75  https://doi.org/10.1093/bioinformatics/btp163 
 - [genomescope](https://github.com/tbenavi1/genomescope2.0) 2.0 https://doi.org/10.1093/bioinformatics/btx153
 - [merqury](https://github.com/marbl/merqury) and [meryl](https://github.com/marbl/meryl) 1.3 : https://doi.org/10.1186/s13059-020-02134-9
-- [LTR_Finder](https://github.com/xzhub/LTR_Finder) 1.07  https://doi.org/10.1093/nar/gkm286
+- [LTR_FINDER_parallel](https://github.com/oushujun/LTR_FINDER_parallel) 1.4, wrapping LTR_FINDER 1.07  https://doi.org/10.1093/nar/gkm286
 - [LTR_retriever](https://github.com/oushujun/LTR_retriever) 3.0.1  https://doi.org/10.1104/pp.17.01310
 - [RagTag](https://github.com/malonge/RagTag) 2.0.1  https://doi.org/10.1186/s13059-022-02823-7
 - [QUAST](https://github.com/ablab/quast) 5.2.0 https://doi.org/10.1093/bioinformatics/btt086
