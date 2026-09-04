@@ -4,18 +4,22 @@ Asm4pg is an automatic and reproducible genome assembly workflow for pangenomic 
 
 Documentation: [GitLab Pages](https://asm4pg.pages.mia.inra.fr/genomasm4pg)
 
+## Cookbook
+
+Task-oriented answers to the questions that come up most often [I want to...](i_want_to.md) 
+
 ## All Options
 
-Asm4pg has many options with default values. To modify them, refer to the [Going Further](doc/going_further.md) section.
+Asm4pg has many options with default values. To modify them, refer to the [Going Further](going_further.md) section.
 
 ## Outputs
 
-To learn more about the workflow's output files, refer to the [Outputs](doc/outputs.md) section.
+To learn more about the workflow's output files, refer to the [Outputs](outputs.md) section.
 
 ## Known Errors
 
-You may encounter [these errors](doc/known_errors.md).
+You may encounter [these errors](known_errors.md).
 
 ## Software
 
-Here is a list of [software used in the workflow](doc/software_list.md).
+Here is a list of [software used in the workflow](software_list.md).
