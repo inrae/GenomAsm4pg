@@ -97,6 +97,13 @@ def get_mito_reference(wildcards) -> list:
         return 'None'
     return ref
 
+# Fetch the reference chloroplast genome. 
+def get_chloro_reference(wildcards) -> str:
+    try:
+        return config["samples"][wildcards.sample]["reference_chloroplast_genome"]
+    except KeyError:
+        return 'None'
+
 # Fetch the reference  genome
 def get_reference(wildcards) -> str:
     try:
@@ -125,16 +132,6 @@ def get_quast_bool(wildcards) -> bool:
         return False
     return quast_bool
 
-# Fetch whether to run mitochondrial read separation
-def get_separation_bool(wildcards) -> bool:
-    try:
-        run_sep = config["samples"][wildcards.sample]["run_mito_separation"]
-        if run_sep == "true":
-            run_sep = True
-    except KeyError:
-        warn_once(f'Asm4pg -> "run_mito_separation" unspecified for {wildcards.sample}, using "False" by default')
-        return False
-    return run_sep
 
 # Fetch whether to run downsampling
 def get_downsampling_bool(wildcards) -> bool:
