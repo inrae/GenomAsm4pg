@@ -101,6 +101,9 @@ asm4pg [dry|run|local-run|dag|rulegraph|unlock|touch] [additional snakemake args
     rulegraph - generate the rulegraph for the workflow
     unlock - Unlock the directory if snakemake crashed
     touch - Tell snakemake that all files are up to date (use with caution)
+    --bind PATHS - extra paths to mount in the containers (comma separated).
+                   The current directory is always mounted; add your scratch,
+                   output and reference paths here on a cluster.
     [additional snakemake args] - for any snakemake arg, like --until hifiasm
 ```
 ## 🔧 Using the full potential of the workflow :
