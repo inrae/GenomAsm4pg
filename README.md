@@ -110,7 +110,7 @@ asm4pg [dry|run|local-run|dag|rulegraph|unlock|touch] [additional snakemake args
 Asm4pg has many options. If you wish to modify the default values and know more about the workflow, please refer to the [documentation](doc/documentation.md)
 
 **Start here if you have a specific need** ("I have Hi-C data", "I want to extract chloroplast reads",
-"what is a LAI score"): the [I want to...](doc/i_want_to.md) cookbook.
+"what is a LAI score"): the [I want to...](doc/cookbook.md) cookbook.
 
 ## Output of the workflow :
 

@@ -6,7 +6,7 @@ Documentation: [GitLab Pages](https://asm4pg.pages.mia.inra.fr/genomasm4pg)
 
 ## Cookbook
 
-Task-oriented answers to the questions that come up most often [I want to...](i_want_to.md) 
+Task-oriented answers to the questions that come up most often [I want to...](cookbook.md) 
 
 ## All Options
 
