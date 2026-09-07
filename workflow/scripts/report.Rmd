@@ -167,15 +167,20 @@ cat_file("LRT_recap_hap1", 50)
 cat_file("LRT_recap_hap2", 50)
 ```
 
-## Mitogenome
-Contigs identified as mitochondrial.
+## Organelles
 
+### Chloroplast reads removed before assembly
+```{r}
+cat_file("chloro_stats")
+```
+
+### Mitochondrial contigs in the assembly
 #### Hap 1
 ```{r}
-cat_file("mitogenome_contigs_hap1", 2)
+cat_file("mitogenome_contigs_hap1", 10)
 ```
 
 #### Hap 2
 ```{r}
-cat_file("mitogenome_contigs_hap2", 2)
+cat_file("mitogenome_contigs_hap2", 10)
 ```
