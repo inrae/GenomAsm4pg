@@ -14,19 +14,45 @@
 if [ $# -lt 1 ] || [ "$1" == "help" ]; then
     echo "Use this script to run asm4pg"
     echo ""
-    echo "Usage: asm4pg [dry|run|local-run|dag|rulegraph|unlock] [additional snakemake args]"
+    echo "Usage: asm4pg [dry|run|local-run|dag|rulegraph|unlock] [--bind PATHS] [additional snakemake args]"
     echo "    dry - run in dry-run mode"
     echo "    run - run the workflow with SLURM"
     echo "    local-run - run the workflow localy (on a single node)"
     echo "    dag - generate the directed acyclic graph for the workflow"
     echo "    rulegraph - generate the rulegraph for the workflow"
     echo "    unlock - Unlock the directory if snakemake crashed"
+    echo ""
+    echo "    --bind PATHS - extra paths to mount inside the containers, comma separated."
+    echo "                   Defaults to the current directory. Anything the containers"
+    echo "                   must read or write that lives elsewhere has to be listed"
     exit 1
 fi
 echo "Welcome to Asm4pg! Make sure .config/masterconfig.yaml is correctly edited for this run."
+
+SNG_BIND="$(pwd)"
+FORWARD_ARGS=()
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --bind)
+            [ -n "${2:-}" ] || { echo "❌ Asm4pg -> --bind needs a value"; exit 1; }
+            SNG_BIND="$(pwd),$2"; shift 2 ;;
+        --bind=*)
+            SNG_BIND="$(pwd),${1#*=}"; shift ;;
+        *)
+            FORWARD_ARGS+=("$1"); shift ;;
+    esac
+done
+set -- "${FORWARD_ARGS[@]}"
+
 MEM_MB=$(free -m | awk '/^Mem:/{print $2}')
+if [ -n "${SLURM_MEM_PER_NODE:-}" ]; then
+    [ "$SLURM_MEM_PER_NODE" -lt "$MEM_MB" ] && MEM_MB=$SLURM_MEM_PER_NODE
+elif [ -n "${SLURM_MEM_PER_CPU:-}" ] && [ -n "${SLURM_CPUS_PER_TASK:-}" ]; then
+    SLURM_ALLOC=$(( SLURM_MEM_PER_CPU * SLURM_CPUS_PER_TASK ))
+    [ "$SLURM_ALLOC" -lt "$MEM_MB" ] && MEM_MB=$SLURM_ALLOC
+fi
 #######################
-# Update line 48 with your cluster if not on cbib or genotoul
+# Update line 74 with your cluster if not on cbib or genotoul
 #######################
 echo '🔹 Asm4pg -> Activating execution environment'
 case "${SLURM_SUBMIT_HOST:-$(hostname)}" in
@@ -42,10 +68,10 @@ case "${SLURM_SUBMIT_HOST:-$(hostname)}" in
         module load miniconda/3
         eval "$(conda shell.bash hook)"
         conda activate wf_env
-        MEM_MB=${SLURM_MEM_PER_NODE:-204800}
+        [ -z "${SLURM_MEM_PER_NODE:-}" ] && MEM_MB=$(( MEM_MB < 204800 ? MEM_MB : 204800 ))
         ;;
     *)
-        echo '🔹 Asm4pg -> Unkown host, or local run (if not configure this file line 48)'
+        echo '🔹 Asm4pg -> Unkown host, or local run (if not configure this file line 74)'
         ;;
 esac
 
@@ -89,10 +115,9 @@ run_snakemake() {
             fi
             ;;
         run)
-            snakemake --workflow-profile ./.config/snakemake/profiles/slurm --rerun-incomplete $extra_args
+            snakemake --workflow-profile ./.config/snakemake/profiles/slurm --singularity-args "-B $SNG_BIND" --rerun-incomplete $extra_args
             ;;
         local-run)
-            SNG_BIND=$(pwd)
             echo "🔹 Asm4pg -> Using $MEM_MB Mb of memory"
             snakemake --use-singularity --singularity-args "-B $SNG_BIND" -j $(nproc) --rerun-incomplete --resources mem_mb=$MEM_MB $extra_args
             ;;
