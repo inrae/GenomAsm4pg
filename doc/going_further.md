@@ -11,6 +11,12 @@ Usage: `asm4pg [dry|run|local-run|dag|rulegraph|unlock|touch]`
 - `rulegraph` - generate the rulegraph for the workflow
 - `unlock` - unlock the directory if Snakemake crashed
 - `touch` - Tell snakemake that all files are up to date 
+- `--bind PATHS` - extra paths to mount inside the containers, comma separated. The
+  current directory is always mounted. **Anything the containers must read or write that
+  lives elsewhere has to be listed here**: reads on a scratch filesystem, an
+  `output_dir_pdw` outside the workflow, reference genomes. Without it those paths simply
+  do not exist inside the container (`No such file or directory`, or `Read-only file
+  system` when writing). Example: `sbatch asm4pg run --bind /scratch/me,/work/refs`
 
 > **Nb :** Touch can be usefull if you are replacing files or updating the config
 
