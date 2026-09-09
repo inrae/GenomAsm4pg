@@ -11,6 +11,11 @@ import yaml
 container_registry = config.get("container_registry", "docker://registry.forge.inrae.fr/asm4pg/genomasm4pg")
 output_dir = os.path.abspath(os.path.join(config.get("output_dir_pdw", os.getcwd()), config.get("output_dir", "results/")))
 
+# An optional step that is off must not be requested at all
+QUAST_SAMPLES  = samples_with(get_quast_bool,      config["samples"])
+RAGTAG_SAMPLES = samples_with(get_ragtag_bool,     config["samples"])
+MITO_SAMPLES   = samples_with(get_mito_reference,  config["samples"])
+
 rule all:
     input:
         expand(
@@ -18,8 +23,8 @@ rule all:
             sample=config["samples"].keys(), n=[1, 2]
         ),
         expand(
-            os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "ragtag_scafold", "recap.txt"),
-            sample=config["samples"].keys(), n=[1, 2]
+            os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "ragtag_scaffold", "recap.txt"),
+            sample=RAGTAG_SAMPLES, n=[1, 2]
         ),
         expand(
             os.path.join(output_dir, "{sample}_results", "{sample}_assembly_report.html"),
@@ -31,11 +36,11 @@ rule all:
         ),
         expand(
             os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "quast"),
-            sample=config["samples"].keys()
+            sample=QUAST_SAMPLES
         ), 
         expand(
             os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "mitogenome", "contigs_stats.tsv"),
-            sample=config["samples"].keys(), n=[1, 2]
+            sample=MITO_SAMPLES, n=[1, 2]
         )
         
 rule input_conversion:
@@ -792,8 +797,9 @@ rule generate_report:
         merqury_stats=os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "merqury", "{sample}_merqury.completeness.stats"),
         merqury_qv=os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "merqury", "{sample}_merqury.qv"),
         chloro_stats = os.path.join(output_dir, "{sample}_results", "00_preprocess", "chloroplast_{sample}_stats.txt"),
-        mitogenome_contigs_hap1 = os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap1", "mitogenome", "contigs_stats.tsv"),
-        mitogenome_contigs_hap2 = os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap2", "mitogenome", "contigs_stats.tsv")
+
+        mitogenome_contigs_hap1 = lambda wildcards: os.path.join(output_dir, f"{wildcards.sample}_results", "02_final_assembly", "hap1", "mitogenome", "contigs_stats.tsv") if wildcards.sample in MITO_SAMPLES else [],
+        mitogenome_contigs_hap2 = lambda wildcards: os.path.join(output_dir, f"{wildcards.sample}_results", "02_final_assembly", "hap2", "mitogenome", "contigs_stats.tsv") if wildcards.sample in MITO_SAMPLES else []
     output:
         os.path.join(output_dir, "{sample}_results", "{sample}_assembly_report.html")
     params:

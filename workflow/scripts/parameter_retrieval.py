@@ -12,6 +12,14 @@ def warn_once(message: str) -> None:
         _WARNED.add(message)
         print(message, file=sys.stderr)
 
+# rule all and generate_report must know which optional steps are on BEFORE any wildcard exists.
+class _Sample:
+    def __init__(self, sample):
+        self.sample = sample
+
+def samples_with(getter, samples) -> list:
+    return [s for s in samples if getter(_Sample(s)) not in (False, 'None')]
+
 # Fetch the purge level for hifiasm
 def get_purge_force(wildcards) -> str:
     try:
