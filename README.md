@@ -125,7 +125,7 @@ Asm4pg has many options. If you wish to modify the default values and know more 
         │   ├── hap1/hap2 
         │   │   ├── sample.fasta.gz # <- The final assembly
         │   │   ├── mitogenome
-        │   │   └── ragtag_scafold
+        │   │   └── ragtag_scaffold
         ├── 03_raw_data_qc
         │   ├── genometools
         │   ├── genomescope

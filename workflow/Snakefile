@@ -230,7 +230,7 @@ rule pigz_gfa_to_fasta:
     shell:
         """
         if [[ "{params.mode}" == "hi-c" ]]; then
-            echo "🔹 Asm4pg -> Compressing the scafold"
+            echo "🔹 Asm4pg -> Compressing the scaffold"
             pigz -p {threads} -c {params.hic_scaffold} > {output.fasta}
         else
             awk {TO_FA_CMD:q} {input.gfa} | pigz -p {threads} > {output.fasta}
@@ -699,24 +699,24 @@ rule LTR_retriever:
         fi
         '''
 
-# Rule to create scafold on assemblies
-rule scafolding:
+# Rule to create scaffold on assemblies
+rule scaffolding:
     input:
         os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "{sample}_final_hap{n}.fasta")
     output:
-        os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "ragtag_scafold", "recap.txt")
+        os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "ragtag_scaffold", "recap.txt")
     params:
-        out_file = os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "ragtag_scafold", "{sample}_scafold_hap{n}.fasta.gz"),
-        out_dir = os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "ragtag_scafold"),
+        out_file = os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "ragtag_scaffold", "{sample}_scaffold_hap{n}.fasta.gz"),
+        out_dir = os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "ragtag_scaffold"),
         reference_genome = get_reference,
         ragtag_bool = get_ragtag_bool
     threads: 4
     resources:
         mem_mb = 80000,
     benchmark:
-        os.path.join(output_dir, "{sample}_results", "benchmark", "scafolding_hap{n}_benchmark.txt")
+        os.path.join(output_dir, "{sample}_results", "benchmark", "scaffolding_hap{n}_benchmark.txt")
     log:
-        os.path.join(output_dir, "{sample}_results", "logs", "scafolding_hap{n}.log")
+        os.path.join(output_dir, "{sample}_results", "logs", "scaffolding_hap{n}.log")
     container:
         f"{container_registry}/ragtag:2.0.1"
     shell:

@@ -22,7 +22,7 @@ results/
     │   ├── hap1
     │   │   ├── cutoffs                 # Purge_dups coverage cutoffs
     │   │   ├── mitogenome              # Mitogenome and names of contigs identified as mitochondrial                 
-    │   │   ├── ragtag_scafold
+    │   │   ├── ragtag_scaffold
     │   │   │   └── recap.txt          # Scaffolding summary
     │   │   └── final_hap1.fasta.gz    # Final processed haplotype 1
     │   └── hap2                        # Similar structure for haplotype 2
