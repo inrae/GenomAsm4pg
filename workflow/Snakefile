@@ -518,7 +518,7 @@ rule meryl:
     resources:
         mem_mb=120000, 
     container:
-        f"{container_registry}/merqury1.3"
+        f"{container_registry}/merqury:1.4.1"
     shell:
         """
         echo "🔹 Asm4pg -> starting meryl" > {log} 2>&1
@@ -564,7 +564,7 @@ rule merqury:
     resources:
         mem_mb=120000, 
     container:
-        f"{container_registry}/merqury1.3"
+        f"{container_registry}/merqury:1.4.1"
     shell:
         """
         echo "🔹 Asm4pg -> Starting merqury" > {log} 2>&1
