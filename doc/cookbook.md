@@ -32,6 +32,12 @@
 - *How to*: `run_purge_dups: True`, then compare. Cross-check with the Merqury copy-number
   spectra: false duplication shows as read k-mers present twice in the assembly.
 
+**I want BUSCO instead of compleasm**
+- *Why*: a reviewer or a comparison with older work asks for BUSCO by name. On eukaryotes
+  both align with miniprot and agree closely; compleasm is the faster of the two.
+- *How to*: `use_busco: True` on the sample. Same `busco_lineage`, same place in the report,
+  and the other tool does not run at all.
+
 **Is purge_dups worth it?**
 - *Why*: hifiasm already purges at `assembly_purge_force` (`-l`, default 3). purge_dups is
   a second, coverage-based pass.
