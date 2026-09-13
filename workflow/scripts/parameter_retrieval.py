@@ -129,6 +129,17 @@ def get_ragtag_bool(wildcards) -> bool:
         return False
     return ragtag_bool
 
+# Fetch whether to measure completeness with BUSCO instead of compleasm
+def get_busco_bool(wildcards) -> bool:
+    try:
+        busco_bool = config["samples"][wildcards.sample]["use_busco"]
+        if busco_bool == "true":
+            busco_bool = True
+    except KeyError:
+        warn_once(f'Asm4pg -> "use_busco" unspecified for {wildcards.sample}, using compleasm by default')
+        return False
+    return busco_bool
+
 # Fetch whether to run QUAST
 def get_quast_bool(wildcards) -> bool:
     try:
