@@ -405,22 +405,28 @@ use rule genometools_on_raw_data as genometools_on_assembly with:
     priority: 0
 
 # Download the BUSCO lineage ONCE, before any assessment runs. Keyed on the lineage
-rule download_compleasm_lineage:
+rule download_lineage:
     output:
-        directory(os.path.join(output_dir, "compleasm_lineages", "{lineage}"))
+        directory(os.path.join(output_dir, "{tool}_lineages", "{lineage}"))
+    wildcard_constraints:
+        tool = "compleasm|busco"
     params:
         name = lambda wildcards: split_lineage(wildcards.lineage)[0],
         odb = lambda wildcards: split_lineage(wildcards.lineage)[1]
     threads: 1
     log:
-        os.path.join(output_dir, "logs", "download_compleasm_lineage_{lineage}.log")
+        os.path.join(output_dir, "logs", "download_{tool}_lineage_{lineage}.log")
     container:
-        f"{container_registry}/compleasm:0.2.9"
+        f"{container_registry}/compleasm:0.2.9-busco6.1.0"
     shell:
         """
-        echo "🔹 Asm4pg -> downloading compleasm lineage {wildcards.lineage}" > {log} 2>&1
-        compleasm download {params.name} --odb {params.odb} -L {output} >> {log} 2>&1
-        find {output} -name '*.tar.gz' -delete >> {log} 2>&1 || true
+        echo "🔹 Asm4pg -> downloading {wildcards.tool} lineage {wildcards.lineage}" > {log} 2>&1
+        if [[ "{wildcards.tool}" == "busco" ]]; then
+            busco --download {wildcards.lineage} --download_path {output} >> {log} 2>&1
+        else
+            compleasm download {params.name} --odb {params.odb} -L {output} >> {log} 2>&1
+            find {output} -name '*.tar.gz' -delete >> {log} 2>&1 || true
+        fi
         """
 
 # calculate the busco with compleasm
@@ -444,7 +450,7 @@ rule compleasm:
     log:
         os.path.join(output_dir, "{sample}_results", "logs", "compleasm_hap{n}.log")
     container:
-        f"{container_registry}/compleasm:0.2.9"
+        f"{container_registry}/compleasm:0.2.9-busco6.1.0"
     shell:
         """
         echo "🔹 Asm4pg -> starting compleasm on {input.hap}" > {log} 2>&1
@@ -829,8 +835,8 @@ rule generate_report:
         genometools_hap1 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "{sample}_hap1_genometools_stats.txt"),
         genometools_hap2 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "{sample}_hap2_genometools_stats.txt"),
         
-        compleasm_hap1 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "compleasm", "compleasm_{sample}_hap1.txt"),
-        compleasm_hap2 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "compleasm", "compleasm_{sample}_hap2.txt"),
+        completeness_hap1 = lambda wildcards: os.path.join(output_dir, f"{wildcards.sample}_results", "04_assembly_qc", "hap1", "busco", f"busco_{wildcards.sample}_hap1.txt") if get_busco_bool(wildcards) else os.path.join(output_dir, f"{wildcards.sample}_results", "04_assembly_qc", "hap1", "compleasm", f"compleasm_{wildcards.sample}_hap1.txt"),
+        completeness_hap2 = lambda wildcards: os.path.join(output_dir, f"{wildcards.sample}_results", "04_assembly_qc", "hap2", "busco", f"busco_{wildcards.sample}_hap2.txt") if get_busco_bool(wildcards) else os.path.join(output_dir, f"{wildcards.sample}_results", "04_assembly_qc", "hap2", "compleasm", f"compleasm_{wildcards.sample}_hap2.txt"),
 
         telomeres_hap1 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "telomeres", "{sample}_hap1_telomeres.txt"),
         telomeres_hap2 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "telomeres", "{sample}_hap2_telomeres.txt"),
@@ -856,6 +862,7 @@ rule generate_report:
         assembly_purge_force = get_purge_force,
         purge_dups_bool = get_purge_bool,
         busco_lineage = get_busco_lin,
+        completeness_tool = lambda wildcards: "BUSCO" if get_busco_bool(wildcards) else "compleasm",
         ploidy = get_ploidy,
         kmer_size = get_kmer_size,
         ragtag_bool = get_ragtag_bool,
