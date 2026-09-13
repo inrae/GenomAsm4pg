@@ -414,6 +414,9 @@ rule download_lineage:
         name = lambda wildcards: split_lineage(wildcards.lineage)[0],
         odb = lambda wildcards: split_lineage(wildcards.lineage)[1]
     threads: 1
+    resources:
+        mem_mb=4000,
+        runtime=60
     log:
         os.path.join(output_dir, "logs", "download_{tool}_lineage_{lineage}.log")
     container:
@@ -511,7 +514,7 @@ rule busco:
                 --download_path {input.lineage} --offline \
                 -o run_hap{wildcards.n} --out_path {params.out_dir} -c {threads} -f >> {log} 2>&1
 
-            SUMMARY=$(ls {params.run_dir}/short_summary.specific.*.txt 2>/dev/null | head -1)
+            SUMMARY=$(ls {params.run_dir}/short_summary.specific.*.txt 2>/dev/null | head -1 || true)
             if [ -n "$SUMMARY" ]; then
                 echo "🔹 Asm4pg -> cleaning BUSCO output files" >> {log} 2>&1
                 mv "$SUMMARY" {output.summary} >> {log} 2>&1
@@ -578,12 +581,12 @@ rule meryl:
         if [[ "{params.mode}" == "trio" ]]; then
             echo "🔹 Asm4pg -> trio mode detected" >> {log} 2>&1
             echo "🔹 Asm4pg -> counting p1" >> {log} 2>&1
-            meryl k={params.km_size} threads={threads} count {params.r1} output {params.out_dir}/{wildcards.sample}_P1-db.meryl >> {log} 2>&1
+            meryl k={params.km_size} threads={threads} memory=$(( {resources.mem_mb} * 9 / 10 / 1024 )) count {params.r1} output {params.out_dir}/{wildcards.sample}_P1-db.meryl >> {log} 2>&1
             echo "🔹 Asm4pg -> counting p2" >> {log} 2>&1
-            meryl k={params.km_size} threads={threads} count {params.r2} output {params.out_dir}/{wildcards.sample}_P2-db.meryl >> {log} 2>&1
+            meryl k={params.km_size} threads={threads} memory=$(( {resources.mem_mb} * 9 / 10 / 1024 )) count {params.r2} output {params.out_dir}/{wildcards.sample}_P2-db.meryl >> {log} 2>&1
         fi
         echo "🔹 Asm4pg -> counting input reads" >> {log} 2>&1
-        meryl k={params.km_size} threads={threads} count {input} output {params.db_dir} >> {log} 2>&1
+        meryl k={params.km_size} threads={threads} memory=$(( {resources.mem_mb} * 9 / 10 / 1024 )) count {input} output {params.db_dir} >> {log} 2>&1
         echo "🔹 Asm4pg -> writing k-mer histogram for genomescope" >> {log} 2>&1
         meryl histogram {params.db_dir} > {output.histo} 2>> {log}
 
