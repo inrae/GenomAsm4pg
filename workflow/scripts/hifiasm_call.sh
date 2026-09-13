@@ -2,7 +2,7 @@
 # Script to dynamically run hifiasm with the correct command based on the mode
 # Author: Lucien PIAT
 # For: Project Pangenoak
-# Date: April 3, 2025
+# Date: 13/09/2026
 
 # Don't use set -e initially to handle segfaults gracefully
 set -uo pipefail
@@ -43,10 +43,18 @@ fi
 available_mem=$(free -h | awk '/Mem:/ {print $7}')
 echo "🔹 Asm4pg -> Available memory: $available_mem"
 
+# Memory optimisation for small machines, uncoment the second block
+BLOOM_BITS=37
+HIC_SORT_MEM="4G"
+MINIBWA_OPTS=""
+
+#BLOOM_BITS=34
+#HIC_SORT_MEM="512M"
+#MINIBWA_OPTS="-K 20m --mmap"
+
 cleanup_files() {
     echo "🔹 Asm4pg -> Cleaning up intermediate files..."
-    # Don't remove GFA files - we might need them!
-    rm -f ${PREFIX}*.{agp,bin,amb,ann,fai,bwt,pac,sa,fasta,lowQ.bed,yak}
+    rm -f ${PREFIX}*.{agp,bin,amb,ann,fai,bwt,pac,sa,fasta,lowQ.bed,yak,l2b,mbw}
 }
 
 run_fastp() {
@@ -68,14 +76,14 @@ convert_gfa_to_fasta() {
 }
 
 align_hic_reads() {
-    echo "🔹 Asm4pg -> Indexing FASTA file with BWA..."
-    bwa index "${PREFIX}.hap1.p_ctg.fasta"
-    bwa index "${PREFIX}.hap2.p_ctg.fasta"
+    echo "🔹 Asm4pg -> Indexing FASTA file with minibwa..."
+    minibwa index "${PREFIX}.hap1.p_ctg.fasta" "${PREFIX}.hap1.p_ctg"
+    minibwa index "${PREFIX}.hap2.p_ctg.fasta" "${PREFIX}.hap2.p_ctg"
 
     echo "🔹 Asm4pg -> Aligning Hi-C reads to contigs..."
     for hap in hap1 hap2; do
-        bwa mem -5SP -t "$THREADS" "${PREFIX}.${hap}.p_ctg.fasta" "$RUN_1" "$RUN_2" | \
-            samtools view -Sb - | samtools sort -@ "$THREADS" -m 4G -o "${PREFIX}_${hap}_hic_aligned.bam"
+        minibwa map --hic -t "$THREADS" $MINIBWA_OPTS "${PREFIX}.${hap}.p_ctg" "$RUN_1" "$RUN_2" | \
+            samtools view -Sb - | samtools sort -@ "$THREADS" -m "$HIC_SORT_MEM" -o "${PREFIX}_${hap}_hic_aligned.bam"
         samtools index "${PREFIX}_${hap}_hic_aligned.bam"
     done
 }
@@ -163,7 +171,7 @@ run_hifiasm() {
     case "$MODE" in
         default)
             echo "🔹 Asm4pg -> Running in default mode"
-            hifiasm -l"$PURGE_FORCE" -o "$PREFIX" -t "$THREADS" "$INPUT" || HIFIASM_EXIT=$?
+            hifiasm -l"$PURGE_FORCE" -f"$BLOOM_BITS" -o "$PREFIX" -t "$THREADS" "$INPUT" || HIFIASM_EXIT=$?
             handle_hifiasm_output "default" ${HIFIASM_EXIT:-0}
             if [[ $? -eq 0 ]]; then
                 cleanup_files
@@ -182,7 +190,7 @@ run_hifiasm() {
             fi
             
             # Build command
-            HIFIASM_CMD="hifiasm -l$PURGE_FORCE -o $PREFIX -t $THREADS --ont $INPUT_FQ"
+            HIFIASM_CMD="hifiasm -l$PURGE_FORCE -f$BLOOM_BITS -o $PREFIX -t $THREADS --ont $INPUT_FQ"
             
             # Add ultra-long reads if available
             if [[ -n "$INPUT_LONG" ]] && [[ -s "$INPUT_LONG" ]]; then
@@ -203,7 +211,7 @@ run_hifiasm() {
             
         hi-c)
             [[ "$RUN_1" == *.fastq.gz && "$RUN_2" == *.fastq.gz ]] && run_fastp
-            hifiasm -l"$PURGE_FORCE" -o "$PREFIX" -t "$THREADS" --h1 "$RUN_1" --h2 "$RUN_2" "$INPUT" || HIFIASM_EXIT=$?
+            hifiasm -l"$PURGE_FORCE" -f"$BLOOM_BITS" -o "$PREFIX" -t "$THREADS" --h1 "$RUN_1" --h2 "$RUN_2" "$INPUT" || HIFIASM_EXIT=$?
             
             if [[ ${HIFIASM_EXIT:-0} -eq 139 ]]; then
                 echo "⚠️ Asm4pg -> Hifiasm segfaulted, checking outputs..."
@@ -221,11 +229,11 @@ run_hifiasm() {
         
         trio)
             echo "🔹 Asm4pg -> Generating yak files for parental reads..."
-            yak count -k31 -b37 -t16 -o "${PREFIX}_parent1.yak" "$RUN_1"
-            yak count -k31 -b37 -t16 -o "${PREFIX}_parent2.yak" "$RUN_2"
+            yak count -k31 -b"$BLOOM_BITS" -t "$THREADS" -o "${PREFIX}_parent1.yak" "$RUN_1"
+            yak count -k31 -b"$BLOOM_BITS" -t "$THREADS" -o "${PREFIX}_parent2.yak" "$RUN_2"
 
             echo "🔹 Asm4pg -> Running hifiasm in trio mode..."
-            hifiasm -o "$PREFIX" -t "$THREADS" -1 "${PREFIX}_parent1.yak" -2 "${PREFIX}_parent2.yak" "$INPUT" || HIFIASM_EXIT=$?
+            hifiasm -f"$BLOOM_BITS" -o "$PREFIX" -t "$THREADS" -1 "${PREFIX}_parent1.yak" -2 "${PREFIX}_parent2.yak" "$INPUT" || HIFIASM_EXIT=$?
             
             if [[ ${HIFIASM_EXIT:-0} -eq 139 ]]; then
                 echo "⚠️ Asm4pg -> Hifiasm segfaulted, checking outputs..."

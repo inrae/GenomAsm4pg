@@ -89,10 +89,10 @@ echo "=== Step 2: Calculating current coverage and sampling fraction ==="
 # Detect if input is FASTA or FASTQ
 if zcat "$INPUT_FILE" 2>/dev/null | head -n1 | grep -q "^>"; then
     echo "Input detected as FASTA format"
-    TOTAL_BASES=$(zcat "$INPUT_FILE" | awk '/^>/{if(seq) print length(seq); seq=""; next}{seq=seq$0}END{if(seq) print length(seq)}' | awk '{sum+=$1}END{print sum}')
+    TOTAL_BASES=$(zcat "$INPUT_FILE" | awk '/^>/{if(seq) print length(seq); seq=""; next}{seq=seq$0}END{if(seq) print length(seq)}' | awk '{sum+=$1}END{printf "%.0f\n", sum}')
 else
     echo "Input detected as FASTQ format"
-    TOTAL_BASES=$(zcat "$INPUT_FILE" | awk 'NR%4==2{bases+=length($0)}END{print bases}')
+    TOTAL_BASES=$(zcat "$INPUT_FILE" | awk 'NR%4==2{bases+=length($0)}END{printf "%.0f\n", bases}')
 fi
 
 CURRENT_COV=$(echo "scale=2; $TOTAL_BASES / $ESTIMATED_GENOME_SIZE" | bc -l)
@@ -121,9 +121,9 @@ fi
 echo "=== Step 5: Summary ==="
 # Count bases in downsampled file
 if zcat "$OUTPUT_DOWNSAMPLED" 2>/dev/null | head -n1 | grep -q "^>"; then
-    DOWNSAMPLED_BASES=$(zcat "$OUTPUT_DOWNSAMPLED" | awk '/^>/{if(seq) print length(seq); seq=""; next}{seq=seq$0}END{if(seq) print length(seq)}' | awk '{sum+=$1}END{print sum}')
+    DOWNSAMPLED_BASES=$(zcat "$OUTPUT_DOWNSAMPLED" | awk '/^>/{if(seq) print length(seq); seq=""; next}{seq=seq$0}END{if(seq) print length(seq)}' | awk '{sum+=$1}END{printf "%.0f\n", sum}')
 else
-    DOWNSAMPLED_BASES=$(zcat "$OUTPUT_DOWNSAMPLED" | awk 'NR%4==2{bases+=length($0)}END{print bases}')
+    DOWNSAMPLED_BASES=$(zcat "$OUTPUT_DOWNSAMPLED" | awk 'NR%4==2{bases+=length($0)}END{printf "%.0f\n", bases}')
 fi
 
 FINAL_COV=$(echo "scale=2; $DOWNSAMPLED_BASES / $ESTIMATED_GENOME_SIZE" | bc -l)

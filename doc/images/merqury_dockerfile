@@ -1,0 +1,34 @@
+# asm4pg merqury box
+# meryl 1.4.1 + merqury 1.4.1
+FROM registry.forge.inrae.fr/asm4pg/genomasm4pg/merqury1.3
+
+ARG MERYL_VERSION=1.4.1
+ARG MERQURY_VERSION=1.4.1
+
+RUN wget -q "https://github.com/marbl/meryl/releases/download/v${MERYL_VERSION}/meryl-${MERYL_VERSION}.Linux-amd64.tar.xz" -O /tmp/meryl.tar.xz && \
+    mkdir -p /opt/meryl && \
+    tar -xJf /tmp/meryl.tar.xz -C /opt/meryl --strip-components=1 && \
+    rm /tmp/meryl.tar.xz && \
+    ln -sf /opt/meryl/bin/meryl /usr/local/bin/meryl && \
+    ln -sf /opt/meryl/bin/meryl-lookup /usr/local/bin/meryl-lookup
+
+RUN wget -q "https://github.com/marbl/merqury/archive/v${MERQURY_VERSION}.tar.gz" -O /tmp/merqury.tar.gz && \
+    rm -rf /usr/local/share/merqury && \
+    mkdir -p /usr/local/share/merqury && \
+    tar -xzf /tmp/merqury.tar.gz -C /usr/local/share/merqury --strip-components=1 && \
+    rm /tmp/merqury.tar.gz && \
+    chmod -R a+rX /usr/local/share/merqury
+
+ENV MERQURY=/usr/local/share/merqury
+ENV PATH="/usr/local/bin:${PATH}"
+
+RUN echo /usr/local/lib > /etc/ld.so.conf.d/usrlocal.conf && ldconfig
+
+RUN set -eux; \
+    meryl --version; \
+    for f in merqury.sh trio/hapmers.sh trio/hap_blob.sh eval/spectra-cn.sh \
+             build/filt.sh build/intersect.sh plot/plot_spectra_cn.R; do \
+        test -f "$MERQURY/$f" || { echo "MANQUANT: $f"; exit 1; }; \
+    done; \
+    Rscript -e 'library(ggplot2); library(scales); library(argparse); cat("R OK\n")'; \
+    bedtools --version; samtools --version | head -1

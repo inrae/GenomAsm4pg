@@ -7,23 +7,21 @@ Images are automatically pulled by Snakemake on first run and stored in the proj
 
 ## List of tools embeded in the workflow
 
-- [hifiasm](https://github.com/chhylp123/hifiasm) 0.24.0-r703 https://doi.org/10.1038/s41592-020-01056-5 
+- [hifiasm](https://github.com/chhylp123/hifiasm) 0.25.0-r726 https://doi.org/10.1038/s41592-020-01056-5 
 - [Samtools](https://github.com/samtools/samtools) 1.10 and 1.13 and 1.9 https://doi.org/10.1093/gigascience/giab008 
-- [fastp](https://github.com/OpenGene/fastp) 0.24.0  https://doi.org/10.1093/bioinformatics/bty560 
-- [bwa](https://github.com/lh3/bwa)  0.7.17-r1188  https://doi.org/10.48550/arXiv.1303.3997
+- [fastp](https://github.com/OpenGene/fastp) 1.3.6  https://doi.org/10.1093/bioinformatics/bty560 
+- [minibwa](https://github.com/lh3/minibwa) 0.7-r421 (Hi-C read alignment, replaces bwa-mem)  https://arxiv.org/abs/2606.15357
 - [YaHS](https://github.com/c-zhou/yahs) 1.2.2  https://doi.org/10.1093/bioinformatics/btac808
 - [purge_dups](https://github.com/dfguan/purge_dups) 1.2.5 https://doi.org/10.1093/bioinformatics/btaa025 
-- [BUSCO](https://gitlab.com/ezlab/busco) 5.7.1  https://doi.org/10.1007/978-1-4939-9173-0_14
+- [compleasm](https://github.com/huangnengCSU/compleasm) 0.2.9, bundling miniprot 0.12-r237 and hmmsearch 3.3.2  https://doi.org/10.1093/bioinformatics/btad595
 - biopython 1.75  https://doi.org/10.1093/bioinformatics/btp163 
 - [genomescope](https://github.com/tbenavi1/genomescope2.0) 2.0 https://doi.org/10.1093/bioinformatics/btx153
-- [merqury](https://github.com/marbl/merqury) and [meryl](https://github.com/marbl/meryl) 1.3 : https://doi.org/10.1186/s13059-020-02134-9
-- [LTR_Finder](https://github.com/xzhub/LTR_Finder) 1.07  https://doi.org/10.1093/nar/gkm286
+- [merqury](https://github.com/marbl/merqury) and [meryl](https://github.com/marbl/meryl) 1.4.1 : https://doi.org/10.1186/s13059-020-02134-9
+- [LTR_FINDER_parallel](https://github.com/oushujun/LTR_FINDER_parallel) 1.4, wrapping LTR_FINDER 1.07  https://doi.org/10.1093/nar/gkm286
 - [LTR_retriever](https://github.com/oushujun/LTR_retriever) 3.0.1  https://doi.org/10.1104/pp.17.01310
 - [RagTag](https://github.com/malonge/RagTag) 2.0.1  https://doi.org/10.1186/s13059-022-02823-7
 - [QUAST](https://github.com/ablab/quast) 5.2.0 https://doi.org/10.1093/bioinformatics/btt086
-- [jellyfish](https://github.com/gmarcais/Jellyfish) 2.3.0  https://doi.org/10.1093/bioinformatics/btr011
-- [KAT](https://github.com/TGAC/KAT) 2.4.1 https://doi.org/10.1093/bioinformatics/btw663
-- [YAK](https://github.com/lh3/yak) 0.1
+- [YAK](https://github.com/lh3/yak) 0.1-r93
 - R markdown 4.0.3
 - matplotlib 0.11.5
 - [genometools](https://github.com/genometools/genometools) 1.5.9 https://doi.org/10.1109/tcbb.2013.68

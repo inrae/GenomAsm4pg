@@ -1,0 +1,31 @@
+# asm4pg LTR_FINDER_parallel box
+# Replaces plain LTR_FINDER
+
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+ARG LFP_VERSION=1.4
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    wget \
+    perl \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN wget -q "https://github.com/oushujun/LTR_FINDER_parallel/archive/refs/tags/v${LFP_VERSION}.tar.gz" -O /tmp/lfp.tar.gz && \
+    mkdir -p /opt/LTR_FINDER_parallel && \
+    tar -xzf /tmp/lfp.tar.gz -C /opt/LTR_FINDER_parallel --strip-components=1 && \
+    rm /tmp/lfp.tar.gz && \
+    chmod +x /opt/LTR_FINDER_parallel/LTR_FINDER_parallel && \
+    chmod +x /opt/LTR_FINDER_parallel/bin/LTR_FINDER.x86_64-1.0.7/ltr_finder && \
+    printf '#!/bin/sh\nexec perl /opt/LTR_FINDER_parallel/LTR_FINDER_parallel "$@"\n' > /usr/local/bin/LTR_FINDER_parallel && \
+    chmod +x /usr/local/bin/LTR_FINDER_parallel
+
+ENV PATH="/usr/local/bin:${PATH}"
+
+RUN set -eux; \
+    perl -e 'use threads; use Thread::Queue; print "perl ithreads OK\n"'; \
+    LTR_FINDER_parallel -check_dependencies; \
+    /opt/LTR_FINDER_parallel/bin/LTR_FINDER.x86_64-1.0.7/ltr_finder -h 2>&1 | head -2

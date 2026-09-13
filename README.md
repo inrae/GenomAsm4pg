@@ -13,17 +13,16 @@ This workflow leverages **[Snakemake](https://snakemake.readthedocs.io/en/stable
   Performs primary genome assembly using high-fidelity long reads.
 
 - **hi-c mode**  
-  Uses Hi-C data to scaffold the assembled contigs into chromosome-scale scaffolds.
+  Uses Hi-C + Hifi data to scaffold the assembled contigs into chromosome-scale scaffolds.
 
 - **trio mode**  
-  Uses parental short reads to partition long reads by haplotype before assembly.
+  Uses parental short reads to partition Hifi data by haplotype before assembly.
 
 - **ont mode**  
   Uses ultra long reads (in fastq or bam format, no fasta) to perform the assembly 
 
 &nbsp;
 ![Workflow flowchart](doc/asm4pg_flowchart_bg.svg)  
-[Animated version](https://asm4pg-animated-7dc863.pages.mia.inra.fr/asm4pg_animated.html) 
 ## 📂 Repository Structure  
 
 ```bash
@@ -106,10 +105,16 @@ asm4pg [dry|run|local-run|dag|rulegraph|unlock|touch] [additional snakemake args
     rulegraph - generate the rulegraph for the workflow
     unlock - Unlock the directory if snakemake crashed
     touch - Tell snakemake that all files are up to date (use with caution)
+    --bind PATHS - extra paths to mount in the containers (comma separated).
+                   The current directory is always mounted; add your scratch,
+                   output and reference paths here on a cluster.
     [additional snakemake args] - for any snakemake arg, like --until hifiasm
 ```
 ## 🔧 Using the full potential of the workflow :
 Asm4pg has many options. If you wish to modify the default values and know more about the workflow, please refer to the [documentation](doc/documentation.md)
+
+**Start here if you have a specific need** ("I have Hi-C data", "I want to extract chloroplast reads",
+"what is a LAI score"): the [I want to...](doc/cookbook.md) cookbook.
 
 ## Output of the workflow :
 
@@ -124,16 +129,15 @@ Asm4pg has many options. If you wish to modify the default values and know more 
         │   ├── hap1/hap2 
         │   │   ├── sample.fasta.gz # <- The final assembly
         │   │   ├── mitogenome
-        │   │   └── ragtag_scafold
+        │   │   └── ragtag_scaffold
         ├── 03_raw_data_qc
         │   ├── genometools
         │   ├── genomescope
-        │   └── jellyfish
+        │   └── meryl
         ├── 04_assembly_qc
         │   ├── hap1/hap2
         │   │   ├── genometools
-        │   │   ├── busco
-        │   │   ├── katplot
+        │   │   ├── compleasm
         │   │   ├── LTR/LAI
         │   │   └── telomeres
         │   ├── merqury

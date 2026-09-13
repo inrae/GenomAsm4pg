@@ -1,0 +1,33 @@
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+ARG COMPLEASM_VERSION=0.2.9
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    wget \
+    bzip2 \
+    python3 \
+    python3-pandas \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN wget -q "https://github.com/huangnengCSU/compleasm/releases/download/v${COMPLEASM_VERSION}/compleasm-${COMPLEASM_VERSION}_x64-linux.tar.bz2" -O /tmp/compleasm.tar.bz2 && \
+    mkdir -p /opt/compleasm && \
+    tar -xjf /tmp/compleasm.tar.bz2 -C /opt/compleasm --strip-components=1 && \
+    rm /tmp/compleasm.tar.bz2 && \
+    chmod +x /opt/compleasm/miniprot /opt/compleasm/hmmsearch && \
+    ln -s /opt/compleasm/miniprot /usr/local/bin/miniprot && \
+    ln -s /opt/compleasm/hmmsearch /usr/local/bin/hmmsearch
+
+RUN printf '#!/bin/sh\nexec python3 /opt/compleasm/compleasm.py "$@"\n' > /usr/local/bin/compleasm && \
+    chmod +x /usr/local/bin/compleasm
+
+ENV PATH="/usr/local/bin:${PATH}"
+
+RUN set -eux; \
+    compleasm --version; \
+    miniprot --version; \
+    hmmsearch -h | head -2; \
+    python3 -c "import pandas; print('pandas', pandas.__version__)"

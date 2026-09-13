@@ -1,6 +1,6 @@
 # Author: Lucien PIAT based on Sukanya Denni's work
 # For: Project Pangenoak
-# Date: april, 2025
+# Date: 13/09/2026
 
 configfile: ".config/masterconfig.yaml"
 include: "scripts/parameter_retrieval.py"
@@ -9,7 +9,12 @@ import os
 import yaml
 
 container_registry = config.get("container_registry", "docker://registry.forge.inrae.fr/asm4pg/genomasm4pg")
-output_dir = os.path.join(config.get("output_dir_pdw", os.getcwd()), config.get("output_dir", "results/"))
+output_dir = os.path.abspath(os.path.join(config.get("output_dir_pdw", os.getcwd()), config.get("output_dir", "results/")))
+
+# An optional step that is off must not be requested at all
+QUAST_SAMPLES  = samples_with(get_quast_bool,      config["samples"])
+RAGTAG_SAMPLES = samples_with(get_ragtag_bool,     config["samples"])
+MITO_SAMPLES   = samples_with(get_mito_reference,  config["samples"])
 
 rule all:
     input:
@@ -18,8 +23,8 @@ rule all:
             sample=config["samples"].keys(), n=[1, 2]
         ),
         expand(
-            os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "ragtag_scafold", "recap.txt"),
-            sample=config["samples"].keys(), n=[1, 2]
+            os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "ragtag_scaffold", "recap.txt"),
+            sample=RAGTAG_SAMPLES, n=[1, 2]
         ),
         expand(
             os.path.join(output_dir, "{sample}_results", "{sample}_assembly_report.html"),
@@ -31,11 +36,11 @@ rule all:
         ),
         expand(
             os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "quast"),
-            sample=config["samples"].keys()
+            sample=QUAST_SAMPLES
         ), 
         expand(
             os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "mitogenome", "contigs_stats.tsv"),
-            sample=config["samples"].keys(), n=[1, 2]
+            sample=MITO_SAMPLES, n=[1, 2]
         )
         
 rule input_conversion:
@@ -65,24 +70,25 @@ rule input_conversion:
             {output.fastqgz} > {log} 2>&1
         """
 
-rule separate_reads:
+# Pull chloroplast reads out before assembly, so they do not turn into contigs.
+rule separate_chloroplast_reads:
     input:
         fasta = rules.input_conversion.output.fastagz,
         fastq = rules.input_conversion.output.fastqgz
     output:
-        nuclear_fasta = os.path.join(output_dir, "{sample}_results", "00_preprocess", "nuclear_{sample}.fasta.gz"),
-        nuclear_fastq = os.path.join(output_dir, "{sample}_results", "00_preprocess", "nuclear_{sample}.fastq.gz"),
-        mito_fasta = os.path.join(output_dir, "{sample}_results", "00_preprocess", "mito_{sample}.fasta.gz"),
-        mito_fastq = os.path.join(output_dir, "{sample}_results", "00_preprocess", "mito_{sample}.fastq.gz")
+        nuclear_fasta = temp(os.path.join(output_dir, "{sample}_results", "00_preprocess", "nuclear_{sample}.fasta.gz")),
+        nuclear_fastq = temp(os.path.join(output_dir, "{sample}_results", "00_preprocess", "nuclear_{sample}.fastq.gz")),
+        chloro_fasta = os.path.join(output_dir, "{sample}_results", "00_preprocess", "chloroplast_{sample}.fasta.gz"),
+        chloro_fastq = os.path.join(output_dir, "{sample}_results", "00_preprocess", "chloroplast_{sample}.fastq.gz"),
+        chloro_stats = os.path.join(output_dir, "{sample}_results", "00_preprocess", "chloroplast_{sample}_stats.txt")
     params:
-        run_bool = get_separation_bool,
-        mito_ref = get_mito_reference,
+        chloro_ref = get_chloro_reference,
         work_dir = lambda wildcards: os.path.join(output_dir, f"{wildcards.sample}_results", "00_preprocess", "separation_work"),
         mode = get_mode
     log:
-        os.path.join(output_dir, "{sample}_results", "logs", "separate_reads.log")
+        os.path.join(output_dir, "{sample}_results", "logs", "separate_chloroplast_reads.log")
     benchmark:
-        os.path.join(output_dir, "{sample}_results", "benchmark", "separate_reads_benchmark.txt")
+        os.path.join(output_dir, "{sample}_results", "benchmark", "separate_chloroplast_reads_benchmark.txt")
     threads: 20
     resources:
         mem_mb=250000
@@ -90,55 +96,24 @@ rule separate_reads:
         f"{container_registry}/biotools:minimap2-samtools-seqtk"
     shell:
         """
-        bash workflow/scripts/separation_reads.sh \
-            {params.run_bool} \
+        bash workflow/scripts/separate_organelle_reads.sh \
+            {params.chloro_ref} \
             {input.fasta} \
             {input.fastq} \
-            {params.mito_ref[0]} \
+            {params.mode} \
             {threads} \
             {params.work_dir} \
             {output.nuclear_fasta} \
             {output.nuclear_fastq} \
-            {output.mito_fasta} \
-            {output.mito_fastq} \
-            {params.mode} > {log} 2>&1
-        """
-
-# Count k-mers in the input reads and generate a histogram of k-mer frequencies.
-rule jellyfish:
-    input:
-        reads = rules.input_conversion.output.fastagz
-    output:
-        jf = os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "jellyfish", "{sample}.jf"),
-        histo = os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "jellyfish", "{sample}.histo")
-    params:
-        km_size = get_kmer_size
-    threads: 20
-    benchmark:
-        os.path.join(output_dir, "{sample}_results", "benchmark", "jellyfish_benchmark.txt")
-    log:
-        os.path.join(output_dir, "{sample}_results", "logs", "jellyfish.log")
-    resources:
-        mem_mb=250000
-    container:
-        f"{container_registry}/jellyfish2.3.0"
-    shell:
-        """
-        echo "🔹 Asm4pg -> starting jellyfish counts of kmers of size {params.km_size}" > {log} 2>&1
-        jellyfish count -m {params.km_size} -s 100M -t {threads} -o {output.jf} -C <(zcat {input.reads}) >> {log} 2>&1
-        echo "🔹 Asm4pg -> starting to compute jellyfish histogram" >> {log} 2>&1
-        jellyfish histo -h 1000000 -t {threads} {output.jf} > {output.histo} 2>> {log}
-        if [ ! -s {output.histo} ]; then
-            echo "⚠️  Asm4pg -> jellyfish missing histo, check logs" >> {log}
-        else
-            echo "✅ Asm4pg -> jellyfish histo created" >> {log}
-        fi
+            {output.chloro_fasta} \
+            {output.chloro_fastq} \
+            {output.chloro_stats} > {log} 2>&1
         """
 
 # Analyze the k-mer histogram and estimate genome characteristics, including genome size, heterozygosity, and error rates. 
 rule genomescope:
     input:
-        rules.jellyfish.output.histo
+        os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "meryl", "{sample}.histo")
     output:
         plot = os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "genomescope", "linear_plot.png"),
         summary = os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "genomescope", "summary.txt")
@@ -159,15 +134,15 @@ rule genomescope:
 rule downsample_reads:
     input:
         # Always use separation outputs as input (they exist even if separation is skipped)
-        fasta = rules.separate_reads.output.nuclear_fasta,
-        fastq = rules.separate_reads.output.nuclear_fastq,
+        fasta = rules.separate_chloroplast_reads.output.nuclear_fasta,
+        fastq = rules.separate_chloroplast_reads.output.nuclear_fastq,
         # Use the actual genomescope output location
         genomescope_summary = rules.genomescope.output.summary
     output:
-        downsampled_fasta = os.path.join(output_dir, "{sample}_results", "00_preprocess", "downsampled_{sample}.fasta.gz"),
-        downsampled_fastq = os.path.join(output_dir, "{sample}_results", "00_preprocess", "downsampled_{sample}.fastq.gz"),
-        longreads_fasta = os.path.join(output_dir, "{sample}_results", "00_preprocess", "longreads_{sample}.fasta.gz"),
-        longreads_fastq = os.path.join(output_dir, "{sample}_results", "00_preprocess", "longreads_{sample}.fastq.gz")
+        downsampled_fasta = temp(os.path.join(output_dir, "{sample}_results", "00_preprocess", "downsampled_{sample}.fasta.gz")),
+        downsampled_fastq = temp(os.path.join(output_dir, "{sample}_results", "00_preprocess", "downsampled_{sample}.fastq.gz")),
+        longreads_fasta = temp(os.path.join(output_dir, "{sample}_results", "00_preprocess", "longreads_{sample}.fasta.gz")),
+        longreads_fastq = temp(os.path.join(output_dir, "{sample}_results", "00_preprocess", "longreads_{sample}.fastq.gz"))
     params:
         run_bool = get_downsampling_bool,
         coverage = get_target_coverage,
@@ -223,7 +198,7 @@ rule run_hifiasm:
     resources:
         mem_mb=250000
     container:
-        f"{container_registry}/hifiasm-box:latest"
+        f"{container_registry}/hifiasm-box:0.25.0"
     benchmark:
         os.path.join(output_dir, "{sample}_results", "benchmark", "hifiasm_benchmark.txt")
     log:
@@ -260,7 +235,7 @@ rule pigz_gfa_to_fasta:
     shell:
         """
         if [[ "{params.mode}" == "hi-c" ]]; then
-            echo "🔹 Asm4pg -> Compressing the scafold"
+            echo "🔹 Asm4pg -> Compressing the scaffold"
             pigz -p {threads} -c {params.hic_scaffold} > {output.fasta}
         else
             awk {TO_FA_CMD:q} {input.gfa} | pigz -p {threads} > {output.fasta}
@@ -338,7 +313,7 @@ rule mito_genome_from_assembly:
         if [[ "{params.mito_reference}" == "None" ]]; then
             echo "🔹 Asm4pg -> no mitogenome reference provided, skipping" > $LOG_ABS 2>&1
             cd {params.out_dir}
-            echo "No ref mitogenome specified" > {output}
+            echo "No reference mitogenome specified (set reference_mitochondrial_genome)" > {output}
             echo "✅ Asm4pg -> done!" >> $LOG_ABS 2>&1
             exit 0
         fi
@@ -370,9 +345,8 @@ rule mito_genome_from_assembly:
             mv final_mitogenome.gb {wildcards.sample}_mitogenome_hap{wildcards.n}.gb
             echo "✅ Asm4pg -> done!" >> $LOG_ABS 2>&1
         else
-            echo "🔹 Asm4pg -> mitogenome extraction unsuccessful, check logs" >> $LOG_ABS 2>&1
-            rm *
-            echo "mitogenome extraction unsuccessful (from assembly), check logs" > {output}
+            echo "⚠️  Asm4pg -> mitogenome extraction unsuccessful, intermediates kept" >> $LOG_ABS 2>&1
+            echo "mitogenome extraction unsuccessful (from assembly), check logs and this directory" > {output}
         fi
         """
 
@@ -430,64 +404,74 @@ use rule genometools_on_raw_data as genometools_on_assembly with:
         os.path.join(output_dir, "{sample}_results", "logs", "genometools_on_assembly_hap{n}.log")
     priority: 0
 
-# BUSCO stats haplotype 1
-rule busco_hap1:
-    input:
-        hap = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap1","{sample}_final_hap1.fasta")
+# Download the BUSCO lineage ONCE, before any assessment runs. Keyed on the lineage
+rule download_compleasm_lineage:
     output:
-        os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "busco", "busco_{sample}_hap1.txt")
+        directory(os.path.join(output_dir, "compleasm_lineages", "{lineage}"))
     params:
-        prefix = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "busco"),
-        lineage=get_busco_lin, 
-        sample="{sample}_hap1"
+        name = lambda wildcards: split_lineage(wildcards.lineage)[0],
+        odb = lambda wildcards: split_lineage(wildcards.lineage)[1]
+    threads: 1
+    log:
+        os.path.join(output_dir, "logs", "download_compleasm_lineage_{lineage}.log")
+    container:
+        f"{container_registry}/compleasm:0.2.9"
+    shell:
+        """
+        echo "🔹 Asm4pg -> downloading compleasm lineage {wildcards.lineage}" > {log} 2>&1
+        compleasm download {params.name} --odb {params.odb} -L {output} >> {log} 2>&1
+        find {output} -name '*.tar.gz' -delete >> {log} 2>&1 || true
+        """
+
+# calculate the busco with compleasm
+rule compleasm:
+    input:
+        hap = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap{n}","{sample}_final_hap{n}.fasta"),
+        lineage = lambda wildcards: os.path.join(output_dir, "compleasm_lineages", get_busco_lin(wildcards))
+    output:
+        summary = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "compleasm", "compleasm_{sample}_hap{n}.txt")
+    params:
+        run_dir = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "compleasm", "run_hap{n}"),
+        out_dir = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "compleasm"),
+        name = lambda wildcards: split_lineage(get_busco_lin(wildcards))[0],
+        odb = lambda wildcards: split_lineage(get_busco_lin(wildcards))[1],
+        lineage = get_busco_lin
     threads: 20
     benchmark:
-        os.path.join(output_dir, "{sample}_results", "benchmark", "busco_hap1_benchmark.txt")
+        os.path.join(output_dir, "{sample}_results", "benchmark", "compleasm_hap{n}_benchmark.txt")
     resources:
         mem_mb=250000
     log:
-        os.path.join(output_dir, "{sample}_results", "logs", "busco_hap1.log")
+        os.path.join(output_dir, "{sample}_results", "logs", "compleasm_hap{n}.log")
     container:
-        f"{container_registry}/busco:5.7.1"
+        f"{container_registry}/compleasm:0.2.9"
     shell:
         """
-        echo "🔹 Asm4pg -> starting BUSCO on {input.hap}" > {log} 2>&1
-        
+        echo "🔹 Asm4pg -> starting compleasm on {input.hap}" > {log} 2>&1
+
         # Check if input file is empty
         if [ ! -s {input.hap} ]; then
-            echo "input file empty" > {output}
-            echo "⚠️  Asm4pg -> Warning: Input file is empty, skipping BUSCO!" >> {log}
+            echo "input file empty" > {output.summary}
+            echo "⚠️  Asm4pg -> Warning: Input file is empty, skipping compleasm!" >> {log}
         else
-            busco -f -i {input.hap} -l {params.lineage} --out_path {params.prefix} -o {params.sample} -m genome -c {threads} >> {log} 2>&1 
-            
-            # Check if BUSCO produced the expected output
-            if [ -f {params.prefix}/{params.sample}/short_summary.specific.{params.lineage}.{params.sample}.txt ]; then
-                echo "🔹 Asm4pg -> cleaning busco output files" >> {log} 2>&1 
-                mv {params.prefix}/{params.sample}/short_summary.specific.{params.lineage}.{params.sample}.txt {output} >> {log} 2>&1
-                rm -rf {params.prefix}/{params.sample} >> {log} 2>&1
-                echo "✅ Asm4pg -> BUSCO completed successfully" >> {log}
+            compleasm run -a {input.hap} -o {params.run_dir} \
+                -l {params.name} --odb {params.odb} \
+                -L {input.lineage} -t {threads} >> {log} 2>&1
+
+            if [ -f {params.run_dir}/summary.txt ]; then
+                echo "🔹 Asm4pg -> cleaning compleasm output files" >> {log} 2>&1
+                mv {params.run_dir}/summary.txt {output.summary} >> {log} 2>&1
+                # Keep the BUSCO-format table, the one other tools expect
+                mv {params.run_dir}/{params.lineage}/full_table_busco_format.tsv \
+                   {params.out_dir}/full_table_{wildcards.sample}_hap{wildcards.n}.tsv >> {log} 2>&1 || true
+                rm -rf {params.run_dir} >> {log} 2>&1
+                echo "✅ Asm4pg -> compleasm completed successfully" >> {log}
             else
-                echo "⚠️  Asm4pg -> Warning: BUSCO did not produce expected output!" >> {log}
-                echo "BUSCO failed to produce output" > {output}
+                echo "⚠️  Asm4pg -> Warning: compleasm did not produce expected output!" >> {log}
+                echo "compleasm failed to produce output" > {output.summary}
             fi
         fi
         """
-
-# BUSCO stats haplotype 2 (we do them one by on to avoid downlaoding the database twice)
-use rule busco_hap1 as busco_hap2 with:
-    input:
-        hap = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap2","{sample}_final_hap2.fasta"),
-        other = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "busco", "busco_{sample}_hap1.txt")
-    output:
-        os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "busco", "busco_{sample}_hap2.txt")
-    benchmark:
-        os.path.join(output_dir, "{sample}_results", "benchmark", "busco_hap2_benchmark.txt")
-    log:
-        os.path.join(output_dir, "{sample}_results", "logs", "busco_hap2.log")
-    params:
-        prefix = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "busco"),
-        lineage=get_busco_lin, 
-        sample="{sample}_hap2"
 
 # Estimate telomeric region content
 rule find_telomeres:
@@ -512,50 +496,20 @@ rule find_telomeres:
         fi
         """
 
-# Compare the k-mer content between the assembly and the raw reads.
-rule kat:
-    input:
-        hap = rules.haplotigs_handling.output.hap,
-        jellyfish = rules.jellyfish.output.jf
-    output:
-        os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "katplot", "{sample}_hap{n}.katplot.png")
-    params:
-        out_dir = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "katplot", "{sample}_hap{n}"),
-        km_size = get_kmer_size
-    threads: 4
-    benchmark:
-        os.path.join(output_dir, "{sample}_results", "benchmark", "kat_hap{n}_benchmark.txt")
-    log:
-        os.path.join(output_dir, "{sample}_results", "logs", "kat_hap{n}.log")
-    resources:
-        mem_mb=100000,
-    container: 
-        f"{container_registry}/kat2.4.1"
-    shell:
-        """
-        echo "🔹 Asm4pg -> starting kat comp" > {log} 2>&1
-        kat comp -o {params.out_dir} -t {threads} -m {params.km_size} --output_type png -v {input.jellyfish} {input.hap} >> {log} 2>&1
-        echo "🔹 Asm4pg -> starting kat plot" > {log} 2>&1
-        kat plot spectra-cn -x 200 -o {params.out_dir}.katplot.png {params.out_dir}-main.mx >> {log} 2>&1 
-        if [ ! -s {output} ]; then
-            echo "⚠️  Asm4pg -> plot missing, check logs" >> {log}
-        else
-            echo "✅ Asm4pg -> plot created" >> {log}
-        fi
-        """
-
 # Creates a k-mer database from the input reads 
 rule meryl:
     input:
         rules.input_conversion.output.fastagz
     output:
-        db = directory(os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "merqury", "{sample}_reads-db.meryl"))
+        db = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "merqury", "{sample}_reads-db.meryl.tar.gz"),
+        histo = os.path.join(output_dir, "{sample}_results", "03_raw_data_qc", "meryl", "{sample}.histo")
     params:
         km_size = get_kmer_size,
         mode = get_mode,
         r1 = lambda wildcards: get_run(wildcards, run=1),
         r2 = lambda wildcards: get_run(wildcards, run=2),
-        out_dir = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "merqury")
+        out_dir = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "merqury"),
+        db_dir = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "merqury", "{sample}_reads-db.meryl")
     threads: 20
     benchmark:
         os.path.join(output_dir, "{sample}_results", "benchmark", "meryl_benchmark.txt")
@@ -564,7 +518,7 @@ rule meryl:
     resources:
         mem_mb=120000, 
     container:
-        f"{container_registry}/merqury1.3"
+        f"{container_registry}/merqury:1.4.1"
     shell:
         """
         echo "🔹 Asm4pg -> starting meryl" > {log} 2>&1
@@ -576,12 +530,23 @@ rule meryl:
             meryl k={params.km_size} threads={threads} count {params.r2} output {params.out_dir}/{wildcards.sample}_P2-db.meryl >> {log} 2>&1
         fi
         echo "🔹 Asm4pg -> counting input reads" >> {log} 2>&1
-        meryl k={params.km_size} threads={threads} count {input} output {output.db} >> {log} 2>&1
+        meryl k={params.km_size} threads={threads} count {input} output {params.db_dir} >> {log} 2>&1
+        echo "🔹 Asm4pg -> writing k-mer histogram for genomescope" >> {log} 2>&1
+        meryl histogram {params.db_dir} > {output.histo} 2>> {log}
+
+        echo "🔹 Asm4pg -> compressing meryl databases" >> {log} 2>&1
+        cd {params.out_dir}
+        for db in {wildcards.sample}_reads-db.meryl {wildcards.sample}_P1-db.meryl {wildcards.sample}_P2-db.meryl; do
+            if [ -d "$db" ]; then
+                tar -cf - "$db" | bgzip -@ {threads} -c > "$db.tar.gz" 2>> {log}
+                rm -rf "$db" >> {log} 2>&1
+            fi
+        done
         """
 
 rule merqury:
     input:
-        km_database = rules.meryl.output,
+        km_database = rules.meryl.output.db,
         hap1 = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap1","{sample}_final_hap1.fasta"),
         hap2 = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap2","{sample}_final_hap2.fasta"),
     output:
@@ -599,7 +564,7 @@ rule merqury:
     resources:
         mem_mb=120000, 
     container:
-        f"{container_registry}/merqury1.3"
+        f"{container_registry}/merqury:1.4.1"
     shell:
         """
         echo "🔹 Asm4pg -> Starting merqury" > {log} 2>&1
@@ -607,12 +572,24 @@ rule merqury:
         cp {input.hap2} {params.out_dir}/{wildcards.sample}_hap2.fasta >> {log} 2>&1
         cd {params.out_dir} >> {log} 2>&1
         export MERQURY=/usr/local/share/merqury
+
+        find . -maxdepth 1 -mindepth 1 \
+             ! -name '*.meryl.tar.gz' \
+             ! -name '{wildcards.sample}_hap1.fasta' \
+             ! -name '{wildcards.sample}_hap2.fasta' \
+             -exec rm -rf {{}} + >> {log} 2>&1 || true
+
+        echo "🔹 Asm4pg -> unpacking meryl databases" >> {log} 2>&1
+        for a in ./*.meryl.tar.gz; do
+            [ -e "$a" ] || continue
+            gzip -dc "$a" | tar -xf - >> {log} 2>&1
+        done
         if [[ "{params.mode}" == "trio" ]]; then
             echo "🔹 Asm4pg -> trio mode detected" >> {log} 2>&1
             echo "🔹 Asm4pg -> creating hapmer" >> {log} 2>&1
-            $MERQURY/trio/hapmers.sh {wildcards.sample}_P1-db.meryl {wildcards.sample}_P2-db.meryl {input.km_database} >> {log} 2>&1
+            $MERQURY/trio/hapmers.sh {wildcards.sample}_P1-db.meryl {wildcards.sample}_P2-db.meryl {wildcards.sample}_reads-db.meryl >> {log} 2>&1
             echo "🔹 Asm4pg -> running merqury" >> {log} 2>&1
-            merqury.sh {input.km_database} {wildcards.sample}_P1-db.hapmer.meryl {wildcards.sample}_P2-db.hapmer.meryl {wildcards.sample}_hap1.fasta {wildcards.sample}_hap2.fasta {params.prefix} >> {log} 2>&1
+            merqury.sh {wildcards.sample}_reads-db.meryl {wildcards.sample}_P1-db.hapmer.meryl {wildcards.sample}_P2-db.hapmer.meryl {wildcards.sample}_hap1.fasta {wildcards.sample}_hap2.fasta {params.prefix} >> {log} 2>&1
             rm *.fai >> {log} 2>&1
             rm *.txt >> {log} 2>&1
             rm *.gaps >> {log} 2>&1
@@ -620,22 +597,17 @@ rule merqury:
             rm *block.sizes >> {log} 2>&1
             rm *contig.sizes* >> {log} 2>&1
             rm *block.stats* >> {log} 2>&1
-            rm *hap1*.png >> {log} 2>&1
-            rm *hap2*.png >> {log} 2>&1
         else
             echo "🔹 Asm4pg -> default mode detected" >> {log} 2>&1
-            merqury.sh {input.km_database} {wildcards.sample}_hap1.fasta {wildcards.sample}_hap2.fasta {params.prefix} >> {log} 2>&1
-            rm *hap*.png >> {log} 2>&1
+            merqury.sh {wildcards.sample}_reads-db.meryl {wildcards.sample}_hap1.fasta {wildcards.sample}_hap2.fasta {params.prefix} >> {log} 2>&1
         fi
         echo "🔹 Asm4pg -> cleaning up" >> {log} 2>&1
-        rm *.bed >> {log} 2>&1
-        rm *.wig >> {log} 2>&1
-        rm *.fasta >> {log} 2>&1
-        rm *.hist >> {log} 2>&1
-        rm *.filt >> {log} 2>&1
-        rm *.ploidy >> {log} 2>&1
-        rm *hap*.qv >> {log} 2>&1
-        rm -rf logs >> {log} 2>&1
+        find . -maxdepth 1 -mindepth 1 \
+             ! -name '*.meryl.tar.gz' \
+             ! -name '*.png' \
+             ! -name '{wildcards.sample}_merqury.qv' \
+             ! -name '{wildcards.sample}_merqury.completeness.stats' \
+             -exec rm -rf {{}} + >> {log} 2>&1 || true
         echo "🔹 Asm4pg -> Done!" >> {log} 2>&1
         """
 
@@ -644,7 +616,10 @@ rule LTR_finder:
     input:
         rules.unpigz_to_fasta.output
     output:
-        os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "LTR", "{sample}_hap{n}.scn")
+        temp(os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "LTR", "{sample}_hap{n}.scn"))
+    params:
+        out_dir = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "LTR")
+    threads: 8
     resources:
         mem_mb=60000, 
     benchmark:
@@ -652,15 +627,27 @@ rule LTR_finder:
     log:
         os.path.join(output_dir, "{sample}_results", "logs", "LTR_finder_hap{n}.log")
     container:
-        f"{container_registry}/ltr_finder:latest"
+        f"{container_registry}/ltr_finder_parallel:1.4"
     shell:
         """
-        echo "🔹 Asm4pg -> Starting LTR finder" > {log} 2>&1
-        ltr_finder -C {input} > {output} 2>> {log} 2>&1
-        if [ ! -s {output} ]; then
-            echo "⚠️  Asm4pg -> scn missing, check logs" >> {log}
+        echo "🔹 Asm4pg -> Starting LTR_FINDER_parallel" > {log} 2>&1
+        INPUT_ABS=$(realpath {input})
+        LOG_ABS=$(realpath {log})
+        OUT_ABS=$(realpath -m {output})
+        SEQ=$(basename $INPUT_ABS)
+        mkdir -p {params.out_dir}
+        cd {params.out_dir}
+
+        LTR_FINDER_parallel -seq $INPUT_ABS -threads {threads} \
+            -harvest_out -size 1000000 -time 300 >> $LOG_ABS 2>&1
+
+        rm -f $SEQ.shortID $SEQ.shortID.list >> $LOG_ABS 2>&1
+        if [ -s $SEQ.finder.combine.scn ]; then
+            mv $SEQ.finder.combine.scn $OUT_ABS >> $LOG_ABS 2>&1
+            echo "✅ Asm4pg -> scn created" >> $LOG_ABS
         else
-            echo "✅ Asm4pg -> snc created" >> {log}
+            echo "⚠️  Asm4pg -> scn missing, check logs" >> $LOG_ABS
+            : > $OUT_ABS
         fi
         """
 
@@ -699,7 +686,7 @@ rule LTR_retriever:
         else
             cp {input.hap} {params.out_dir}/tmp_hap.fasta >> {log} 2>&1
             cd {params.out_dir} >> {log} 2>&1
-            LTR_retriever -threads {threads} -genome tmp_hap.fasta -infinder {params.scn} >> {log} 2>&1 || true
+            LTR_retriever -threads {threads} -genome tmp_hap.fasta -inharvest {params.scn} >> {log} 2>&1 || true
             
             # Check if LAI file was created, if not create a placeholder
             if [ -f tmp_hap.fasta.out.LAI ]; then
@@ -717,24 +704,24 @@ rule LTR_retriever:
         fi
         '''
 
-# Rule to create scafold on assemblies
-rule scafolding:
+# Rule to create scaffold on assemblies
+rule scaffolding:
     input:
         os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "{sample}_final_hap{n}.fasta")
     output:
-        os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "ragtag_scafold", "recap.txt")
+        os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "ragtag_scaffold", "recap.txt")
     params:
-        out_file = os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "ragtag_scafold", "{sample}_scafold_hap{n}.fasta.gz"),
-        out_dir = os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "ragtag_scafold"),
+        out_file = os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "ragtag_scaffold", "{sample}_scaffold_hap{n}.fasta.gz"),
+        out_dir = os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "ragtag_scaffold"),
         reference_genome = get_reference,
         ragtag_bool = get_ragtag_bool
     threads: 4
     resources:
         mem_mb = 80000,
     benchmark:
-        os.path.join(output_dir, "{sample}_results", "benchmark", "scafolding_hap{n}_benchmark.txt")
+        os.path.join(output_dir, "{sample}_results", "benchmark", "scaffolding_hap{n}_benchmark.txt")
     log:
-        os.path.join(output_dir, "{sample}_results", "logs", "scafolding_hap{n}.log")
+        os.path.join(output_dir, "{sample}_results", "logs", "scaffolding_hap{n}.log")
     container:
         f"{container_registry}/ragtag:2.0.1"
     shell:
@@ -795,11 +782,8 @@ rule generate_report:
         genometools_hap1 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "{sample}_hap1_genometools_stats.txt"),
         genometools_hap2 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "{sample}_hap2_genometools_stats.txt"),
         
-        busco_hap1 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "busco", "busco_{sample}_hap1.txt"),
-        busco_hap2 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "busco", "busco_{sample}_hap2.txt"),
-
-        kplot_hap1 =os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "katplot", "{sample}_hap1.katplot.png"),
-        kplot_hap2 =os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "katplot", "{sample}_hap2.katplot.png"),
+        compleasm_hap1 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "compleasm", "compleasm_{sample}_hap1.txt"),
+        compleasm_hap2 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "compleasm", "compleasm_{sample}_hap2.txt"),
 
         telomeres_hap1 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "telomeres", "{sample}_hap1_telomeres.txt"),
         telomeres_hap2 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "telomeres", "{sample}_hap2_telomeres.txt"),
@@ -812,12 +796,15 @@ rule generate_report:
 
         merqury_stats=os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "merqury", "{sample}_merqury.completeness.stats"),
         merqury_qv=os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "merqury", "{sample}_merqury.qv"),
-        mitogenome_contigs_hap1 = os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap1", "mitogenome", "contigs_stats.tsv"),
-        mitogenome_contigs_hap2 = os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap2", "mitogenome", "contigs_stats.tsv")
+        chloro_stats = os.path.join(output_dir, "{sample}_results", "00_preprocess", "chloroplast_{sample}_stats.txt"),
+
+        mitogenome_contigs_hap1 = lambda wildcards: os.path.join(output_dir, f"{wildcards.sample}_results", "02_final_assembly", "hap1", "mitogenome", "contigs_stats.tsv") if wildcards.sample in MITO_SAMPLES else [],
+        mitogenome_contigs_hap2 = lambda wildcards: os.path.join(output_dir, f"{wildcards.sample}_results", "02_final_assembly", "hap2", "mitogenome", "contigs_stats.tsv") if wildcards.sample in MITO_SAMPLES else []
     output:
         os.path.join(output_dir, "{sample}_results", "{sample}_assembly_report.html")
     params:
         sample = "{sample}",
+        merqury_dir = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "merqury"),
         mode = get_mode,
         assembly_purge_force = get_purge_force,
         purge_dups_bool = get_purge_bool,
