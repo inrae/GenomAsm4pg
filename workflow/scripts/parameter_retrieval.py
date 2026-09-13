@@ -167,6 +167,5 @@ def get_target_coverage(wildcards) -> int:
     try:
         cov = config["samples"][wildcards.sample]["target_coverage"]
     except KeyError:
-        warn_once(f'Asm4pg -> "target_coverage" unspecified for {wildcards.sample}, using 50 by default')
         return 50
     return cov
