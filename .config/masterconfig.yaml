@@ -1,32 +1,166 @@
 # Config file
 
-# Add the assembly runs you want to do under samples. 
-# Here is an example of mininmal configuration. Refer to the documentation for all options
-
 samples:
-  insect_example_assembly_01 :
-    reads: ladybug_long_reads.bam
-    busco_lineage: insecta_odb10
+  Pdul_delcid:
+    reads: /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/reads_nochloro/Pdul_delcid/Pdul_delcid.nochloro.fastq.gz
+    mode: default
+    busco_lineage: viridiplantae_odb10
+    run_mito_separation: True
+    reference_mitochondrial_genome:
+      - /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/mito/prunus_mitochondria.fasta
+      - /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/mito/prunus_mitochondria.gb
+    run_ragtag: True
+    reference_genome:
+      - /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/ref/Texas_F0_K80_chr.fasta.gz
+      
+  Pdul_KR019:
+    reads: /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/reads_nochloro/Pdul_KR019/Pdul_KR019.nochloro.fastq.gz
+    mode: default
+    busco_lineage: viridiplantae_odb10
+    run_mito_separation: True
+    reference_mitochondrial_genome:
+      - /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/mito/prunus_mitochondria.fasta
+      - /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/mito/prunus_mitochondria.gb
+    run_ragtag: True
+    reference_genome:
+      - /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/ref/Texas_F0_K80_chr.fasta.gz
+      
+  Pdul_mono:
+    reads: /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/reads_nochloro/Pdul_mono/Pdul_mono.nochloro.fastq.gz
+    mode: default
+    busco_lineage: viridiplantae_odb10
+    run_mito_separation: True
+    reference_mitochondrial_genome:
+      - /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/mito/prunus_mitochondria.fasta
+      - /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/mito/prunus_mitochondria.gb
+    run_ragtag: True
+    reference_genome:
+      - /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/ref/Texas_F0_K80_chr.fasta.gz
+      
+  Pfen_AM2_121:
+    reads: /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/reads_nochloro/Pfen_AM2_121/Pfen_AM2_121.nochloro.fastq.gz
+    mode: default
+    busco_lineage: viridiplantae_odb10
+    run_mito_separation: True
+    reference_mitochondrial_genome:
+      - /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/mito/prunus_mitochondria.fasta
+      - /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/mito/prunus_mitochondria.gb
+    run_ragtag: True
+    reference_genome:
+      - /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/ref/Texas_F0_K80_chr.fasta.gz
+      
+  Pfen_AZ207:
+    reads: /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/reads_nochloro/Pfen_AZ207/Pfen_AZ207.nochloro.fastq.gz
+    mode: default
+    busco_lineage: viridiplantae_odb10
+    run_mito_separation: True
+    reference_mitochondrial_genome:
+      - /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/mito/prunus_mitochondria.fasta
+      - /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/mito/prunus_mitochondria.gb
+    run_ragtag: True
+    reference_genome:
+      - /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/ref/Texas_F0_K80_chr.fasta.gz
+      
+  Pscop_S13_1:
+    reads: /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/reads_nochloro/Pscop_S13_1/Pscop_S13_1.nochloro.fastq.gz
+    mode: default
+    busco_lineage: viridiplantae_odb10
+    run_mito_separation: True
+    reference_mitochondrial_genome:
+      - /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/mito/prunus_mitochondria.fasta
+      - /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/mito/prunus_mitochondria.gb
+    run_ragtag: True
+    reference_genome:
+      - /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/ref/Texas_F0_K80_chr.fasta.gz
+      
+  Pspi_KR237:
+    reads: /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/reads_nochloro/Pspi_KR237/Pspi_KR237.nochloro.fastq.gz
+    mode: default
+    busco_lineage: viridiplantae_odb10
+    run_mito_separation: True
+    reference_mitochondrial_genome:
+      - /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/mito/prunus_mitochondria.fasta
+      - /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/mito/prunus_mitochondria.gb
+    run_ragtag: True
+    reference_genome:
+      - /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/ref/Texas_F0_K80_chr.fasta.gz
+      
+  Pweb_ARM14:
+    reads: /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/reads_nochloro/Pweb_ARM14/Pweb_ARM14.nochloro.fastq.gz
+    mode: default
+    busco_lineage: viridiplantae_odb10
+    run_mito_separation: True
+    reference_mitochondrial_genome:
+      - /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/mito/prunus_mitochondria.fasta
+      - /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/mito/prunus_mitochondria.gb
+    run_ragtag: True
+    reference_genome:
+      - /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/ref/Texas_F0_K80_chr.fasta.gz
+      
+  Pweb_LES13:
+    reads: /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/reads_nochloro/Pweb_LES13/Pweb_LES13.nochloro.fastq.gz
+    mode: default
+    busco_lineage: viridiplantae_odb10
+    run_mito_separation: True
+    reference_mitochondrial_genome:
+      - /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/mito/prunus_mitochondria.fasta
+      - /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/mito/prunus_mitochondria.gb
+    run_ragtag: True
+    reference_genome:
+      - /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/ref/Texas_F0_K80_chr.fasta.gz
+      
+  Pweb_PES08:
+    reads: /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/reads_nochloro/Pweb_PES08/Pweb_PES08.nochloro.fastq.gz
+    mode: default
+    busco_lineage: viridiplantae_odb10
+    run_mito_separation: True
+    reference_mitochondrial_genome:
+      - /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/mito/prunus_mitochondria.fasta
+      - /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/mito/prunus_mitochondria.gb
+    run_ragtag: True
+    reference_genome:
+      - /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/ref/Texas_F0_K80_chr.fasta.gz
+      
+  Pweb_PW034_2:
+    reads: /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/reads_nochloro/Pweb_PW034_2/Pweb_PW034_2.nochloro.fastq.gz
+    mode: default
+    busco_lineage: viridiplantae_odb10
+    run_mito_separation: True
+    reference_mitochondrial_genome:
+      - /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/mito/prunus_mitochondria.fasta
+      - /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/mito/prunus_mitochondria.gb
+    run_ragtag: True
+    reference_genome:
+      - /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/ref/Texas_F0_K80_chr.fasta.gz
+      
+  Pweb_SOT05:
+    reads: /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/reads_nochloro/Pweb_SOT05/Pweb_SOT05.nochloro.fastq.gz
+    mode: default
+    busco_lineage: viridiplantae_odb10
+    run_mito_separation: True
+    reference_mitochondrial_genome:
+      - /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/mito/prunus_mitochondria.fasta
+      - /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/mito/prunus_mitochondria.gb
+    run_ragtag: True
+    reference_genome:
+      - /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/ref/Texas_F0_K80_chr.fasta.gz
+      
 
-# FULL path to your output dir (mandatory)
-output_dir_pdw: /home
+output_dir_pdw: /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond
 
-# ----
-
-# Container to pull the images from
 container_registry: "docker://registry.forge.inrae.fr/asm4pg/genomasm4pg"
-# You can modify the output path if you need to
 output_dir: "results/"
+
 
 # ----
 
 # List of parameters :
-#   fasta_gz: Your reads (mandatory)
+#   reads: Your reads (mandatory)
 #   mode: [default, hi-c, trio, ont] (default: default, use fasq or bam for ont)
 #   r1: The run1/parent1 read file
 #   r2: The run2/parent2 read file
 #   run_purge_dups: [True, False] (default: False)
-#   run_ragtag: [True, False] (default: False)
+#   run_ragtag: [True, False] (default: False): only one ref of ragtag accepted!
 #   run_mito_separation: [True, False] (default: False)
 #   run_downsampling: [True, False] (default: False)
 #   target_coverage: int (defaut: 50)

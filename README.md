@@ -1,3 +1,10 @@
+#usage: conda activate wf_env (it works when we we activate conda manually before run the job)
+#Preparer the file .config/masterconfig/yaml (only one ref for ragtag accepted)
+#makedire "slurm_logs"
+#we can run now: sbatch asm4pg run
+#check logs: in "slum_log" but also in .snakemake/logs and .snakemake/slumr_logs
+
+
 # [Asm4pg](https://forge.inrae.fr/asm4pg/GenomAsm4pg/)  
 
 **Asm4pg** is an **automatic and reproducible genome assembly workflow** designed for **pangenomic applications** using **PacBio HiFi data**.  
@@ -61,7 +68,8 @@ conda env create -n wf_env -f .config/wf_env.yaml
 ```  
 > Use Miniforge with the conda-forge channel, see why [here](https://science-ouverte.inrae.fr/fr/offre-service/fiches-pratiques-et-recommandations/quelles-alternatives-aux-fonctionnalites-payantes-danaconda) (french)
 
-- Update the `asm4pg` file with the correct paths to **Singularity/Apptainer** modules lines 45-46
+- Update the `asm4pg` file with the correct paths to **Singularity/Apptainer** modules lines 45-46 (in case we don't work on cbib or genotoul. Modify the block of "*)" = other cluster
+
 ```bash
 nano asm4pg
 ```
@@ -84,8 +92,21 @@ samples:
     busco_lineage: insecta_odb10
   example2: 
     reads: example-2.fasta.gz
-    busco_lineage: eudicots_odb10 # Options only affect current assembly
+    busco_lineage: eudicots_odb10 # Options only affect current assembly (~2,326 genes). If viridiplantae_odb10: ~425 genes)
+
 ```
+###creat log folder: mkdir slurms_results
+#creat log folder for each samples, ex: 
+#cd /home/qbui/work/Assembly_HiFi/almond
+
+#for fq in reads_nochloro/*/*.nochloro.fastq.gz; do
+#    sample=$(basename "$fq" .nochloro.fastq.gz)
+#    mkdir -p \
+#        "results/${sample}_results/logs" \
+#        "results/${sample}_results/benchmark" \
+#        "results/${sample}_results/00_preprocess"
+#done
+
 ### 3. Run the workflow 
 
 - Run the workflow :

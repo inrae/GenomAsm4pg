@@ -1,11 +1,14 @@
 #!/bin/bash
 #SBATCH --cpus-per-task=5
-#SBATCH -o slurm_logs/asm4pg_slurm_log_%j.log
-#SBATCH -e slurm_logs/asm4pg_slurm_log_%j.log
-#SBATCH --time=80:00:00
+#SBATCH -p unlimitq
+#SBATCH -o /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/slurm_logs/asm4pg_slurm_log_%j.log
+#SBATCH -e /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/slurm_logs/asm4pg_slurm_log_%j.log
+##SBATCH --time=80:00:00
 #SBATCH -J asm4pg
 #SBATCH --mem=10G
 #SBATCH --ntasks=1
+#SBATCH --mail-type=END # notification par e-mail à la fin en cas de réussite ou erreur
+#SBATCH --mail-user=quynh-trang.bui@inrae.fr # l’adresse e-mail
 
 # Written by Lucien Piat at INRAe
 # Use this script to run asm4pg on a HPC
@@ -89,7 +92,7 @@ run_snakemake() {
             fi
             ;;
         run)
-            snakemake --workflow-profile ./.config/snakemake/profiles/slurm --rerun-incomplete $extra_args
+            snakemake --workflow-profile /home/qbui/work/Assembly_HiFi/GenomAsm4pg/.config/snakemake/profiles/slurm --rerun-incomplete $extra_args
             ;;
         local-run)
             SNG_BIND=$(pwd)

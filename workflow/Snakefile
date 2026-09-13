@@ -562,7 +562,8 @@ rule meryl:
     log:
         os.path.join(output_dir, "{sample}_results", "logs", "meryl.log")
     resources:
-        mem_mb=120000, 
+        mem_mb=120000,
+        disk_mb=50000,
     container:
         f"{container_registry}/merqury1.3"
     shell:

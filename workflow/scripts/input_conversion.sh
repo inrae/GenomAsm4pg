@@ -2,6 +2,7 @@
 
 # Author: Lucien PIAT
 # Date: January 13, 2025
+# Filename detection fixed to support names containing multiple dots.
 
 set -e  # Exit on error
 
@@ -11,9 +12,9 @@ THREADS="$3"
 MODE="$4"
 OUTPUT_FQ="$5"
 
-# Get file extension after the first dot
-EXTENSION="${INPUT_FILE#*.}"  # Remove everything before the first dot
-EXTENSION="${EXTENSION,,}"     # Convert to lowercase
+# Match the full lowercase basename against supported filename suffixes.
+FILE_NAME="${INPUT_FILE##*/}"
+FILE_NAME="${FILE_NAME,,}"
 
 echo "🔹 Asm4pg -> Checking input file type: $INPUT_FILE"
 
@@ -23,20 +24,18 @@ else
     echo "🔹 Asm4pg -> Non-ONT mode, producing FASTA only, creating empty FASTQ placeholder"
 fi
 
-# Handle different file extensions
-case "$EXTENSION" in
-    fa.gz|fasta.gz)
+case "$FILE_NAME" in
+    *.fa.gz|*.fasta.gz)
         if [[ "$MODE" == "ont" ]]; then
             echo "❌ Asm4pg -> ERROR: In ONT mode, FASTQ input is required (need quality scores)"
             exit 1
         fi
         echo "🔹 Asm4pg -> No conversion needed for .fasta.gz or .fa.gz, copying"
         cp "$INPUT_FILE" "$OUTPUT_FA"
-        # Create empty placeholder for non-ONT modes
         echo "" | gzip > "$OUTPUT_FQ"
         ;;
 
-    fq.gz|fastq.gz)
+    *.fq.gz|*.fastq.gz)
         echo "🔹 Asm4pg -> Converting FastQ to Fasta (gzipped)"
         zcat "$INPUT_FILE" | awk 'NR%4==1{sub(":.*", "", $0); print ">" substr($0,2)} NR%4==2{print}' | pigz -p "$THREADS" > "$OUTPUT_FA"
         if [[ "$MODE" == "ont" ]]; then
@@ -48,18 +47,17 @@ case "$EXTENSION" in
         fi
         ;;
 
-    fasta|fa)
+    *.fasta|*.fa)
         if [[ "$MODE" == "ont" ]]; then
             echo "❌ Asm4pg -> ERROR: In ONT mode, FASTQ input is required (need quality scores)"
             exit 1
         fi
         echo "🔹 Asm4pg -> Compressing .fasta or .fa file"
         pigz -p "$THREADS" -c "$INPUT_FILE" > "$OUTPUT_FA"
-        # Create empty placeholder for non-ONT modes
         echo "" | gzip > "$OUTPUT_FQ"
         ;;
 
-    fastq|fq)
+    *.fastq|*.fq)
         echo "🔹 Asm4pg -> Converting FastQ to Fasta and handling based on mode"
         awk 'NR%4==1{sub(":.*", "", $0); print ">" substr($0,2)} NR%4==2{print}' "$INPUT_FILE" | pigz -p "$THREADS" > "$OUTPUT_FA"
         if [[ "$MODE" == "ont" ]]; then
@@ -71,7 +69,7 @@ case "$EXTENSION" in
         fi
         ;;
 
-    bam)
+    *.bam)
         echo "🔹 Asm4pg -> Converting BAM to FASTA"
         samtools fasta -@ "$THREADS" "$INPUT_FILE" | pigz -p "$THREADS" > "$OUTPUT_FA"
         if [[ "$MODE" == "ont" ]]; then
