@@ -473,6 +473,53 @@ rule compleasm:
         fi
         """
 
+# BUSCO instead of compleasm if user ask for it. 
+rule busco:
+    input:
+        hap = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap{n}","{sample}_final_hap{n}.fasta"),
+        lineage = lambda wildcards: os.path.join(output_dir, "busco_lineages", get_busco_lin(wildcards))
+    output:
+        summary = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "busco", "busco_{sample}_hap{n}.txt")
+    params:
+        run_dir = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "busco", "run_hap{n}"),
+        out_dir = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "busco"),
+        lineage = get_busco_lin
+    threads: 20
+    benchmark:
+        os.path.join(output_dir, "{sample}_results", "benchmark", "busco_hap{n}_benchmark.txt")
+    resources:
+        mem_mb=250000
+    log:
+        os.path.join(output_dir, "{sample}_results", "logs", "busco_hap{n}.log")
+    container:
+        f"{container_registry}/compleasm:0.2.9-busco6.1.0"
+    shell:
+        """
+        echo "🔹 Asm4pg -> starting BUSCO on {input.hap}" > {log} 2>&1
+
+        if [ ! -s {input.hap} ]; then
+            echo "input file empty" > {output.summary}
+            echo "⚠️  Asm4pg -> Warning: Input file is empty, skipping BUSCO!" >> {log}
+        else
+            busco -i {input.hap} -m genome -l {params.lineage} \
+                --download_path {input.lineage} --offline \
+                -o run_hap{wildcards.n} --out_path {params.out_dir} -c {threads} -f >> {log} 2>&1
+
+            SUMMARY=$(ls {params.run_dir}/short_summary.specific.*.txt 2>/dev/null | head -1)
+            if [ -n "$SUMMARY" ]; then
+                echo "🔹 Asm4pg -> cleaning BUSCO output files" >> {log} 2>&1
+                mv "$SUMMARY" {output.summary} >> {log} 2>&1
+                mv {params.run_dir}/run_*/full_table.tsv \
+                   {params.out_dir}/full_table_{wildcards.sample}_hap{wildcards.n}.tsv >> {log} 2>&1 || true
+                rm -rf {params.run_dir} >> {log} 2>&1
+                echo "✅ Asm4pg -> BUSCO completed successfully" >> {log}
+            else
+                echo "⚠️  Asm4pg -> Warning: BUSCO did not produce expected output!" >> {log}
+                echo "BUSCO failed to produce output" > {output.summary}
+            fi
+        fi
+        """
+
 # Estimate telomeric region content
 rule find_telomeres:
     input:
