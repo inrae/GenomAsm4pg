@@ -4,7 +4,7 @@
 #
 # Protocole de Christophe Klopp
 # Script adapté de Quynh-Trang Bui et intégré par Lucien Piat
-# For: Project Pangenoak
+# Date: 13/09/2026
 
 set -uo pipefail
 

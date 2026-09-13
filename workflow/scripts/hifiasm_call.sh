@@ -2,7 +2,7 @@
 # Script to dynamically run hifiasm with the correct command based on the mode
 # Author: Lucien PIAT
 # For: Project Pangenoak
-# Date: April 3, 2025
+# Date: 13/09/2026
 
 # Don't use set -e initially to handle segfaults gracefully
 set -uo pipefail

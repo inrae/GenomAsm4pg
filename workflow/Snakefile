@@ -1,6 +1,6 @@
 # Author: Lucien PIAT based on Sukanya Denni's work
 # For: Project Pangenoak
-# Date: april, 2025
+# Date: 13/09/2026
 
 configfile: ".config/masterconfig.yaml"
 include: "scripts/parameter_retrieval.py"

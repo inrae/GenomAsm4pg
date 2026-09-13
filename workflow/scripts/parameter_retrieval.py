@@ -3,7 +3,7 @@ import sys
 
 # Written by Lucien Piat at INRAe
 # Used to retrieve the parameters for rules
-# 07/01/25
+# Date: 13/09/2026
 
 # Avoid spamming the user with each lambda call of snakemake. 
 _WARNED = set()
