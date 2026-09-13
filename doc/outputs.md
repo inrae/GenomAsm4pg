@@ -1,6 +1,8 @@
 # Workflow Output
 
 ## Directories
+- `00_preprocess`: converted reads, plus `chloroplast_<sample>.fasta.gz` and its
+  `_stats.txt` when a chloroplast reference is configured
 - `01_raw_assembly`: Direct Hifiasm output
 - `02_final_assembly`: Processed haplotypes (purged/scaffolded)
 - `03_raw_qc`: Read quality metrics
@@ -20,7 +22,7 @@ results/
     │   ├── hap1
     │   │   ├── cutoffs                 # Purge_dups coverage cutoffs
     │   │   ├── mitogenome              # Mitogenome and names of contigs identified as mitochondrial                 
-    │   │   ├── ragtag_scafold
+    │   │   ├── ragtag_scaffold
     │   │   │   └── recap.txt          # Scaffolding summary
     │   │   └── final_hap1.fasta.gz    # Final processed haplotype 1
     │   └── hap2                        # Similar structure for haplotype 2
@@ -29,18 +31,14 @@ results/
     │   ├── genomescope
     │   │   ├── linear_plot.png        # K-mer frequency distribution
     │   │   └── log_plot.png           # Log-scale k-mer distribution
-    │   ├── jellyfish
-    │   │   ├── run.histo              # K-mer count histogram
-    │   │   └── run.jf                 # K-mer count database
+    │   ├── meryl
+    │   │   └── run.histo              # K-mer histogram, feeds GenomeScope
     │   └── genometools_stats.txt      # Basic sequence statistics
     ├── 04_assembly_qc
     │ ├── hap1
-    │ │   ├── busco                    # Completeness assessment
-    │ │   │   └── busco_run1_hap1.txt
-    │ │   ├── katplot                  # K-mer frequency analysis
-    │ │   │   ├── run1_hap1.katplot.png
-    │ │   │   ├── run1_hap1-main.mx.spectra-cn.png
-    │ │   │   └── run1_hap1.stats
+    │ │   ├── compleasm                # Completeness assessment
+    │ │   │   ├── compleasm_run1_hap1.txt
+    │ │   │   └── full_table_run1_hap1.tsv
     │ │   ├── LTR                      # Transposable element analysis
     │ │   │   ├── recap_run1_hap1.tbl
     │ │   │   ├── run1_hap1.out.LAI

@@ -17,108 +17,170 @@ output:
       smooth_scroll: yes
 ---
 
-----
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(comment = '', echo = FALSE)
 
-# Global Asm4pg assembly report for:  `r snakemake@params[["sample"]]`
-## Asm4pg Parameters
-* Hifiasm mode : `r snakemake@params[["mode"]]`
-* If hi-c or trio mode : 
-  * parent1/r1 `r snakemake@params[["r1"]]`
-  * parent2/r2 `r snakemake@params[["r2"]]`
+cat_file <- function(key, n = -1L) {
+  f <- snakemake@input[[key]]
+  if (is.null(f) || !file.exists(f)) { cat("Not produced by this run.\n"); return(invisible()) }
+  txt <- readLines(f, warn = FALSE)
+  if (length(txt) == 0) { cat("Empty.\n"); return(invisible()) }
+  if (n > 0) txt <- head(txt, n)
+  cat(txt, sep = "\n")
+}
 
-* Hifiasm purge force : `r snakemake@params[["assembly_purge_force"]]` 
-* Purge_dups executed: `r if (snakemake@params[["purge_dups_bool"]]) { "Yes" } else { "No" }`
-* Genome scafolded: `r if (snakemake@params[["ragtag_bool"]]) { "Yes" } else { "No" }`
+plot_if <- function(pattern, caption) {
+  d <- snakemake@params[["merqury_dir"]]
+  fs <- if (dir.exists(d)) list.files(d, pattern = pattern, full.names = TRUE) else character(0)
+  if (length(fs) == 0) return(invisible())
+  cat("\n\n**", caption, "**\n\n", sep = "")
+  for (f in sort(fs)) cat("![](", f, ")\n\n", sep = "")
+}
+is_trio <- identical(snakemake@params[["mode"]], "trio")
+```
 
-* Busco lineage: `r snakemake@params[["busco_lineage"]]`
-* Genome ploidy: `r snakemake@params[["ploidy"]]`
-* Kmers size: `r snakemake@params[["kmer_size"]]`
+# Asm4pg assembly report: `r snakemake@params[["sample"]]`
 
-## Raw data QC
+## Parameters
+
+| | |
+|---|---|
+| Hifiasm mode | `r snakemake@params[["mode"]]` |
+| Parent/run 1 | `r snakemake@params[["r1"]]` |
+| Parent/run 2 | `r snakemake@params[["r2"]]` |
+| Hifiasm purge force (`-l`) | `r snakemake@params[["assembly_purge_force"]]` |
+| purge_dups run | `r if (isTRUE(snakemake@params[["purge_dups_bool"]])) "Yes" else "No"` |
+| Scaffolded with RagTag | `r if (isTRUE(snakemake@params[["ragtag_bool"]])) "Yes" else "No"` |
+| Lineage | `r snakemake@params[["busco_lineage"]]` |
+| Ploidy | `r snakemake@params[["ploidy"]]` |
+| k-mer size | `r snakemake@params[["kmer_size"]]` |
+
+## Raw reads
+
+### Read statistics
+```{r}
+cat_file("genometools_on_raw_data")
+```
+
+### Genome profile (GenomeScope)
+Estimated from the k-mer histogram *before* assembly.
+
+```{r}
+cat_file("genomescope_sum")
+```
+
 ![](`r snakemake@input[["genomescope"]]`)
 
-### Reads statistics
-```{r comment='', echo=FALSE}
-cat(readLines(snakemake@input[["genometools_on_raw_data"]]), sep = '\n')
-```
+## Assembly
 
-## QC on final assembly
-### Assembly statistics
+### Contiguity
+
 #### Hap 1
-```{r comment='', echo=FALSE}
-cat(readLines(snakemake@input[["genometools_hap1"]]), sep = '\n')
+```{r}
+cat_file("genometools_hap1")
 ```
 
 #### Hap 2
-```{r comment='', echo=FALSE}
-cat(readLines(snakemake@input[["genometools_hap2"]]), sep = '\n')
+```{r}
+cat_file("genometools_hap2")
 ```
 
-### K-mer profiles
-| Hap 1 | Hap 2 |
-|-------|-------|
-| ![](`r snakemake@input[["kplot_hap1"]]`) | ![](`r snakemake@input[["kplot_hap2"]]`) |
+### Completeness (compleasm)
 
-### K-mer completeness and error rate
-Completeness
-
-```{r comment='', echo=FALSE}
-cat(readLines(snakemake@input[["merqury_stats"]]), sep = '\n')
-```
-
-Error rate 
-```{r comment='', echo=FALSE}
-cat(readLines(snakemake@input[["merqury_qv"]]), sep = '\n')
-```
-
-### BUSCO score
 #### Hap 1
-```{r comment='', echo=FALSE}
-cat(readLines(snakemake@input[["busco_hap1"]]), sep = '\n')
+```{r}
+cat_file("compleasm_hap1")
 ```
+
 #### Hap 2
-```{r comment='', echo=FALSE}
-cat(readLines(snakemake@input[["busco_hap2"]]), sep = '\n')
+```{r}
+cat_file("compleasm_hap2")
 ```
 
 ### Telomeres
-Telomeres present in assembly
+Contig ends carrying a telomeric repeat.
+
 #### Hap 1
-```{r comment='', echo=FALSE}
-cat(readLines(snakemake@input[["telomeres_hap1"]]), sep = '\n')
-```
-#### Hap 2
-```{r comment='', echo=FALSE}
-cat(readLines(snakemake@input[["telomeres_hap2"]]), sep = '\n')
+```{r}
+cat_file("telomeres_hap1")
 ```
 
-### Transposable element analysis
-#### Hap 1
-LTR recap
-```{r comment='', echo=FALSE}
-cat(head(readLines(snakemake@input[["LRT_recap_hap1"]]), 50), sep = '\n')
-```
-LAI
-```{r comment='', echo=FALSE}
-cat(head(readLines(snakemake@input[["LAI_hap1"]]), 2), sep = '\n')
-```
 #### Hap 2
-LTR recap
-```{r comment='', echo=FALSE}
-cat(head(readLines(snakemake@input[["LRT_recap_hap2"]]), 50), sep = '\n')
-```
-LAI
-```{r comment='', echo=FALSE}
-cat(head(readLines(snakemake@input[["LAI_hap2"]]), 2), sep = '\n')
+```{r}
+cat_file("telomeres_hap2")
 ```
 
-### Mitogenome
-Contigs identified as mitochondrial
-#### Hap1 
-```{r comment='', echo=FALSE}
-cat(head(readLines(snakemake@input[["mitogenome_contigs_hap1"]]), 2), sep = '\n')
+## K-mer evaluation (Merqury)
+
+### Consensus quality (QV)
+Log-scaled base accuracy, higher is better.
+
+```{r}
+cat_file("merqury_qv")
 ```
-#### Hap1 
-```{r comment='', echo=FALSE}
-cat(head(readLines(snakemake@input[["mitogenome_contigs_hap2"]]), 2), sep = '\n')
+
+### K-mer completeness
+Fraction of read k-mers present in the assembly.
+
+```{r}
+cat_file("merqury_stats")
+```
+
+### Copy-number spectra
+
+```{r results='asis'}
+plot_if("hap1\\.spectra-cn\\.fl\\.png$", "Hap 1")
+plot_if("hap2\\.spectra-cn\\.fl\\.png$", "Hap 2")
+plot_if("^[^.]*\\.spectra-asm\\.fl\\.png$", "Both haplotypes together")
+```
+
+```{r results='asis'}
+if (is_trio) {
+  cat("### Haplotype phasing (trio)\n\n",
+      "Each contig placed by how many k-mers it carries from each parent. ", sep = "")
+  plot_if("blob\\.png$", "Parental k-mer blob plot")
+}
+```
+
+## Transposable elements
+
+### LTR Assembly Index
+
+#### Hap 1
+```{r}
+cat_file("LAI_hap1", 2)
+```
+
+#### Hap 2
+```{r}
+cat_file("LAI_hap2", 2)
+```
+
+### LTR summary
+#### Hap 1
+```{r}
+cat_file("LRT_recap_hap1", 50)
+```
+
+#### Hap 2
+```{r}
+cat_file("LRT_recap_hap2", 50)
+```
+
+## Organelles
+
+### Chloroplast reads removed before assembly
+```{r}
+cat_file("chloro_stats")
+```
+
+### Mitochondrial contigs in the assembly
+#### Hap 1
+```{r}
+cat_file("mitogenome_contigs_hap1", 10)
+```
+
+#### Hap 2
+```{r}
+cat_file("mitogenome_contigs_hap2", 10)
 ```

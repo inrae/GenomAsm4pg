@@ -16,7 +16,6 @@ RUN apt-get update && apt-get install -y \
     curl \
     cmake \
     libboost-all-dev \
-    bwa \
     samtools \
     pigz \
     python3 \
@@ -25,7 +24,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install hifiasm
-RUN git clone --depth 1 https://github.com/chhylp123/hifiasm.git /opt/hifiasm && \
+RUN git clone --depth 1 --branch 0.25.0 https://github.com/chhylp123/hifiasm.git /opt/hifiasm && \
     cd /opt/hifiasm && \
     make && \
     ln -s /opt/hifiasm/hifiasm /usr/local/bin/hifiasm
@@ -40,6 +39,12 @@ RUN git clone --depth 1 https://github.com/lh3/yak.git /opt/yak && \
 RUN wget http://opengene.org/fastp/fastp && \
     chmod +x fastp && \
     mv fastp /usr/local/bin/
+
+# Install minibwa (replaces bwa-mem for Hi-C alignment; --hic == bwa's -5SP)
+RUN wget -q "https://github.com/lh3/minibwa/releases/download/v0.7/minibwa-0.7_x64-linux.tar.bz2" -O /tmp/minibwa.tar.bz2 && \
+    tar -xjf /tmp/minibwa.tar.bz2 -C /opt && \
+    rm /tmp/minibwa.tar.bz2 && \
+    ln -s /opt/minibwa-0.7_x64-linux/minibwa /usr/local/bin/minibwa
 
 # Install YAHS
 RUN git clone --depth 1 https://github.com/c-zhou/yahs.git /opt/yahs && \

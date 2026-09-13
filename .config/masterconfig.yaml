@@ -1,4 +1,5 @@
-# Config file
+# Asm4pg configuration
+# Every assembly you want to run goes under `samples:` as one block.
 
 samples:
   Pdul_delcid:
