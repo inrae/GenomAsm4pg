@@ -28,3 +28,7 @@ slurm_logs
 !**hifiasm_dockerfile
 !asm4pg
 .vscode
+.config/masterconfig_nochloro.yaml
+.config/masterconfig_rawdata.yaml
+almond/
+workflow/scripts/input_conversion_backup.sh
