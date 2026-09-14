@@ -23,6 +23,7 @@ container_registry: "docker://registry.forge.inrae.fr/asm4pg/genomasm4pg"
 #   r1, r2                          Hi-C R1/R2, or the two parents  (hi-c and trio)
 #
 #   busco_lineage                   compleasm/BUSCO lineage         (default: eukaryota_odb10)
+#   use_busco                       True | False, BUSCO instead of compleasm (default: False)
 #   ploidy                                                          (default: 2)
 #   kmer_size                       k for the QC steps              (default: 21)
 #
@@ -42,6 +43,7 @@ container_registry: "docker://registry.forge.inrae.fr/asm4pg/genomasm4pg"
 #   reference_mitochondrial_genome  [mitogenome.fasta, annotation.gb]. Given ->
 #                                   the mitogenome is recovered FROM the assembly
 #                                   by MitoHiFi. Both files are required.
+#   mito_organism                   plant | animal | fungi, MitoHiFi -a    (default: plant)
 
 # Examples
 

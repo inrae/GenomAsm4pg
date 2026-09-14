@@ -294,6 +294,7 @@ rule mito_genome_from_assembly:
         os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "mitogenome", "contigs_stats.tsv"),
     params:
         mito_reference = get_mito_reference,
+        mito_organism = get_mito_organism,
         out_dir = os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "mitogenome")
     threads: 20
     benchmark:
@@ -335,7 +336,7 @@ rule mito_genome_from_assembly:
         cd {params.out_dir}
         echo "🔹 Asm4pg -> starting mitohifi" > $LOG_ABS 2>&1
         
-        if mitohifi.py -c $INPUT_ABS -f $FASTA_REF_ABS -g $GB_REF_ABS -t {threads} -d >> $LOG_ABS 2>&1; then
+        if mitohifi.py -c $INPUT_ABS -f $FASTA_REF_ABS -g $GB_REF_ABS -a {params.mito_organism} -t {threads} -d >> $LOG_ABS 2>&1; then
             echo "🔹 Asm4pg -> cleaning up..." >> $LOG_ABS 2>&1
             rm fixed_header_contigs.fasta
             rm -rf coverage_mapping
