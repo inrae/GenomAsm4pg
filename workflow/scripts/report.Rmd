@@ -85,16 +85,16 @@ cat_file("genometools_hap1")
 cat_file("genometools_hap2")
 ```
 
-### Completeness (compleasm)
+### Completeness (`r snakemake@params[["completeness_tool"]]`)
 
 #### Hap 1
 ```{r}
-cat_file("compleasm_hap1")
+cat_file("completeness_hap1")
 ```
 
 #### Hap 2
 ```{r}
-cat_file("compleasm_hap2")
+cat_file("completeness_hap2")
 ```
 
 ### Telomeres

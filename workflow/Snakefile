@@ -405,22 +405,31 @@ use rule genometools_on_raw_data as genometools_on_assembly with:
     priority: 0
 
 # Download the BUSCO lineage ONCE, before any assessment runs. Keyed on the lineage
-rule download_compleasm_lineage:
+rule download_lineage:
     output:
-        directory(os.path.join(output_dir, "compleasm_lineages", "{lineage}"))
+        directory(os.path.join(output_dir, "{tool}_lineages", "{lineage}"))
+    wildcard_constraints:
+        tool = "compleasm|busco"
     params:
         name = lambda wildcards: split_lineage(wildcards.lineage)[0],
         odb = lambda wildcards: split_lineage(wildcards.lineage)[1]
     threads: 1
+    resources:
+        mem_mb=4000,
+        runtime=60
     log:
-        os.path.join(output_dir, "logs", "download_compleasm_lineage_{lineage}.log")
+        os.path.join(output_dir, "logs", "download_{tool}_lineage_{lineage}.log")
     container:
-        f"{container_registry}/compleasm:0.2.9"
+        f"{container_registry}/compleasm:0.2.9-busco6.1.0"
     shell:
         """
-        echo "🔹 Asm4pg -> downloading compleasm lineage {wildcards.lineage}" > {log} 2>&1
-        compleasm download {params.name} --odb {params.odb} -L {output} >> {log} 2>&1
-        find {output} -name '*.tar.gz' -delete >> {log} 2>&1 || true
+        echo "🔹 Asm4pg -> downloading {wildcards.tool} lineage {wildcards.lineage}" > {log} 2>&1
+        if [[ "{wildcards.tool}" == "busco" ]]; then
+            busco --download {wildcards.lineage} --download_path {output} >> {log} 2>&1
+        else
+            compleasm download {params.name} --odb {params.odb} -L {output} >> {log} 2>&1
+            find {output} -name '*.tar.gz' -delete >> {log} 2>&1 || true
+        fi
         """
 
 # calculate the busco with compleasm
@@ -444,7 +453,7 @@ rule compleasm:
     log:
         os.path.join(output_dir, "{sample}_results", "logs", "compleasm_hap{n}.log")
     container:
-        f"{container_registry}/compleasm:0.2.9"
+        f"{container_registry}/compleasm:0.2.9-busco6.1.0"
     shell:
         """
         echo "🔹 Asm4pg -> starting compleasm on {input.hap}" > {log} 2>&1
@@ -469,6 +478,53 @@ rule compleasm:
             else
                 echo "⚠️  Asm4pg -> Warning: compleasm did not produce expected output!" >> {log}
                 echo "compleasm failed to produce output" > {output.summary}
+            fi
+        fi
+        """
+
+# BUSCO instead of compleasm if user ask for it. 
+rule busco:
+    input:
+        hap = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap{n}","{sample}_final_hap{n}.fasta"),
+        lineage = lambda wildcards: os.path.join(output_dir, "busco_lineages", get_busco_lin(wildcards))
+    output:
+        summary = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "busco", "busco_{sample}_hap{n}.txt")
+    params:
+        run_dir = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "busco", "run_hap{n}"),
+        out_dir = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap{n}", "busco"),
+        lineage = get_busco_lin
+    threads: 20
+    benchmark:
+        os.path.join(output_dir, "{sample}_results", "benchmark", "busco_hap{n}_benchmark.txt")
+    resources:
+        mem_mb=250000
+    log:
+        os.path.join(output_dir, "{sample}_results", "logs", "busco_hap{n}.log")
+    container:
+        f"{container_registry}/compleasm:0.2.9-busco6.1.0"
+    shell:
+        """
+        echo "🔹 Asm4pg -> starting BUSCO on {input.hap}" > {log} 2>&1
+
+        if [ ! -s {input.hap} ]; then
+            echo "input file empty" > {output.summary}
+            echo "⚠️  Asm4pg -> Warning: Input file is empty, skipping BUSCO!" >> {log}
+        else
+            busco -i {input.hap} -m genome -l {params.lineage} \
+                --download_path {input.lineage} --offline \
+                -o run_hap{wildcards.n} --out_path {params.out_dir} -c {threads} -f >> {log} 2>&1
+
+            SUMMARY=$(ls {params.run_dir}/short_summary.specific.*.txt 2>/dev/null | head -1 || true)
+            if [ -n "$SUMMARY" ]; then
+                echo "🔹 Asm4pg -> cleaning BUSCO output files" >> {log} 2>&1
+                mv "$SUMMARY" {output.summary} >> {log} 2>&1
+                mv {params.run_dir}/run_*/full_table.tsv \
+                   {params.out_dir}/full_table_{wildcards.sample}_hap{wildcards.n}.tsv >> {log} 2>&1 || true
+                rm -rf {params.run_dir} >> {log} 2>&1
+                echo "✅ Asm4pg -> BUSCO completed successfully" >> {log}
+            else
+                echo "⚠️  Asm4pg -> Warning: BUSCO did not produce expected output!" >> {log}
+                echo "BUSCO failed to produce output" > {output.summary}
             fi
         fi
         """
@@ -525,12 +581,12 @@ rule meryl:
         if [[ "{params.mode}" == "trio" ]]; then
             echo "🔹 Asm4pg -> trio mode detected" >> {log} 2>&1
             echo "🔹 Asm4pg -> counting p1" >> {log} 2>&1
-            meryl k={params.km_size} threads={threads} count {params.r1} output {params.out_dir}/{wildcards.sample}_P1-db.meryl >> {log} 2>&1
+            meryl k={params.km_size} threads={threads} memory=$(( {resources.mem_mb} * 9 / 10 / 1024 )) count {params.r1} output {params.out_dir}/{wildcards.sample}_P1-db.meryl >> {log} 2>&1
             echo "🔹 Asm4pg -> counting p2" >> {log} 2>&1
-            meryl k={params.km_size} threads={threads} count {params.r2} output {params.out_dir}/{wildcards.sample}_P2-db.meryl >> {log} 2>&1
+            meryl k={params.km_size} threads={threads} memory=$(( {resources.mem_mb} * 9 / 10 / 1024 )) count {params.r2} output {params.out_dir}/{wildcards.sample}_P2-db.meryl >> {log} 2>&1
         fi
         echo "🔹 Asm4pg -> counting input reads" >> {log} 2>&1
-        meryl k={params.km_size} threads={threads} count {input} output {params.db_dir} >> {log} 2>&1
+        meryl k={params.km_size} threads={threads} memory=$(( {resources.mem_mb} * 9 / 10 / 1024 )) count {input} output {params.db_dir} >> {log} 2>&1
         echo "🔹 Asm4pg -> writing k-mer histogram for genomescope" >> {log} 2>&1
         meryl histogram {params.db_dir} > {output.histo} 2>> {log}
 
@@ -782,8 +838,8 @@ rule generate_report:
         genometools_hap1 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "{sample}_hap1_genometools_stats.txt"),
         genometools_hap2 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "{sample}_hap2_genometools_stats.txt"),
         
-        compleasm_hap1 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "compleasm", "compleasm_{sample}_hap1.txt"),
-        compleasm_hap2 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "compleasm", "compleasm_{sample}_hap2.txt"),
+        completeness_hap1 = lambda wildcards: os.path.join(output_dir, f"{wildcards.sample}_results", "04_assembly_qc", "hap1", "busco", f"busco_{wildcards.sample}_hap1.txt") if get_busco_bool(wildcards) else os.path.join(output_dir, f"{wildcards.sample}_results", "04_assembly_qc", "hap1", "compleasm", f"compleasm_{wildcards.sample}_hap1.txt"),
+        completeness_hap2 = lambda wildcards: os.path.join(output_dir, f"{wildcards.sample}_results", "04_assembly_qc", "hap2", "busco", f"busco_{wildcards.sample}_hap2.txt") if get_busco_bool(wildcards) else os.path.join(output_dir, f"{wildcards.sample}_results", "04_assembly_qc", "hap2", "compleasm", f"compleasm_{wildcards.sample}_hap2.txt"),
 
         telomeres_hap1 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap1", "telomeres", "{sample}_hap1_telomeres.txt"),
         telomeres_hap2 = os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "hap2", "telomeres", "{sample}_hap2_telomeres.txt"),
@@ -809,6 +865,7 @@ rule generate_report:
         assembly_purge_force = get_purge_force,
         purge_dups_bool = get_purge_bool,
         busco_lineage = get_busco_lin,
+        completeness_tool = lambda wildcards: "BUSCO" if get_busco_bool(wildcards) else "compleasm",
         ploidy = get_ploidy,
         kmer_size = get_kmer_size,
         ragtag_bool = get_ragtag_bool,

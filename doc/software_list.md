@@ -14,6 +14,7 @@ Images are automatically pulled by Snakemake on first run and stored in the proj
 - [YaHS](https://github.com/c-zhou/yahs) 1.2.2  https://doi.org/10.1093/bioinformatics/btac808
 - [purge_dups](https://github.com/dfguan/purge_dups) 1.2.5 https://doi.org/10.1093/bioinformatics/btaa025 
 - [compleasm](https://github.com/huangnengCSU/compleasm) 0.2.9, bundling miniprot 0.12-r237 and hmmsearch 3.3.2  https://doi.org/10.1093/bioinformatics/btad595
+- [BUSCO](https://doi.org/10.1093/molbev/msab199)
 - biopython 1.75  https://doi.org/10.1093/bioinformatics/btp163 
 - [genomescope](https://github.com/tbenavi1/genomescope2.0) 2.0 https://doi.org/10.1093/bioinformatics/btx153
 - [merqury](https://github.com/marbl/merqury) and [meryl](https://github.com/marbl/meryl) 1.4.1 : https://doi.org/10.1186/s13059-020-02134-9
