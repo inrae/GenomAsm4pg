@@ -35,7 +35,7 @@ Here are all the options and their default values:
 - `run_ragtag`: [True, False] If set to true, the workflow will run RagTag and produce a scaffold of the assemblies (default: False)
 - `reference_genome`: The reference genome used for QUAST and RagTag scaffolding
 - `run_quast`: [True, False] If set to true, the workflow will run Quast and porduce global assembly statistics.
-- `reference_mitochondrial_genome`: list, `[mitogenome.fasta, annot.gb]`. Providing it switches on mitogenome recovery **from the assembly** (MitoHiFi), after assembly.
+- `reference_mitochondrial_genome`: list, `[mitogenome.fasta, annot.gb]`. Providing it removes the mitochondrial contigs from the final assembly (contigs with >= 90% of their length aligned to the reference, listed in `{sample}_mito_contigs_hap{n}.tsv`), then MitoHiFi builds the mitogenome from those contigs.
 - `mito_organism`: [plant, animal, fungi] MitoHiFi `-a`, sets how contigs are filtered against the reference mitogenome (default: plant)
 - `reference_chloroplast_genome`: chloroplast genome in FASTA. Providing it is what switches on chloroplast read removal **before** assembly.
 - `run_downsampling:` [True, False] (default: False) If set to true, will reduce read count match target coverage
