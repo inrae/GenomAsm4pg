@@ -15,6 +15,9 @@ HAP_OUT=$3
 PREFIX=$4
 READS=$5
 DIRR=$6
+MITO_REF=$7     # reference mitogenome fasta, or None
+MITO_FA=$8      # mitochondrial contigs removed from the assembly
+MITO_TSV=$9     # their names, lengths and aligned fraction
 
 cleanup_temp_files() {
     echo "🔹 Asm4pg -> Cleaning temporary files..."
@@ -62,6 +65,45 @@ run_purge_dups() {
     cleanup_temp_files
 }
 
+# Move the mitochondrial contigs (>= 90% of their length aligned to the reference mitogenome)
+# out of the final assembly.
+remove_mito_contigs() {
+    : > "$MITO_FA"
+    if [[ "$MITO_REF" == "None" ]]; then
+        echo "No reference mitogenome given, no contig removed" > "$MITO_TSV"
+        return 0
+    fi
+
+    echo "🔹 Asm4pg -> Removing mitochondrial contigs..."
+    if ! minimap2 -x asm20 "$MITO_REF" "$HAP_OUT" > "$DIRR/$PREFIX.mito.paf"; then
+        echo "⚠️  Asm4pg -> minimap2 against the mitogenome failed, no contig removed"
+        echo "Mapping against the reference mitogenome failed, no contig removed" > "$MITO_TSV"
+        rm -f "$DIRR/$PREFIX.mito.paf"
+        return 0
+    fi
+
+    # Merge the aligned intervals of each contig, keep contigs covered at >= 90%
+    sort -k1,1 -k3,3n "$DIRR/$PREFIX.mito.paf" | awk -v OFS='\t' '
+        function flush() { if (q != "") { cov += e - s; if (cov / len >= 0.9) print q, len, sprintf("%.3f", cov / len) } }
+        $1 != q { flush(); q = $1; len = $2; s = $3; e = $4; cov = 0; next }
+        $3 > e  { cov += e - s; s = $3; e = $4; next }
+        $4 > e  { e = $4 }
+        END     { flush() }' > "$DIRR/$PREFIX.mito.ids"
+
+    : > "$DIRR/$PREFIX.nomito.fa"
+    zcat "$HAP_OUT" | awk -v ids="$DIRR/$PREFIX.mito.ids" -v mito="$MITO_FA" -v keep="$DIRR/$PREFIX.nomito.fa" '
+        BEGIN { while ((getline l < ids) > 0) { split(l, a, "\t"); m[a[1]] = 1 } }
+        /^>/  { out = (substr($1, 2) in m) ? mito : keep }
+        { print > out }'
+    gzip -c "$DIRR/$PREFIX.nomito.fa" > "$HAP_OUT"
+
+    { echo "# $(wc -l < "$DIRR/$PREFIX.mito.ids") contig(s) removed, $(awk '{ s += $2 } END { print s + 0 }' "$DIRR/$PREFIX.mito.ids") bp, >= 90% aligned to the reference mitogenome"
+      printf 'contig\tlength\taligned_fraction\n'
+      cat "$DIRR/$PREFIX.mito.ids"; } > "$MITO_TSV"
+    rm -f "$DIRR/$PREFIX.mito.paf" "$DIRR/$PREFIX.mito.ids" "$DIRR/$PREFIX.nomito.fa"
+    cat "$MITO_TSV"
+}
+
 echo "🔹 Asm4pg -> Starting haplotigs handling"
 if [[ "$PURGE_DUPS" =~ ^(true|True|yes|Yes)$ ]]; then
     run_purge_dups
@@ -72,4 +114,5 @@ else
     echo "✅ Asm4pg -> Creating empty cutoffs file..."
     echo "No cutoffs, purge_dups is turned off" > "$DIRR/cutoffs"
 fi
+remove_mito_contigs
 echo "✅ Asm4pg -> Done with haplotigs handling"

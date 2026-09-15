@@ -249,11 +249,14 @@ rule haplotigs_handling:
         reads = rules.input_conversion.output.fastagz
     output:
         hap = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap{n}","{sample}_final_hap{n}.fasta.gz"),
-        cutoffs = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap{n}","cutoffs")
+        cutoffs = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap{n}","cutoffs"),
+        mito_fasta = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap{n}","{sample}_mito_contigs_hap{n}.fasta"),
+        mito_tsv = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap{n}","{sample}_mito_contigs_hap{n}.tsv")
     params:
         prefix = "{sample}_hap{n}",
         out_dir = os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}"),
-        purge_dups_option = get_purge_bool
+        purge_dups_option = get_purge_bool,
+        mito_ref = lambda wildcards: get_mito_reference(wildcards)[0] if get_mito_reference(wildcards) != 'None' else 'None'
     threads: 20
     benchmark:
         os.path.join(output_dir, "{sample}_results", "benchmark", "haplotigs_handling_hap{n}_benchmark.txt")
@@ -271,7 +274,10 @@ rule haplotigs_handling:
             {output.hap} \
             {params.prefix} \
             {input.reads} \
-            {params.out_dir} > {log} 2>&1
+            {params.out_dir} \
+            {params.mito_ref} \
+            {output.mito_fasta} \
+            {output.mito_tsv} > {log} 2>&1
         """
 
         
@@ -289,7 +295,7 @@ rule unpigz_to_fasta:
 
 rule mito_genome_from_assembly:
     input:
-        rules.unpigz_to_fasta.output
+        rules.haplotigs_handling.output.mito_fasta
     output:
         os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "mitogenome", "contigs_stats.tsv"),
     params:
@@ -325,9 +331,9 @@ rule mito_genome_from_assembly:
         
         # Then check if input file is empty
         if [[ ! -s $INPUT_ABS ]]; then
-            echo "🔹 Asm4pg -> input haplotype empty, skipping" > $LOG_ABS 2>&1
+            echo "🔹 Asm4pg -> no mitochondrial contig found in the assembly, skipping" > $LOG_ABS 2>&1
             cd {params.out_dir}
-            echo "Input haplotype empty" > {output}
+            echo "No mitochondrial contig found in the assembly" > {output}
             echo "✅ Asm4pg -> done!" >> $LOG_ABS 2>&1
             exit 0
         fi
@@ -855,6 +861,8 @@ rule generate_report:
         merqury_qv=os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "merqury", "{sample}_merqury.qv"),
         chloro_stats = os.path.join(output_dir, "{sample}_results", "00_preprocess", "chloroplast_{sample}_stats.txt"),
 
+        mito_removed_hap1 = os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap1", "{sample}_mito_contigs_hap1.tsv"),
+        mito_removed_hap2 = os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap2", "{sample}_mito_contigs_hap2.tsv"),
         mitogenome_contigs_hap1 = lambda wildcards: os.path.join(output_dir, f"{wildcards.sample}_results", "02_final_assembly", "hap1", "mitogenome", "contigs_stats.tsv") if wildcards.sample in MITO_SAMPLES else [],
         mitogenome_contigs_hap2 = lambda wildcards: os.path.join(output_dir, f"{wildcards.sample}_results", "02_final_assembly", "hap2", "mitogenome", "contigs_stats.tsv") if wildcards.sample in MITO_SAMPLES else []
     output:
