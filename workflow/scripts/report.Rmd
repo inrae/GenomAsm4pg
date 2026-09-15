@@ -36,6 +36,10 @@ plot_if <- function(pattern, caption) {
   cat("\n\n**", caption, "**\n\n", sep = "")
   for (f in sort(fs)) cat("![](", f, ")\n\n", sep = "")
 }
+mito_png <- function(stats) {
+  f <- if (is.null(stats)) "" else file.path(dirname(stats), "final_mitogenome.annotation.png")
+  if (file.exists(f)) cat("![](", f, ")\n\n", sep = "")
+}
 is_trio <- identical(snakemake@params[["mode"]], "trio")
 ```
 
@@ -129,9 +133,9 @@ cat_file("merqury_stats")
 ### Copy-number spectra
 
 ```{r results='asis'}
-plot_if("hap1\\.spectra-cn\\.fl\\.png$", "Hap 1")
-plot_if("hap2\\.spectra-cn\\.fl\\.png$", "Hap 2")
-plot_if("^[^.]*\\.spectra-asm\\.fl\\.png$", "Both haplotypes together")
+plot_if("hap1\\.spectra-cn\\.st\\.png$", "Hap 1")
+plot_if("hap2\\.spectra-cn\\.st\\.png$", "Hap 2")
+plot_if("^[^.]*\\.spectra-asm\\.st\\.png$", "Both haplotypes together")
 ```
 
 ```{r results='asis'}
@@ -190,8 +194,14 @@ cat_file("mito_removed_hap2", 30)
 ```{r}
 cat_file("mitogenome_contigs_hap1", 10)
 ```
+```{r results='asis'}
+mito_png(snakemake@input[["mitogenome_contigs_hap1"]])
+```
 
 #### Hap 2
 ```{r}
 cat_file("mitogenome_contigs_hap2", 10)
+```
+```{r results='asis'}
+mito_png(snakemake@input[["mitogenome_contigs_hap2"]])
 ```
