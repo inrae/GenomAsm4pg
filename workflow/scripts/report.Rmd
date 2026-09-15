@@ -56,7 +56,6 @@ is_trio <- identical(snakemake@params[["mode"]], "trio")
 | purge_dups run | `r if (isTRUE(snakemake@params[["purge_dups_bool"]])) "Yes" else "No"` |
 | Scaffolded with RagTag | `r if (isTRUE(snakemake@params[["ragtag_bool"]])) "Yes" else "No"` |
 | Lineage | `r snakemake@params[["busco_lineage"]]` |
-| Ploidy | `r snakemake@params[["ploidy"]]` |
 | k-mer size | `r snakemake@params[["kmer_size"]]` |
 
 ## Raw reads

@@ -883,7 +883,6 @@ rule generate_report:
         purge_dups_bool = get_purge_bool,
         busco_lineage = get_busco_lin,
         completeness_tool = lambda wildcards: "BUSCO" if get_busco_bool(wildcards) else "compleasm",
-        ploidy = get_ploidy,
         kmer_size = get_kmer_size,
         ragtag_bool = get_ragtag_bool,
         r1 = lambda wildcards: get_run(wildcards, run=1),
