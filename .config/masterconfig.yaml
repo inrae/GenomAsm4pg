@@ -24,7 +24,6 @@ container_registry: "docker://registry.forge.inrae.fr/asm4pg/genomasm4pg"
 #
 #   busco_lineage                   compleasm/BUSCO lineage         (default: eukaryota_odb10)
 #   use_busco                       True | False, BUSCO instead of compleasm (default: False)
-#   ploidy                                                          (default: 2)
 #   kmer_size                       k for the QC steps              (default: 21)
 #
 #   run_purge_dups                  True | False                    (default: False)
