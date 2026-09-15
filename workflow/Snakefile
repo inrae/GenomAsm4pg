@@ -315,7 +315,7 @@ rule mito_genome_from_assembly:
         """
         INPUT_ABS=$(realpath {input})
         LOG_ABS=$(realpath {log})
-        
+        SHIM_ABS=$(realpath workflow/scripts/mitofinder_arwen.sh)
         # First check if mito_reference is provided
         if [[ "{params.mito_reference}" == "None" ]]; then
             echo "🔹 Asm4pg -> no mitogenome reference provided, skipping" > $LOG_ABS 2>&1
@@ -341,7 +341,10 @@ rule mito_genome_from_assembly:
         # If we get here, both reference exists and input is non-empty
         cd {params.out_dir}
         echo "🔹 Asm4pg -> starting mitohifi" > $LOG_ABS 2>&1
-        
+
+        mkdir -p .mitofinder_arwen && ln -sf $SHIM_ABS .mitofinder_arwen/mitofinder
+        export PATH="$PWD/.mitofinder_arwen:$PATH"
+
         if mitohifi.py -c $INPUT_ABS -f $FASTA_REF_ABS -g $GB_REF_ABS -a {params.mito_organism} -t {threads} -d >> $LOG_ABS 2>&1; then
             echo "🔹 Asm4pg -> cleaning up..." >> $LOG_ABS 2>&1
             rm fixed_header_contigs.fasta
@@ -355,6 +358,7 @@ rule mito_genome_from_assembly:
             echo "⚠️  Asm4pg -> mitogenome extraction unsuccessful, intermediates kept" >> $LOG_ABS 2>&1
             echo "mitogenome extraction unsuccessful (from assembly), check logs and this directory" > {output}
         fi
+        rm -rf .mitofinder_arwen
         """
 
 # Make purge_dups cutoffs graph
