@@ -31,6 +31,7 @@ Here are all the options and their default values:
 - `r2`: If hi-c or trio mode, the run2/parent2 read file
 - `run_purge_dups`: [True, False] If set to true, the workflow will run [purge_dups](https://github.com/dfguan/purge_dups) on the assembly (default: False)
 - `busco_lineage`: The BUSCO lineage of your organism listed [here](https://busco.ezlab.org/list_of_lineages.html) (default: eukaryota_odb10)
+- `use_busco`: [True, False] Measure completeness with BUSCO instead of compleasm (default: False). Per sample, so two assemblies in one run can use different tools. Both use the same `busco_lineage`, and on eukaryotes both align with miniprot, which is why they agree closely
 - `run_ragtag`: [True, False] If set to true, the workflow will run RagTag and produce a scaffold of the assemblies (default: False)
 - `reference_genome`: The reference genome used for QUAST and RagTag scaffolding
 - `run_quast`: [True, False] If set to true, the workflow will run Quast and porduce global assembly statistics.
