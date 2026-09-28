@@ -299,7 +299,8 @@ rule mito_genome_from_assembly:
     benchmark:
         os.path.join(output_dir, "{sample}_results", "benchmark", "mito_genome_from_assembly{n}_benchmark.txt")
     resources:
-        mem_mb=100000
+        mem_mb=100000,
+        runtime=10080
     log:
         os.path.join(output_dir, "{sample}_results", "logs", "mito_genome_from_assembly{n}.log")
     container:

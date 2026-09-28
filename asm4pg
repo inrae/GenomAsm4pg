@@ -1,17 +1,22 @@
 #!/bin/bash
-#SBATCH --cpus-per-task=5
+#SBATCH --cpus-per-task=20
 #SBATCH -p unlimitq
 #SBATCH -o /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/slurm_logs/asm4pg_slurm_log_%j.log
 #SBATCH -e /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond/slurm_logs/asm4pg_slurm_log_%j.log
-##SBATCH --time=80:00:00
+#SBATCH --time=7-00:00:00
 #SBATCH -J asm4pg
-#SBATCH --mem=10G
+#SBATCH --mem=110G
 #SBATCH --ntasks=1
 #SBATCH --mail-type=END # notification par e-mail à la fin en cas de réussite ou erreur
 #SBATCH --mail-user=quynh-trang.bui@inrae.fr # l’adresse e-mail
 
 # Written by Lucien Piat at INRAe
 # Use this script to run asm4pg on a HPC
+# 1. Charger l'environnement C++ requis pour corriger l'erreur de GLIBCXX
+#module purge
+#module load compilers/gcc/11.2.0
+# 2. Contourner le bug de libmamba sur le nœud de calcul
+#export CONDA_SOLVER=classic
 
 # Verify arguments
 if [ $# -lt 1 ] || [ "$1" == "help" ]; then
@@ -63,7 +68,15 @@ case "${SLURM_SUBMIT_HOST:-$(hostname)}" in
         echo '🔹 Asm4pg -> Identified genotoul cluster'
         module purge
         module load containers/Apptainer/1.2.5     
-        source activate wf_env                     
+         # 1. On initialise proprement Conda pour que la commande 'conda activate' fonctionne
+        source /home/qbui/miniconda3/etc/profile.d/conda.sh
+	
+	# 2. On utilise la syntaxe moderne pour activer l'environnement
+        conda activate /home/qbui/miniconda3/envs/wf_env || exit 1
+        # 3. On donne la priorité absolue à votre Python personnel
+        export PATH=/home/qbui/miniconda3/envs/wf_env/bin:$PATH
+	echo "Python: $(command -v python)"
+        echo "Snakemake: $(command -v snakemake)"
         ;;
     *bb8*)
         echo '🔹 Asm4pg -> Identified cbib cluster, use the local-run on cbib'
