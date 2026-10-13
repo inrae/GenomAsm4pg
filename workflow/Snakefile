@@ -128,7 +128,10 @@ rule genomescope:
     container:
         f"{container_registry}/genomescope2.0"
     shell:
-        "genomescope.R -k {params.km_size} -i {input} -o {params.out_dir} -p {params.ploidy} > {log} 2>&1 "
+        """
+        genomescope.R -k {params.km_size} -i {input} -o {params.out_dir} -p {params.ploidy} > {log} 2>&1
+        rm -f {params.out_dir}/progress.txt {params.out_dir}/transformed_*.png
+        """
 
 # Rule for downsampling reads to a specific coverage based on estimated genome size
 rule downsample_reads:
@@ -249,11 +252,14 @@ rule haplotigs_handling:
         reads = rules.input_conversion.output.fastagz
     output:
         hap = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap{n}","{sample}_final_hap{n}.fasta.gz"),
-        cutoffs = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap{n}","cutoffs")
+        cutoffs = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap{n}","cutoffs"),
+        mito_fasta = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap{n}","{sample}_mito_contigs_hap{n}.fasta"),
+        mito_tsv = os.path.join(output_dir, "{sample}_results", "02_final_assembly","hap{n}","{sample}_mito_contigs_hap{n}.tsv")
     params:
         prefix = "{sample}_hap{n}",
         out_dir = os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}"),
-        purge_dups_option = get_purge_bool
+        purge_dups_option = get_purge_bool,
+        mito_ref = lambda wildcards: get_mito_reference(wildcards)[0] if get_mito_reference(wildcards) != 'None' else 'None'
     threads: 20
     benchmark:
         os.path.join(output_dir, "{sample}_results", "benchmark", "haplotigs_handling_hap{n}_benchmark.txt")
@@ -262,7 +268,7 @@ rule haplotigs_handling:
     log:
         os.path.join(output_dir, "{sample}_results", "logs", "haplotigs_handling_hap{n}.log")
     container:
-        f"{container_registry}/purge_dups1.2.5"
+        f"{container_registry}/purge_dups1.2.5:pigz2.8"
     shell:
         """
         ./workflow/scripts/haplotigs_handling.sh \
@@ -271,7 +277,11 @@ rule haplotigs_handling:
             {output.hap} \
             {params.prefix} \
             {input.reads} \
-            {params.out_dir} > {log} 2>&1
+            {params.out_dir} \
+            {params.mito_ref} \
+            {output.mito_fasta} \
+            {output.mito_tsv} \
+            {threads} > {log} 2>&1
         """
 
         
@@ -289,17 +299,18 @@ rule unpigz_to_fasta:
 
 rule mito_genome_from_assembly:
     input:
-        rules.unpigz_to_fasta.output
+        rules.haplotigs_handling.output.mito_fasta
     output:
         os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "mitogenome", "contigs_stats.tsv"),
     params:
         mito_reference = get_mito_reference,
+        mito_organism = get_mito_organism,
         out_dir = os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "mitogenome")
-    threads: 20
+    threads: 8
     benchmark:
         os.path.join(output_dir, "{sample}_results", "benchmark", "mito_genome_from_assembly{n}_benchmark.txt")
     resources:
-        mem_mb=100000
+        mem_mb=20000
     log:
         os.path.join(output_dir, "{sample}_results", "logs", "mito_genome_from_assembly{n}.log")
     container:
@@ -308,7 +319,7 @@ rule mito_genome_from_assembly:
         """
         INPUT_ABS=$(realpath {input})
         LOG_ABS=$(realpath {log})
-        
+        SHIM_ABS=$(realpath workflow/scripts/mitofinder_arwen.sh)
         # First check if mito_reference is provided
         if [[ "{params.mito_reference}" == "None" ]]; then
             echo "🔹 Asm4pg -> no mitogenome reference provided, skipping" > $LOG_ABS 2>&1
@@ -324,9 +335,9 @@ rule mito_genome_from_assembly:
         
         # Then check if input file is empty
         if [[ ! -s $INPUT_ABS ]]; then
-            echo "🔹 Asm4pg -> input haplotype empty, skipping" > $LOG_ABS 2>&1
+            echo "🔹 Asm4pg -> no mitochondrial contig found in the assembly, skipping" > $LOG_ABS 2>&1
             cd {params.out_dir}
-            echo "Input haplotype empty" > {output}
+            echo "No mitochondrial contig found in the assembly" > {output}
             echo "✅ Asm4pg -> done!" >> $LOG_ABS 2>&1
             exit 0
         fi
@@ -334,20 +345,25 @@ rule mito_genome_from_assembly:
         # If we get here, both reference exists and input is non-empty
         cd {params.out_dir}
         echo "🔹 Asm4pg -> starting mitohifi" > $LOG_ABS 2>&1
-        
-        if mitohifi.py -c $INPUT_ABS -f $FASTA_REF_ABS -g $GB_REF_ABS -t {threads} -d >> $LOG_ABS 2>&1; then
+
+        mkdir -p .mitofinder_arwen && ln -sf $SHIM_ABS .mitofinder_arwen/mitofinder
+        # MitoHiFi never reads its MAFFT alignment (the final choice uses CD-HIT), skip it
+        ln -sf /bin/true .mitofinder_arwen/mafft
+        export PATH="$PWD/.mitofinder_arwen:$PATH"
+
+        if mitohifi.py -c $INPUT_ABS -f $FASTA_REF_ABS -g $GB_REF_ABS -a {params.mito_organism} -t {threads} -d >> $LOG_ABS 2>&1; then
             echo "🔹 Asm4pg -> cleaning up..." >> $LOG_ABS 2>&1
-            rm fixed_header_contigs.fasta
-            rm -rf coverage_mapping
-            rm -rf final_mitogenome_choice
-            rm -rf potential_contigs
             mv final_mitogenome.fasta {wildcards.sample}_mitogenome_hap{wildcards.n}.fasta
             mv final_mitogenome.gb {wildcards.sample}_mitogenome_hap{wildcards.n}.gb
+            # Keep the mitogenome, its annotation and image, and contigs_stats.tsv (the rule output)
+            find . -mindepth 1 -maxdepth 1 ! -name '{wildcards.sample}_mitogenome_hap{wildcards.n}.*' \
+                ! -name 'final_mitogenome.annotation.png' ! -name 'contigs_stats.tsv' -exec rm -rf {{}} +
             echo "✅ Asm4pg -> done!" >> $LOG_ABS 2>&1
         else
             echo "⚠️  Asm4pg -> mitogenome extraction unsuccessful, intermediates kept" >> $LOG_ABS 2>&1
             echo "mitogenome extraction unsuccessful (from assembly), check logs and this directory" > {output}
         fi
+        rm -rf .mitofinder_arwen
         """
 
 # Make purge_dups cutoffs graph
@@ -660,7 +676,7 @@ rule merqury:
         echo "🔹 Asm4pg -> cleaning up" >> {log} 2>&1
         find . -maxdepth 1 -mindepth 1 \
              ! -name '*.meryl.tar.gz' \
-             ! -name '*.png' \
+             \\( ! -name '*.png' -o -name '*.fl.png' -o -name '*.ln.png' \\) \
              ! -name '{wildcards.sample}_merqury.qv' \
              ! -name '{wildcards.sample}_merqury.completeness.stats' \
              -exec rm -rf {{}} + >> {log} 2>&1 || true
@@ -854,6 +870,8 @@ rule generate_report:
         merqury_qv=os.path.join(output_dir, "{sample}_results", "04_assembly_qc", "merqury", "{sample}_merqury.qv"),
         chloro_stats = os.path.join(output_dir, "{sample}_results", "00_preprocess", "chloroplast_{sample}_stats.txt"),
 
+        mito_removed_hap1 = os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap1", "{sample}_mito_contigs_hap1.tsv"),
+        mito_removed_hap2 = os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap2", "{sample}_mito_contigs_hap2.tsv"),
         mitogenome_contigs_hap1 = lambda wildcards: os.path.join(output_dir, f"{wildcards.sample}_results", "02_final_assembly", "hap1", "mitogenome", "contigs_stats.tsv") if wildcards.sample in MITO_SAMPLES else [],
         mitogenome_contigs_hap2 = lambda wildcards: os.path.join(output_dir, f"{wildcards.sample}_results", "02_final_assembly", "hap2", "mitogenome", "contigs_stats.tsv") if wildcards.sample in MITO_SAMPLES else []
     output:
@@ -866,7 +884,6 @@ rule generate_report:
         purge_dups_bool = get_purge_bool,
         busco_lineage = get_busco_lin,
         completeness_tool = lambda wildcards: "BUSCO" if get_busco_bool(wildcards) else "compleasm",
-        ploidy = get_ploidy,
         kmer_size = get_kmer_size,
         ragtag_bool = get_ragtag_bool,
         r1 = lambda wildcards: get_run(wildcards, run=1),

@@ -1,0 +1,24 @@
+# asm4pg purge_dups box
+
+FROM alpine:3.20 AS pigz
+
+ARG PIGZ_VERSION=2.8
+
+RUN apk add --no-cache build-base zlib-dev zlib-static wget && \
+    wget -q "https://zlib.net/pigz/pigz-${PIGZ_VERSION}.tar.gz" -O /tmp/pigz.tar.gz && \
+    mkdir -p /tmp/pigz && \
+    tar -xzf /tmp/pigz.tar.gz -C /tmp/pigz --strip-components=1 && \
+    make -C /tmp/pigz CFLAGS="-O3 -Wall -static" LDFLAGS="-static" && \
+    /tmp/pigz/pigz --version
+
+FROM registry.forge.inrae.fr/asm4pg/genomasm4pg/purge_dups1.2.5:latest
+
+COPY --from=pigz /tmp/pigz/pigz /usr/local/bin/pigz
+
+RUN ln -sf /usr/local/bin/pigz /usr/local/bin/unpigz && \
+    chmod +x /usr/local/bin/pigz && \
+    pigz --version && \
+    unpigz --version && \
+    printf '>t\nACGTACGTAC\n' | pigz -c | unpigz -c && \
+    minimap2 --version && \
+    purge_dups 2>&1 | head -2

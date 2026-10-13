@@ -105,6 +105,10 @@ def get_mito_reference(wildcards) -> list:
         return 'None'
     return ref
 
+# Fetch the MitoHiFi organism type (-a): plant, animal or fungi
+def get_mito_organism(wildcards) -> str:
+    return config["samples"][wildcards.sample].get("mito_organism", "plant")
+
 # Fetch the reference chloroplast genome. 
 def get_chloro_reference(wildcards) -> str:
     try:
