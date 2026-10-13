@@ -18,6 +18,8 @@ DIRR=$6
 MITO_REF=$7     # reference mitogenome fasta, or None
 MITO_FA=$8      # mitochondrial contigs removed from the assembly
 MITO_TSV=$9     # their names, lengths and aligned fraction
+THREADS=${10:-3}  
+PIGZ_PIPE=$(( THREADS / 4 )); [ "$PIGZ_PIPE" -ge 1 ] || PIGZ_PIPE=1
 
 cleanup_temp_files() {
     echo "🔹 Asm4pg -> Cleaning temporary files..."
@@ -28,7 +30,7 @@ run_purge_dups() {
     echo "🔹 Asm4pg -> Running purge_dups on haplotigs..."
 
     echo "🔹 Asm4pg -> Running minimap2..."
-    minimap2 -x asm20 "$HAP_IN" "$READS" | gzip -c - > "$DIRR/$PREFIX.paf.gz"
+    minimap2 -x asm20 -t "$THREADS" "$HAP_IN" "$READS" | pigz -p "$PIGZ_PIPE" -c - > "$DIRR/$PREFIX.paf.gz"
 
     echo "🔹 Asm4pg -> Running pbcstat..."
     pbcstat "$DIRR/$PREFIX.paf.gz" -O "$DIRR"
@@ -51,7 +53,7 @@ run_purge_dups() {
     split_fa "$HAP_IN" > "$DIRR/$PREFIX.split"
 
     echo "🔹 Asm4pg -> Running minimap2 self-alignment..."
-    minimap2 -x asm5 -DP "$DIRR/$PREFIX.split" "$DIRR/$PREFIX.split" | gzip -c - > "$DIRR/$PREFIX.split.self.paf.gz"
+    minimap2 -x asm5 -DP -t "$THREADS" "$DIRR/$PREFIX.split" "$DIRR/$PREFIX.split" | pigz -p "$PIGZ_PIPE" -c - > "$DIRR/$PREFIX.split.self.paf.gz"
 
     echo "🔹 Asm4pg -> Purging haplotigs and overlaps..."
     purge_dups -2 -T "$DIRR/cutoffs" -c "$DIRR/PB.base.cov" "$DIRR/$PREFIX.split.self.paf.gz" > "$DIRR/dups.bed" 2> "$DIRR/purge_dups.log"
@@ -60,7 +62,7 @@ run_purge_dups() {
     get_seqs -e "$DIRR/dups.bed" "$HAP_IN" -p "$DIRR/$PREFIX"
 
     echo "🔹 Asm4pg -> Compressing and moving output..."
-    gzip -c "$DIRR/$PREFIX.purged.fa" > "$HAP_OUT"
+    pigz -p "$THREADS" -c "$DIRR/$PREFIX.purged.fa" > "$HAP_OUT"
 
     cleanup_temp_files
 }
@@ -75,7 +77,7 @@ remove_mito_contigs() {
     fi
 
     echo "🔹 Asm4pg -> Removing mitochondrial contigs..."
-    if ! minimap2 -x asm20 "$MITO_REF" "$HAP_OUT" > "$DIRR/$PREFIX.mito.paf"; then
+    if ! minimap2 -x asm20 -t "$THREADS" "$MITO_REF" "$HAP_OUT" > "$DIRR/$PREFIX.mito.paf"; then
         echo "⚠️  Asm4pg -> minimap2 against the mitogenome failed, no contig removed"
         echo "Mapping against the reference mitogenome failed, no contig removed" > "$MITO_TSV"
         rm -f "$DIRR/$PREFIX.mito.paf"
@@ -90,12 +92,18 @@ remove_mito_contigs() {
         $4 > e  { e = $4 }
         END     { flush() }' > "$DIRR/$PREFIX.mito.ids"
 
+    if [[ ! -s "$DIRR/$PREFIX.mito.ids" ]]; then
+        echo "0 contig matched the reference mitogenome, nothing removed" > "$MITO_TSV"
+        rm -f "$DIRR/$PREFIX.mito.paf" "$DIRR/$PREFIX.mito.ids"
+        return 0
+    fi
+
     : > "$DIRR/$PREFIX.nomito.fa"
-    zcat "$HAP_OUT" | awk -v ids="$DIRR/$PREFIX.mito.ids" -v mito="$MITO_FA" -v keep="$DIRR/$PREFIX.nomito.fa" '
+    unpigz -c "$HAP_OUT" | awk -v ids="$DIRR/$PREFIX.mito.ids" -v mito="$MITO_FA" -v keep="$DIRR/$PREFIX.nomito.fa" '
         BEGIN { while ((getline l < ids) > 0) { split(l, a, "\t"); m[a[1]] = 1 } }
         /^>/  { out = (substr($1, 2) in m) ? mito : keep }
         { print > out }'
-    gzip -c "$DIRR/$PREFIX.nomito.fa" > "$HAP_OUT"
+    pigz -p "$THREADS" -c "$DIRR/$PREFIX.nomito.fa" > "$HAP_OUT"
 
     { echo "# $(wc -l < "$DIRR/$PREFIX.mito.ids") contig(s) removed, $(awk '{ s += $2 } END { print s + 0 }' "$DIRR/$PREFIX.mito.ids") bp, >= 90% aligned to the reference mitogenome"
       printf 'contig\tlength\taligned_fraction\n'

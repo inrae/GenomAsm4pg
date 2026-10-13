@@ -268,7 +268,7 @@ rule haplotigs_handling:
     log:
         os.path.join(output_dir, "{sample}_results", "logs", "haplotigs_handling_hap{n}.log")
     container:
-        f"{container_registry}/purge_dups1.2.5"
+        f"{container_registry}/purge_dups1.2.5:pigz2.8"
     shell:
         """
         ./workflow/scripts/haplotigs_handling.sh \
@@ -280,7 +280,8 @@ rule haplotigs_handling:
             {params.out_dir} \
             {params.mito_ref} \
             {output.mito_fasta} \
-            {output.mito_tsv} > {log} 2>&1
+            {output.mito_tsv} \
+            {threads} > {log} 2>&1
         """
 
         
@@ -305,11 +306,11 @@ rule mito_genome_from_assembly:
         mito_reference = get_mito_reference,
         mito_organism = get_mito_organism,
         out_dir = os.path.join(output_dir, "{sample}_results", "02_final_assembly", "hap{n}", "mitogenome")
-    threads: 20
+    threads: 8
     benchmark:
         os.path.join(output_dir, "{sample}_results", "benchmark", "mito_genome_from_assembly{n}_benchmark.txt")
     resources:
-        mem_mb=100000
+        mem_mb=20000
     log:
         os.path.join(output_dir, "{sample}_results", "logs", "mito_genome_from_assembly{n}.log")
     container:
