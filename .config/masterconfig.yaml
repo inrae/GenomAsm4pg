@@ -152,24 +152,31 @@ output_dir_pdw: /home/qbui/work/Assembly_HiFi/GenomAsm4pg/almond
 container_registry: "docker://registry.forge.inrae.fr/asm4pg/genomasm4pg"
 output_dir: "results/"
 
-
-# ----
-
-# List of parameters :
-#   reads: Your reads (mandatory)
-#   mode: [default, hi-c, trio, ont] (default: default, use fasq or bam for ont)
-#   r1: The run1/parent1 read file
-#   r2: The run2/parent2 read file
-#   run_purge_dups: [True, False] (default: False)
-#   run_ragtag: [True, False] (default: False): only one ref of ragtag accepted!
-#   run_mito_separation: [True, False] (default: False)
-#   run_downsampling: [True, False] (default: False)
-#   target_coverage: int (defaut: 50)
-#   reference_genome: fasta.gz reference genome used for ragtag
-#   reference_mitochondrial_genome: list, the reference mitogenome and annotation in genbank format [mitogenome.fasta, annot.gb]
-#   busco_lineage: (default: eukaryota_odb10)
-#   run_quast: [True, False] (default: False)
-
-# Advanced parameters (we advise keeping default vaules)
-#   assembly_purge_force: [1-3] (default: 3)
-#   kmer_size: (default: 21)
+# All per-sample options and their defaults
+#
+#   reads                           reads file (MANDATORY)
+#   mode                            default | hi-c | trio | ont     (default: default)
+#   r1, r2                          Hi-C R1/R2, or the two parents  (hi-c and trio)
+#
+#   busco_lineage                   compleasm/BUSCO lineage         (default: eukaryota_odb10)
+#   use_busco                       True | False, BUSCO instead of compleasm (default: False)
+#   kmer_size                       k for the QC steps              (default: 21)
+#
+#   run_purge_dups                  True | False                    (default: False)
+#   assembly_purge_force            hifiasm -l, 1-3                 (default: 3)
+#
+#   run_downsampling                True | False                    (default: False)
+#   target_coverage                                                 (default: 50)
+#
+#   run_quast                       True | False, needs             (default: False)
+#
+#   run_ragtag                      True | False, needs reference_genome   (default: False)
+#   reference_genome                fasta.gz, for QUAST and RagTag
+#
+#   reference_chloroplast_genome    fasta. Given -> chloroplast reads are removed
+#                                   BEFORE assembly and kept in 00_preprocess/
+#   reference_mitochondrial_genome  [mitogenome.fasta, annotation.gb]. Given ->
+#                                   mitochondrial contigs are removed FROM the final
+#                                   assembly and MitoHiFi builds the mitogenome
+#                                   from them. Both files are required.
+#   mito_organism                   plant | animal | fungi, MitoHiFi -a    (default: plant)
