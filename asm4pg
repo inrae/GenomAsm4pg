@@ -44,6 +44,9 @@ while [ $# -gt 0 ]; do
 done
 set -- "${FORWARD_ARGS[@]}"
 
+export APPTAINER_BINDPATH="$SNG_BIND${APPTAINER_BINDPATH:+,$APPTAINER_BINDPATH}"
+export SINGULARITY_BINDPATH="$APPTAINER_BINDPATH"
+
 MEM_MB=$(free -m | awk '/^Mem:/{print $2}')
 if [ -n "${SLURM_MEM_PER_NODE:-}" ]; then
     [ "$SLURM_MEM_PER_NODE" -lt "$MEM_MB" ] && MEM_MB=$SLURM_MEM_PER_NODE
